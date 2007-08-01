@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
-"POT-Creation-Date: 2007-08-07 12:21-0500\n"
+"POT-Creation-Date: 2007-08-29 15:55-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,5 +25,5 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../ampache.templates:2001
-msgid "Restart Apache2 webserver? "
+msgid "Restart Apache2 webserver?"
 msgstr ""

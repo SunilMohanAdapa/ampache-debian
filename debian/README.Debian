@@ -1,33 +1,123 @@
 ampache for Debian
 ------------------
+IMPORTANT:
 
-Ampache requires mysql-server to operate.  Mysql-server was not installed as part of the ampache install due to the fact that some users may already have a mysql-server setup and running and upgrading to a newer version of MySQL server may render their databases useless (which is really really bad) .  For those who do not have a mysql-server installed it is very easy to do.  I would recommend using phpmyadmin to setup your mysql-server.  To install mysql-server and phpmyadmin all you have to to is:
+Ampache **REQUIRES** MySQL server to operate.  MySQL server is not installed 
+with Ampache due to the fact that if users are using an older version of 
+MySQL server upgrading to mysql-server-5.0 may render their databases corrupt
+and possible useless.  So please upgrade your mysql server with **CAUTION**.
+For those who do not have mysql-server-5.0 installed it is very easy to install.
+In the command line type:
 
-apt-get install mysql-server-5.0 phpmyadmin
+	Debian:  apt-get install mysql-server-5.0 (as root)
+	Ubuntu:  sudo apt-get install mysql-server-5.0
 
-Once they are installed create a user account on your mysql server that has root priviliges (you will need this account to configure ampache).  For this I use phpmyadmin. Point you browser to 
+WARNING
 
-http://localhost/phpmyadmin or
-http://your.ip.address.com/phpmyadmin.
+Please insure that older versions of Apache-1.x or later are removed, before
+installing ampache or you will experience installation problems.
 
-Log in with username root and password blank.  Once you loging scoll down to the section that says "privileges" and click on it.  Now scroll down to the section that says "add new user" click on it and fill in the user information, then scroll down and click on "check all" under Global privileges scroll down to the bottom of the page an click go. You user account has been created.  Now point your browser to
- 
-http://localhost/ampache or 
-http://your.ip.address.com/ampache
+GETTING STARTED WITH AMPACHE
 
-The web interface should come up.  Follow the instructions on the screen to configure ampache.  
+SUMMARY
+	1.  MySQL Server install
+	2.  Phpmyadmin or command line setup a MySQL server account with root
+	    privileges
+	3.  Step 1 Web Interface
+	4.  Step 2 Web Interface
+	5.  Step 3 Web Interface
+	6.  Sign in and start building music catalogs
 
-For those that already have a mysql-server with a user account that has root privileges all you need to do is point your brower to 
+1.  To install mysql-server-5.0 follow instruction above.  If you already have
+mysql-server installed go to step 2.
 
-http://localhost/ampache or
-http://your.ip.address.com/ampache
+2.  To setup Ampache you must have a user account on the mysql-server with root 
+privileges.  You may do this by either the command line or phpmyadmin.  I prefer
+phpmyadmin and that is what will be explained here.  To install phpmyadmin type
+in the command line:
 
-and follow the configuration instructions.
+	Debian: apt-get install phpmyadmin (as root)
+	Ubuntu: sudo apt-get install phpmyadmin
 
-For installation question or questions on how to enable additonal features in ampache please visit the forums and the wiki
+To setup your mysql root account, sign into phpmyadmin by pointing your browser
+to http://localhost/phpmyadmin or http://your.ip.address/phpmyadmin.
 
-http://www.ampache.org/forums/
-https://ampache.bountysource.com/wiki
+username = root
+password =
+
+***Leave the password blank this is the default sign in for phpmyadmin.****
+
+This takes you to the main page scroll down to where it says "Privileges" and
+click on it.  Now scroll down and click on "Add a new User" and click on it.
+Now fill in
+
+User name = what ever you want
+Host      = Any host
+Password  = what ever you want
+Re-type   = retype your password again
+
+Now Scroll down a little and click on "Check All" for Global privileges.  Now
+scroll down to the bottom of the page and click the "Go" button.  Now sign out.
+
+SECURITY WARNING:
+
+After you have Ampache setup and running it would be a very good idea if you
+changed the root password.  It is widely known the the default sign in for
+phpmyadmin is
+
+username = root
+password = <blank>
+
+So please change this password, as it is a potential security hole.
+
+3.  Now point your browser to http://localhost/ampache or
+http://what.ever.your.ip.address.com/ampache.This will bring you to Ampache's
+Web Installation Interface (step 1)
+
+Desired Database Name = ampache
+MySQL Hostname  = localhost
+MySQL Administrative Username = root or the user name you setup with phpmyadmin
+MySQL Administrative Password = leave blank if you use root, or use the password
+				you created with phpmyadmin
+Create Database User For New Database = set check mark
+Ampache Database Username = ampache
+Ampache Database User Password = set this to a password you like
+
+Click on Insert Database.
+
+4.  This will take you to Ampache's Web Installation Interface (step 2)
+
+Web Path       = /ampache
+Desired Database Name = ampache (default)
+MySQL Hostname = localhost (default)
+MySQL Username = this is the username you setup with phpmyadmin
+				 **root will not work**
+MySQL Password = this is the password you setup with phpmyadmin
+				 **blank will not work**
+
+Click on Write Config.
+
+Ampache will prompt you to download a file called "ampache.cfg.php".  Download 
+it to your favorite location.  Now take "ampache.cfg.php and copy/move it to
+/etc/ampache.
+
+Now click on check for config, and everything should turn green.  Click on next
+
+5.  This will take you to Ampache's Web Installation Interface (step 3)
+
+Enter a password, you will be using this to initially sign into ampache.
+You can change the admin username and password after the install is complete
+through the preferences tab
+
+Click next this will take you to Ampache's log in screen.
+
+Enter Admin and the password you entered in the above step.
+
+6.  You are now ready to start adding music and building you music catalogs.
+
+If you have never setup Ampache Catalogs please take a look at this wiki page
+
+http://ampache.bountysource.com/wiki/Catalog_Builds
 
 
  -- Charlie Smotherman <cjsmo@cableone.net>  Wed,  1 Aug 2007 11:52:03 -0500

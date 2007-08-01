@@ -14,4 +14,3 @@
 /*.php /usr/share/ampache/www
 /docs /usr/share/doc/ampache
 /debian/ampache.conf /etc/ampache
-

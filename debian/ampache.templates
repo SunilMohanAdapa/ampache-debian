@@ -7,7 +7,4 @@ _Description:  Configure Apache2 webserver?
 Template: ampache/restart-webserver
 Type: boolean
 Default: true
-_Description:  Restart Apache2 webserver? 
-
-
-
+_Description:  Restart Apache2 webserver?

@@ -215,10 +215,11 @@ src/rss.php
 src/search.php
 src/test.php
 
-All other files are released under GPL-2 only unless otherwise stated in this document.
+All other files are released under GPL-2 only unless otherwise stated in this
+document.
 For full wording of above license, see '/usr/share/common-licenses/GPL-2
 
-This list of where removed from the ampache-3.3.3.4-dfsg.orig.tar.gz..
+This list of files where removed from the ampache-3.3.3.4-dfsg.orig.tar.gz..
 
 Source code not available:
 

@@ -5,15 +5,12 @@ clean:
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-
 install:
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-
 build:
-
 # Build architecture-dependent files here.
 binary-arch: install
 # We have nothing to do by default.
@@ -36,5 +33,3 @@ binary-indep: install
 
 binary: binary-indep 
 .PHONY: clean binary-indep install
-
-

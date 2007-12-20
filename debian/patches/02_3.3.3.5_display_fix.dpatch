@@ -1,0 +1,51 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 04_display_fix.dpatch by Charlie Smotherman <cjsmo@cableone.net>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad ampache-3.3.3.5-dfsg~/config/ampache.cfg.php.dist ampache-3.3.3.5-dfsg/config/ampache.cfg.php.dist
+--- ampache-3.3.3.5-dfsg~/config/ampache.cfg.php.dist	2007-08-20 01:55:33.000000000 -0500
++++ ampache-3.3.3.5-dfsg/config/ampache.cfg.php.dist	2007-12-20 08:21:07.000000000 -0600
+@@ -50,11 +50,11 @@
+ local_length = 900
+ 
+ # This length defines how long a 'remember me' session and cookie will 
+-# last, the default is 900, same as length. It is up to the administrator
++# last, the default is 1800, same as length. It is up to the administrator
+ # of the box to increase this, for reference 86400 = 1 day 
+ # 604800 = 1 week and 2419200 = 1 month
+-# DEAFULT: 900
+-remember_length = 900
++# DEAFULT: 1800
++remember_length = 1800
+ 
+ # Name of the Session/Cookie that will sent to the browser
+ # default should be fine
+diff -urNad ampache-3.3.3.5-dfsg~/docs/CHANGELOG ampache-3.3.3.5-dfsg/docs/CHANGELOG
+--- ampache-3.3.3.5-dfsg~/docs/CHANGELOG	2007-08-20 01:55:24.000000000 -0500
++++ ampache-3.3.3.5-dfsg/docs/CHANGELOG	2007-12-20 08:22:15.000000000 -0600
+@@ -4,6 +4,7 @@
+ 
+ --------------------------------------------------------------------------
+   v.3.3.3.5 08/19/2007
++	- Fixed potential display problem with some preferences.
+   	- Fixed potential install problem due to invalid database name 
+   	- Fixed a problem with session fixation if session expires, but
+ 		cookie still exists. 
+diff -urNad ampache-3.3.3.5-dfsg~/lib/preferences.php ampache-3.3.3.5-dfsg/lib/preferences.php
+--- ampache-3.3.3.5-dfsg~/lib/preferences.php	2007-08-20 01:55:26.000000000 -0500
++++ ampache-3.3.3.5-dfsg/lib/preferences.php	2007-12-20 08:25:49.000000000 -0600
+@@ -216,7 +216,10 @@
+ 	@discussion takes the key and then creates
+ 		the correct type of input for updating it
+ */
+-function create_preference_input($name,$value) { 
++function create_preference_input($name,$value) {
++
++	// Clean the value before we return it
++	$value = scrub_out($value); 
+ 
+ 	$len = strlen($value);
+ 	if ($len <= 1) { $len = 8; }

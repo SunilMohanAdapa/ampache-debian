@@ -1,3 +1,46 @@
+ampache (3.3.3.5-dfsg-3) unstable; urgency=high
+
+    * Added -XCOLLEGE.ttf option to dh_install in debian rules.  Added
+      ttf-freefont to the depends section of debian control. Added link to
+      freefont in debian links. Closes: #455698
+    * Removed php5-cli from depends section of debian control.
+    * Moved php5-gd from the depends field to the recommends field.
+      Closes: #452638 
+    * Added Dutch po file, thanks Bart Cornelis. Closes: #449405
+    * Fixed a potential display problem.
+    * Updated debian copyright with Dutch translation copyright information.
+    * Added -Xhelperapps option to dh_install in debian rules to correct a 
+      lintian error.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 20 Dec 2007 01:17:24 -0500
+    
+ampache (3.3.3.5-dfsg-2) unstable; urgency=low
+
+    * Added dpatch system.
+    * Fixed getid3.lib.php.
+    * Updated debian/copyright to include translator copyright information.
+    * Upstream will not be including libphp-snoopy into version 3.3.3.5.
+      However he is considering it's usage in version 3.4 which is in
+      development. Closes: #443947
+    * Debconf templates and debian/control reviewed by the debian-l10n-
+      english team as part of the Smith review project.  Thanks Christian
+      Perrier <bubulle@debian.org>.  Closes: #445084, #446006
+    * [Debconf translation updates]
+    * Tamil. Closes: #445597
+    * Portuguese. Closes: #445606, #442391
+    * Czech. Closes: #445654
+    * Basque. Closes: #445949
+    * German. Closes: #446004
+    * Russian. Closes: #446142
+    * Finnish. Closes: #446407
+    * French. Closes: #446553
+    * Italian. Closes: #446591
+    * Galician. Closes: #446605
+    * Vietnamese. Closes: #446987
+    * Brazilian Portuguese. Closes: #447758
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 23 Oct 2007 20:28:39 +0200
+
 ampache (3.3.3.5-dfsg-1) unstable; urgency=low
 
     * Initial release (Closes: #407337)  

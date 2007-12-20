@@ -1,16 +1,26 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-
-clean:
+clean: clean1 unpatch
+clean1:
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-install:
+patch:  patch-stamp
+patch-stamp:
+	dpatch apply-all
+	dpatch cat-all >patch-stamp
+unpatch:
+	dpatch deapply-all
+	rm -rf patch-stamp debian/patched
+build:  build-stamp
+build-stamp:  patch
+	dh_testdir
+	touch build-stamp
+install:  
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-build:
 # Build architecture-dependent files here.
 binary-arch: install
 # We have nothing to do by default.
@@ -20,7 +30,7 @@ binary-indep: install
 	dh_testroot
 	dh_installchangelogs debian/changelog
 	dh_installdocs
-	dh_install
+	dh_install -XCOLLEGE.ttf -Xhelperapps
 	dh_installdebconf
 	dh_link -A
 	dh_compress

@@ -1,0 +1,42 @@
+# Translation of ampache debconf templates to French
+# Copyright (C) 2007 Geoffroy Youri Berret <mxondebian@free.fr>
+# This file is distributed under the same license as the ampache package.
+#
+# Geoffroy Your Berret <mxondebian@free.fr>, 2007.
+# 
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: ampache\n"
+"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
+"POT-Creation-Date: 2007-10-10 07:19+0200\n"
+"PO-Revision-Date: 2007-10-07 00:10-0700\n"
+"Last-Translator: Geoffroy Youri Berret <mxondebian@free.fr>\n"
+"Language-Team: French <debian-l10n-french@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:2001
+msgid "Configure Apache 2 web server for use with Ampache?"
+msgstr "Faut-il configurer le serveur web Apache 2 pour utiliser Ampache ?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid "Restart Apache 2 web server?"
+msgstr "Faut-il redémarrer le serveur web Apache 2 ?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"The Apache 2 web server needs to be restarted to enable Ampache. Please "
+"choose whether you want to restart it automatically now or do it yourself "
+"later."
+msgstr ""
+"Le serveur web Apache 2 doit être redémarré pour prendre en compte Ampache. "
+"Veuillez choisir s'il doit être redémarré maintenant. Dans le cas contraire, "
+"vous devrez le relancer vous-même plus tard."

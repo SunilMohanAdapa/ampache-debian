@@ -1,0 +1,41 @@
+# translation of ampache.po to TAMIL
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Dr.T.Vasudevan <agnihot3@gmail.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: ampache\n"
+"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
+"POT-Creation-Date: 2007-10-07 08:30+0200\n"
+"PO-Revision-Date: 2007-10-07 13:19+0530\n"
+"Last-Translator: Dr.T.Vasudevan <agnihot3@gmail.com>\n"
+"Language-Team: TAMIL <ubuntu-l10n-tam@lists.ubuntu.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:2001
+msgid "Configure Apache 2 web server for use with Ampache?"
+msgstr "அபாசே 2 வலை சேவையகத்தை அம்பாசே உடன் வடிவமைக்கவா?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid "Restart Apache 2 web server?"
+msgstr "அபாசே 2 வலை சேவையகத்தை மீள்துவக்கவா?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"The Apache 2 web server needs to be restarted to enable Ampache. Please "
+"choose whether you want to restart it automatically now or do it yourself "
+"later."
+msgstr ""
+"அம்பாசே ஐ செயல்படுத்த அபாசே 2 வலை சேவையகத்தை மீள்துவக்க வேண்டியுள்ளது. தயை செய்து "
+"இப்போது அதை தானியங்கியாக துவக்க வேண்டுமா அல்லது நீங்களே பின்னால் அதை துவக்குவீர்களா என "
+"தேர்ந்தெடுங்கள்."

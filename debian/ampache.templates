@@ -1,10 +1,22 @@
+# These templates have been reviewed by the debian-l10n-english
+# team
+#
+# If modifications/additions/rewording are needed, please ask
+# debian-l10n-english@lists.debian.org for advice.
+#
+# Even minor modifications require translation updates and such
+# changes should be coordinated with translators and reviewers.
+
 Template: ampache/configure-webserver
 Type: boolean
 Default: true
-_Description:  Configure Apache2 webserver? 
+_Description: Configure Apache 2 web server for use with Ampache?
 
 
 Template: ampache/restart-webserver
 Type: boolean
 Default: true
-_Description:  Restart Apache2 webserver?
+_Description: Restart Apache 2 web server?
+ The Apache 2 web server needs to be restarted to enable Ampache. Please
+ choose whether you want to restart it automatically now or do it yourself
+ later.

@@ -1,0 +1,42 @@
+# translation of ru.po to Russian
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Yuri Kozlov <kozlov.y@gmail.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: 3.3.3.5-dfsg-1\n"
+"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
+"POT-Creation-Date: 2007-10-10 07:19+0200\n"
+"PO-Revision-Date: 2007-10-10 21:26+0400\n"
+"Last-Translator: Yuri Kozlov <kozlov.y@gmail.com>\n"
+"Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
+"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:2001
+msgid "Configure Apache 2 web server for use with Ampache?"
+msgstr "Настроить веб-сервер Apache 2 для работы с Ampache?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid "Restart Apache 2 web server?"
+msgstr "Перезапустить веб-сервер Apache2?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"The Apache 2 web server needs to be restarted to enable Ampache. Please "
+"choose whether you want to restart it automatically now or do it yourself "
+"later."
+msgstr ""
+"Для включения Ampache нужно перезапустить веб-сервер Apache 2. Выберите "
+"нужно ли это сделать сейчас или вы сделаете это позже самостоятельно."

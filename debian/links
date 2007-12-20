@@ -1,1 +1,2 @@
 /etc/ampache/ampache.cfg.php /usr/share/ampache/www/config/ampache.cfg.php
+usr/share/ampache/www/modules/captcha /usr/share/fonts/truetype/freefonts/FreeMono.ttf

@@ -1,0 +1,37 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ampache\n"
+"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
+"POT-Creation-Date: 2007-10-10 07:19+0200\n"
+"PO-Revision-Date: 2007-10-12 23:52+0200\n"
+"Last-Translator: Esko Arajärvi <edu@iki.fi>\n"
+"Language-Team: Finnish <debian-l10n-finnish@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Finnish\n"
+"X-Poedit-Country: FINLAND\n"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:2001
+msgid "Configure Apache 2 web server for use with Ampache?"
+msgstr "Asetetaanko Apache 2 -verkkopalvelin käytettäväksi Ampachen kanssa?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid "Restart Apache 2 web server?"
+msgstr "Käynnistetäänkö Apache2-verkkopalvelin uudelleen?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"The Apache 2 web server needs to be restarted to enable Ampache. Please "
+"choose whether you want to restart it automatically now or do it yourself "
+"later."
+msgstr ""
+"Apache 2 -verkkopalvelin pitää käynnistää uudelleen Ampachen "
+"käyttöönottamiseksi. Valitse haluatko käynnistää sen automaattisesti nyt vai "
+"käsin myöhemmin."

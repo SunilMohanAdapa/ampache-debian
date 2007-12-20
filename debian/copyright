@@ -7,6 +7,19 @@ Upstream Author: Karl Vollmerk vollmerk@ampache.org
 
 Copyright:
 
+src/debian/po/nl.po is Copyright 2007 Bart Cornelis
+src/debian/po/cs.po is Copyright 2007 Miroslav Kure
+src/debian/po/de.po is Copyright 2007 Helge Kreutzmann
+src/debian/po/eu.po is Copyright 2007 Piarres Beobide
+src/debian/po/fi.po is Copyright 2007 Esko Arajärvi
+src/debian/po/fr.po is Copyright 2007 Geoffroy Youri Berret
+src/debian/po/gl.po is Copyright 2007 Jacobo Tarrio
+src/debian/po/it.po is Copyright 2007 Luca Monducci
+src/debian/po/pt.po is Copyright 2007 Américo Monteiro
+src/debian/po/pt_BR.po is Copyright 2007 Felipe Augusto van de Wiel
+src/debian/po/ru.po is Copyright 2007 Yuri Kozlov
+src/debian/po/ta.po is Copyright 2007 Dr.T.Vasudevan
+src/debian/po/vi.po is Copyright 2007 Clytie Siddall
 src/modules/archive/archive.lib.php is Copyright 2005 Devin Doucette
 src/modules/captcha/captcha.php is Copyright 2005 Milky
 src/modules/horde/Browser.php is Copyright 1999 Chuck Hagenbuch

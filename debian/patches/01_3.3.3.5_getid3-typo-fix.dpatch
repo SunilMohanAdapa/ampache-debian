@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 01_3.3.3.5_getid3-typo-fix.dpatch by  <root@charliej>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad ampache-3.3.3.5-dfsg~/modules/id3/getid3/getid3.lib.php ampache-3.3.3.5-dfsg/modules/id3/getid3/getid3.lib.php
+--- ampache-3.3.3.5-dfsg~/modules/id3/getid3/getid3.lib.php	2007-08-20 01:55:27.000000000 -0500
++++ ampache-3.3.3.5-dfsg/modules/id3/getid3/getid3.lib.php	2007-10-06 18:55:29.000000000 -0500
+@@ -953,7 +953,7 @@
+ 		if ($in_charset == $out_charset) {
+ 			return $string;
+ 		}
+-		if (!in_charset) { return $string; } 	
++		if (!$in_charset) { return $string; } 	
+ 
+ 		static $iconv_broken_or_unavailable = array();
+ 		if (is_null(@$iconv_broken_or_unavailable[$in_charset.'_'.$out_charset])) {

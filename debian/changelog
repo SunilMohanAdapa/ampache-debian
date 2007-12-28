@@ -1,3 +1,14 @@
+ampache (3.3.3.5-dfsg1-1) unstable; urgency=high
+
+    * Removed COLLEGE.ttf from the org.tar.gz. Closes: #455698
+    * Removed the -XCOLLEGE.ttf and -Xhelperapps options from dh_install in
+      debian rules. 
+    * Removed empty helperapps folder in src/modules/id3 to correct lintian
+      error.
+    * Updated Standards Version to 3.7.3.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 28 Dec 2007 10:20:44 -0500
+
 ampache (3.3.3.5-dfsg-3) unstable; urgency=high
 
     * Added -XCOLLEGE.ttf option to dh_install in debian rules.  Added

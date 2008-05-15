@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,7 +41,7 @@ function run_search($data) {
 		
 		if ($prefix == 's_' AND strlen($value)) { 
 			$true_name = substr($key,2,strlen($key));
-			$search[$true_name] = sql_escape($value);
+			$search[$true_name] = Dba::escape($value);
 		}
 		
 	} // end foreach
@@ -103,8 +102,7 @@ function search_song($data,$operator,$method,$limit) {
 	/* Generate BASE SQL */
 
 	$where_sql 	= '';
-	$table_sql	= ',';
-        $join_sql       = '';
+	$table_sql	= '';
 	$group_sql 	= ' GROUP BY';
 	$select_sql	= ',';
 
@@ -122,7 +120,7 @@ function search_song($data,$operator,$method,$limit) {
                         case 'all': /* artist, title, and album, anyway.. */
                                 $value_words = explode(' ', $value);
                                 $where_sql .= " ( ";
-                                $ii == 0;
+                                $ii = 0;
                                 foreach($value_words as $word)
                                 {
                                     if($ii++ > 0)
@@ -138,26 +136,24 @@ function search_song($data,$operator,$method,$limit) {
                                                   ) ";
                                 }
                                 $where_sql .= " ) $operator";
-                                $join_sql  .= "song.album=album2.id AND song.artist=artist2.id AND song.genre=genre2.id AND ";
-                                $table_sql .= "album as album2,artist as artist2, genre as genre2";
+                                $table_sql .= " LEFT JOIN `album` as `album2` ON `song`.`album`=`album2`.`id`"; 
+				$table_sql .= " LEFT JOIN `artist` as `artist2` ON `song`.`artist`=`artist2`.`id`"; 
+				$table_sql .= " LEFT JOIN `genre` as `genre2` ON `song`.`genre`=`genre2`.`id`";
                         break;
 			case 'title':
 				$where_sql .= " song.title $value_string $operator";
 			break;
 			case 'album':
 				$where_sql .= " album.name $value_string $operator";
-                                $join_sql  .= "song.album=album.id AND ";
-				$table_sql .= "album,";
+				$table_sql .= " LEFT JOIN `album` ON `song`.`album`=`album`.`id`";
 			break;
 			case 'artist':
 				$where_sql .= " artist.name $value_string $operator";
-                                $join_sql  .= "song.artist=artist.id AND ";
-				$table_sql .= "artist,";
+				$table_sql .= " LEFT JOIN `artist` ON `song`.`artist`=`artist`.`id` ";
 			break;
 			case 'genre':
 				$where_sql .= " genre.name $value_string $operator";
-                                $join_sql  .= "song.genre=genre.id AND ";
-				$table_sql .= "genre,";
+				$table_sql .= " LEFT JOIN `genre` ON `song`.`genre`=`genre`.`id`";
 			break;
 			case 'year':
 				if (empty($data["year2"]) && is_numeric($data["year"])) {
@@ -171,14 +167,13 @@ function search_song($data,$operator,$method,$limit) {
 				$where_sql .= " song.file $value_string $operator";
 			break;
 			case 'comment':
-				$join_sql  .= 'song.id=song_ext_data.song_id AND ';
-				$table_sql .= 'song_ext_data,';
-				$where_sql .= " song_ext_data.comment $value_string $operator";
+				$table_sql .= ' INNER JOIN `song_data` ON `song`.`id`=`song_data`.`song_id`';
+				$where_sql .= " `song_data`.`comment` $value_string $operator";
 			break;
 			case 'played':
 				/* This is a 0/1 value so bool it */
 				$value = make_bool($value);
-				$where_sql .= " song.played = '$value' $operator";
+				$where_sql .= " `song`.`played` = '$value' $operator";
 			break;
 			case 'minbitrate':
 				$value = intval($value);
@@ -186,12 +181,24 @@ function search_song($data,$operator,$method,$limit) {
 			break;
 			case 'rating':
 				$value = intval($value);
-				$select_sql .= "SUM(ratings.user_rating)/(SELECT COUNT(song.id) FROM song,ratings WHERE ratings.object_id=song.id AND ratings.object_type='song' AND ratings.user_rating >= '$value') AS avgrating,";
-				$group_sql .= " ratings.user_rating,";
-				$where_sql .= " (ratings.user_rating >= '$value' AND ratings.object_type='song')";
-				$table_sql .= "ratings,";
-				$join_sql  .= "ratings.object_id=song.id AND";
-				$limit_sql .= " ORDER BY avgrating DESC";
+
+				// This is a little more complext, pull a list of IDs that have this average rating
+				$rating_sql = "SELECT `object_id`,AVG(`rating`.`rating`) AS avgrating FROM `rating` " . 
+						"WHERE `object_type`='song' GROUP BY `object_id`"; 
+				$db_results = Dba::query($rating_sql); 
+
+				$where_sql .= " `song`.`id` IN (";
+				$end_rating = ''; 
+
+				while ($row = Dba::fetch_assoc($db_results)) { 
+					if ($row['avgrating'] < $value) { continue; } 
+					$where_sql .= $row['object_id'] . ','; 
+					$end_rating = ") $operator"; 
+				} 
+		
+				$where_sql = rtrim($where_sql,"`song`.`id` IN ("); 
+				$where_sql = rtrim($where_sql,",") . $end_rating;  
+				
 			default:
 				// Notzing!
 			break;
@@ -201,16 +208,15 @@ function search_song($data,$operator,$method,$limit) {
 	} // foreach data
 
 	/* Trim off the extra $method's and ,'s then combine the sucka! */
-	$table_sql = rtrim($table_sql,',');
 	$where_sql = rtrim($where_sql,$operator);
 	$group_sql = rtrim($group_sql,',');
 	$select_sql = rtrim($select_sql,',');
 
 	if ($group_sql == ' GROUP BY') { $group_sql = ''; } 
 	
-	$base_sql 	= "SELECT DISTINCT(song.id) $select_sql FROM song";
+	$base_sql 	= "SELECT DISTINCT(song.id) $select_sql FROM `song`";
 
-	$sql = $base_sql . $table_sql . " WHERE " . $join_sql . " (" . $where_sql . ")" . $group_sql . $limit_sql;
+	$sql = $base_sql . $table_sql . " WHERE (" . $where_sql . ")" . $group_sql . $limit_sql;
 	
 	/**
 	 * Because we might need this for Dynamic Playlist Action 
@@ -219,11 +225,10 @@ function search_song($data,$operator,$method,$limit) {
 	 */
 	$_SESSION['userdata']['stored_search'] = $sql;
 
-        //echo "DEBUG: $sql<BR>"; flush();
-	$db_results = mysql_query($sql, dbh());
+	$db_results = Dba::query($sql);
 	
-	while ($r = mysql_fetch_assoc($db_results)) { 
-		$results[] = new Song($r['id']);
+	while ($row = Dba::fetch_assoc($db_results)) { 
+		$results[] = $row['id'];
 	}
 
 	return $results;

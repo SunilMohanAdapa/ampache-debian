@@ -1,5 +1,6 @@
-# Galician translation of ampache's debconf templates
-# This file is distributed under the same license as the ampache package.
+# Galician translation of Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org
+# This file is distributed under the same license as the Ampache package.
 # Jacobo Tarrio <jtarrio@debian.org>, 2007.
 #
 msgid ""

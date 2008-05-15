@@ -1,9 +1,7 @@
-# Translation of ampache debconf templates to French
-# Copyright (C) 2007 Geoffroy Youri Berret <mxondebian@free.fr>
+# French translation of Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org
 # This file is distributed under the same license as the ampache package.
-#
-# Geoffroy Your Berret <mxondebian@free.fr>, 2007.
-# 
+# 2007 Geoffroy Your Berret <mxondebian@free.fr>.
 # 
 msgid ""
 msgstr ""

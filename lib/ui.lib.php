@@ -1,13 +1,12 @@
 <?php
 /*
 
-   Copyright (c) 2001 - 2007 Ampache.org
+   Copyright (c) Ampache.org
    All rights reserved.
 
    This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+   modify it under the terms of the GNU General Public License v2
+   as published by the Free Software Foundation.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -38,14 +37,14 @@
  */
 function show_confirmation($title,$text,$next_url,$cancel=0) {
 
-	if (substr_count($next_url,conf('web_path'))) {
+	if (substr_count($next_url,Config::get('web_path'))) {
 		$path = $next_url;
 	}
 	else {
-		$path = conf('web_path') . "/$next_url";
+		$path = Config::get('web_path') . "/$next_url";
 	}
 
-	require (conf('prefix') . "/templates/show_confirmation.inc.php");
+	require Config::get('prefix') . '/templates/show_confirmation.inc.php';
 
 } // show_confirmation
 
@@ -70,39 +69,27 @@ function flip_class($array=0) {
 } // flip_class
 
 /**
- *  clear_now_playing
- * Clears the now playing information incase something has
- *		gotten stuck in there
- */
-function clear_now_playing() {
-
-	$sql = "TRUNCATE TABLE now_playing";
-	$db_results = mysql_query($sql, dbh());
-
-	return true;
-
-} // clear_now_playing
-
-/**
  *  _
  * checks to see if the alias _ is defined
  *	if it isn't it defines it as a simple return
  */
 if (!function_exists('_')) {
+
 	function _($string) {
-
 		return $string;
-
 	} // _
+
 } // if _ isn't defined
 
 /**
- *  show_admin_menu
- * shows the admin menu
+ * ngettext
+ * checks for ngettext and defines it if it doesn't exist
  */
-function show_admin_menu ($admin_highlight) {
-	include(conf('prefix') . "/templates/admin_menu.inc");
-} // show_admin_menu
+if (!function_exists('ngettext')) { 
+	function ngettext($string) { 
+		return $string; 
+	} 
+} // if no ngettext
 
 /**
  *  access_denied
@@ -110,11 +97,11 @@ function show_admin_menu ($admin_highlight) {
  * 	that they aren't allowed to
  */
 function access_denied() {
-
-	echo "<br /><br /><br />";
-	echo "<div class=\"fatalerror\">" . _("Error Access Denied") . "</div>\n";
-	show_footer();
-	exit();
+	
+	// Clear any crap we've got up top
+	ob_end_clean(); 
+	require_once Config::get('prefix') . '/templates/show_denied.inc.php'; 
+	exit; 
 
 } // access_denied
 
@@ -127,11 +114,14 @@ function access_denied() {
 function return_referer() {
 
 	$referer = $_SERVER['HTTP_REFERER'];
-
-	$file = basename($referer);
-	
-	/* Strip off the filename */
-	$referer = substr($referer,0,strlen($referer)-strlen($file));
+    if (substr($referer, -1)=='/'){
+    	$file = 'index.php';
+    }
+    else {
+    	$file = basename($referer);
+		/* Strip off the filename */	
+    	$referer = substr($referer,0,strlen($referer)-strlen($file));  
+    }
 	
 	if (substr($referer,strlen($referer)-6,6) == 'admin/') { 
 		$file = 'admin/' . $file;
@@ -143,70 +133,27 @@ function return_referer() {
 
 /**
  *  show_alphabet_list
- * shows the A-Z,0-9 lists for
- *		albums and artist pages
+ * shows the A-Z,0-9 lists for albums and artist page
+ * It takes a selected and an action 
  */
-function show_alphabet_list ($type,$script="artist.php",$selected="false",$action='match') {
+function show_alphabet_list () {
 
-	$list = array(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,1,2,3,4,5,6,7,8,9,"0");
-
-	$style_name = "style_" . strtolower($selected);
-	${$style_name} = "style=\"font-weight:bold;\"";
-	unset($title);
+	$list = array(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,1,2,3,4,5,6,7,8,9,"0",_('All'));
+  
+	$selected = $_SESSION['browse']['filter']['alpha_match'];
+	
 	echo "<div class=\"alphabet\">";
 	foreach ($list as $l) {
 		$style_name = "style_" . strtolower($l);
-		echo "<a href=\"". conf('web_path') ."/$script?action=$action&amp;match=$l\" " . ${$style_name} . ">$l</a> | \n";
+		$class = "link";
+		if ($l==$selected) $class .=" active";
+		$value = ($l==_('All'))?'':$l;
+		echo "<span class=\"" . $class . "\" onclick=\"ajaxPut('". Config::get('ajax_url') ."?page=browse&action=browse&amp;key=alpha_match&amp;value=$value');return true;\">" . 
+			$l . "</span>\n";
 	}
-
-	echo " <a href=\"". conf('web_path') ."/$script?action=$action&amp;match=Browse\" $style_browse>" . _("Browse") . "</a> | \n";
-	if ($script == "albums.php") {
-		echo " <a href=\"". conf('web_path') ."/$script?action=$action&amp;match=Show_missing_art\" $style_show_missing_art>" . _("Show w/o art") . "</a> | \n";
-	} // if we are on the albums page
-
-	echo " <a href=\"". conf('web_path') ."/$script?action=$action&amp;match=Show_all\" $style_show_all>" . _("Show all") . "</a>";
-	echo "</div>\n";
+	echo "</div>";
 
 } // show_alphabet_list
-
-/**
- * show_alphabet_form
- * this shows the spiffy little form that acts as a "quick search" when browsing
- * @package General
- * @catagory Display
- */
-function show_alphabet_form($match, $text, $action) {
-
-	require (conf('prefix') . '/templates/show_alphabet_form.inc.php');
-
-} // show_alphabet_form
-
-
-/**
- *  show_local_control
- * shows the controls
- *	for localplay
- */
-function show_local_control () {
-
-	require_once(conf('prefix') . "/templates/show_localplay.inc");
-
-} // show_local_control
-
-/**
- *  truncate_with_ellipse
- * truncates a text file to specified length by adding
- *	thre dots (ellipse) to the end
- *	(Thx Nedko Arnaudov)
- * @todo Fix Spelling!
- * @depreciated
- */
-function truncate_with_ellipse($text, $max=27) {
-
-	/* Run the function with the correct spelling */
-	return truncate_with_ellipsis($text,$max);
-
-} // truncate_with_ellipse
 
 /**
  * truncate_with_ellipsis
@@ -216,16 +163,18 @@ function truncate_with_ellipse($text, $max=27) {
  * @catagory General
  * @author Nedko Arnaudov
  */
-function truncate_with_ellipsis($text, $max=27) {
+function truncate_with_ellipsis($text, $max='') {
 
+	$max = $max ? $max : '27'; 
+	
 	/* If we want it to be shorter than three, just throw it back */
 	if ($max > 3) {
 
 		/* Make sure the functions exist before doing the iconv mojo */
 		if (function_exists('iconv') && function_exists('iconv_substr') && function_exists('iconv_strlen')) {
-			if (iconv_strlen($text, conf('site_charset')) > $max) {
-				$text = iconv_substr($text, 0, $max-3, conf('site_charset'));
-				$text .= iconv("ISO-8859-1", conf('site_charset'), "...");
+			if (iconv_strlen($text, Config::get('site_charset')) > $max) {
+				$text = iconv_substr($text, 0, $max-3, Config::get('site_charset'));
+				$text .= iconv("ISO-8859-1", Config::get('site_charset'), "...");
 			}
 		}
 
@@ -242,335 +191,45 @@ function truncate_with_ellipsis($text, $max=27) {
 } // truncate_with_ellipsis
 
 /**
+ * show_header
+ * This shows the header.inc.php, it may do something
+ * more in the future
+ */
+function show_header() { 
+
+	require_once Config::get('prefix') . '/templates/header.inc.php'; 
+
+} // show_header
+
+/**
  *  show_footer
  * shows the footer of the page
  */
 function show_footer() {
 
-	require_once(conf('prefix') . '/templates/footer.inc');
+	require_once Config::get('prefix') . '/templates/footer.inc.php';
 
 } // show_footer
 
 /**
- *  show_now_playing
- * shows the now playing template
+ * img_resize
+ * this automaticly resizes the image for thumbnail viewing
+ * only works on gif/jpg/png this function also checks to make
+ * sure php-gd is enabled
  */
-function show_now_playing() {
-
-	$dbh = dbh();
-	$web_path = conf('web_path');
-	$results = get_now_playing();
-	require (conf('prefix') . "/templates/show_now_playing.inc");
-
-} // show_now_playing
-
-/**
- *  show_user_registration
- * this function is called for a new user
- * registration
- * @author Terry
- * @todo Fix so that it recieves an array of values for the user reg rather than seperate
- */
-function show_user_registration ($values=array()) {
-
-	require (conf('prefix') . "/templates/show_user_registration.inc.php");
-
-} // show_user_registration
-
-/**
- *  show_play_selected
- * this shows the playselected/add to playlist
- *	box, which includes a little javascript
- */
-function show_play_selected() {
-
-	require (conf('prefix') . "/templates/show_play_selected.inc.php");
-
-} // show_play_selected
-
-/**
- *  get_now_playing
- * gets the now playing information
- * @package Web Interface
- * @catagory Get
- */
-function get_now_playing($filter='') {
-
-	$sql = "SELECT song_id,user FROM now_playing ORDER BY id DESC";
-	$db_results = mysql_query($sql, dbh());
-
-	$results = array();
-	
-	/* While we've got stuff playing */
-	while ($r = mysql_fetch_assoc($db_results)) {
-		$song = new Song($r['song_id']);
-		$song->format_song();
-		$np_user = new User($r['user']);
-		$results[] = array('song'=>$song,'user'=>$np_user);
-	} // end while
-
-	return $results;
-
-} // get_now_playing
-
-/*
- * Artist Ratings - Implemented by SoundOfEmotion
- *
- * set_artist_rating()
- *
- * check to see if the ratings exist
- * if they do: update them
- * if they don't: insert them
- *
- */
-
-function set_artist_rating($artist_id, $rate_user, $rating) {
-	$artist_id = sql_escape($artist_id);
-
-	$sql	     = "SELECT * FROM ratings WHERE user='$rate_user' AND object_type='artist' AND object_id='$artist_id'";
-	$db_result = mysql_query( $sql, dbh() );
-	$r         = mysql_fetch_row( $db_result );
-
-	if($r[0]) {
-		$sql2       = "UPDATE ratings SET user_rating='$rating' WHERE object_id='$artist_id' AND user='$rate_user' AND object_type='artist'";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		$r          = mysql_fetch_row( $db_result2 );
-		return mysql_insert_id( dbh() );
-	}
-	else if(!$r[0]) {
-		$sql2       = "INSERT INTO ratings (id,user,object_type,object_id,user_rating) ".
-			"VALUES ('','$rate_user','artist','$artist_id','$rating')";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		return mysql_insert_id(dbh() );
-	}
-	else{
-		return "NA";
-	}
-} // set_artist_rating()
-
-/*
- * Album Ratings - Implemented by SoundOfEmotion
- *
- * set_album_rating()
- *
- * check to see if the ratings exist
- * if they do: update them
- * if they don't: insert them
- *
- */
-
-function set_album_rating($album_id, $rate_user, $rating) {
-	$album_id = sql_escape($album_id);
-
-	$sql       = "SELECT * FROM ratings WHERE user='$rate_user' AND object_type='album' AND object_id='$album_id'";
-	$db_result = mysql_query( $sql, dbh() );
-	$r         = mysql_fetch_row( $db_result );
-
-	if($r[0]) {
-		$sql2       = "UPDATE ratings SET user_rating='$rating' WHERE object_id='$album_id' AND user='$rate_user' AND object_type='album'";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		return mysql_insert_id( dbh() );
-	}
-	else if(!$r[0]) {
-		$sql2       = "INSERT INTO ratings (id,user,object_type,object_id,user_rating) ".
-			"VALUES ('','$rate_user','album','$album_id','$rating')";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		return mysql_insert_id( dbh() );
-	}
-	else{
-		return "NA";
-	}
-} // set_album_rating()
-
-/*
- * Song Ratings - Implemented by SoundOfEmotion
- *
- * set_song_rating()
- *
- * check to see if the ratings exist
- * if they do: update them
- * if they don't: insert them
- *
- */
-
-function set_song_rating($song_id, $rate_user, $rating) {
-	$song_id = sql_escape($song_id);
-
-	$sql       = "SELECT * FROM ratings WHERE user='$rate_user' AND object_type='song' AND object_id='$song_id'";
-	$db_result = mysql_query( $sql, dbh() );
-	$r         = mysql_fetch_row( $db_result );
-
-	if($r[0]){
-		$sql2       = "UPDATE ratings SET user_rating='$rating' WHERE object_id='$song_id' AND user='$rate_user' AND object_type='song'";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		return mysql_insert_id( dbh() );
-	}
-	else if(!$r[0]){
-		$sql2       = "INSERT INTO ratings (id,user,object_type,object_id,user_rating) ".
-			"VALUES ('','$rate_user','song','$song_id','$rating')";
-		$db_result2 = mysql_query( $sql2, dbh() );
-		return mysql_insert_id( dbh() );
-	}
-	else{
-		return "NA";
-	}
-} // set_song_rating()
-
-/**
- *  show_clear
- * this is a hack because of the float mojo it clears the floats
- * @package Web Interface
- * @catagory Hack-o-Rama
- * @author Karl Vollmer
- */
-function show_clear() {
-
-	echo "\n<br style=\"clear:both;\" />\n";
-
-} // show_clear
-
-/**
- *	show_page_footer
- *	adds page footer including html and body end tags
- *	@param $menu			menu item to highlight
- *	@param $admin_menu		admin menu item to highlight
- *	@param $display_menu		display menu or not (1 on 0 off)
- * 	@package Web Interface
- * 	@catagory Display
- */
-function show_page_footer($menu="Home", $admin_menu='', $display_menu=0) {
-
-	if ($display_menu){
-		if($menu == 'Admin'){
-			show_admin_menu($admin_menu);
-		} // end if admin
-
-		show_menu_items($menu);
-
-	} // end if
-
-	show_template('footer');
-
-} // show_page_footer
-
-/**
- * 	Show All Popular
- * 	This functions shows all of the possible global popular tables, this is basicly a top X where X is
- * 	set on a per user basis
- *	@package Web Interface
- *	@catagory Display
- *	@author Karl Vollmer
- */
-function show_all_popular() {
-
-	$artists 	= get_global_popular('artist');
-	$albums		= get_global_popular('album');
-	$songs		= get_global_popular('song');
-	$genres		= get_global_popular('genre');
-
-	require_once(conf('prefix') . '/templates/show_all_popular.inc.php');
-
-} // show_all_popular
-
-/**
- * 	Show All Recent
- * 	This function shows all of the possible "Newest" tables. The number of newest is pulled from the users
- * 	popular threshold
- *	@package Web Interface
- *	@catagory Display
- *	@author Karl Vollmer
- */
-function show_all_recent() {
-
-	$artists	= get_newest('artist');
-	$albums		= get_newest('album');
-
-	require_once(conf('prefix') . '/templates/show_all_recent.inc.php');
-
-} // show_all_recent
-
-/**
- * show_local_catalog_info
- * Shows the catalog stats
- * @package Web INterface
- * @catagory Display
- */
-function show_local_catalog_info() {
-
-	$dbh = dbh();
-
-	/* Before we display anything make sure that they have a catalog */
-	$query = "SELECT * FROM catalog";
-	$db_results = mysql_query($query, $dbh);
-	if (!mysql_num_rows($db_results)) {
-		show_box_top(); 	
-		echo "<span align=\"center\" class=\"error\">" . _('No Catalogs Found!') . "</span> ";
-		echo "<a href=\"" . conf('web_path') . "/admin/catalog.php?action=show_add_catalog\">" ._('Add a Catalog') . "</a>";
-		show_box_bottom(); 
-		return false;
-	}
-
-	$query = "SELECT count(*) AS songs, SUM(size) AS size, SUM(time) as time FROM song";
-	$db_result = mysql_query($query, $dbh);
-	$songs = mysql_fetch_assoc($db_result);
-
-	$query = "SELECT count(*) FROM album";
-	$db_result = mysql_query($query, $dbh);
-	$albums = mysql_fetch_row($db_result);
-
-	$query = "SELECT count(*) FROM artist";
-	$db_result = mysql_query($query, $dbh);
-	$artists = mysql_fetch_row($db_result);
-
-	$sql = "SELECT count(*) FROM user";
-	$db_result = mysql_query($sql, $dbh);
-	$users = mysql_fetch_row($db_result);
-
-	$time = time();
-	$last_seen_time = $time - 1200;
-	$sql =  "SELECT count(DISTINCT s.username) FROM session AS s " .
-		"INNER JOIN user AS u ON s.username = u.username " .
-		"WHERE s.expire > " . $time . " " .
-		"AND u.last_seen > " . $last_seen_time;
-	$db_result = mysql_query($sql, $dbh);
-	$connected_users = mysql_fetch_row($db_result);
-
-	$hours = floor($songs['time']/3600);
-	$size = $songs['size']/1048576;
-
-	$days = floor($hours/24);
-	$hours = $hours%24;
-
-	$time_text = "$days ";
-	$time_text .= ($days == 1) ? _("day") : _("days");
-	$time_text .= ", $hours ";
-	$time_text .= ($hours == 1) ? _("hour") : _("hours");
-
-	if ( $size > 1024 ) {
-		$total_size = sprintf("%.2f", ($size/1024));
-		$size_unit = "GB";
-	}
-	else {
-		$total_size = sprintf("%.2f", $size);
-		$size_unit = "MB";
-	}
-
-	require(conf('prefix') . "/templates/show_local_catalog_info.inc.php");
-
-} // show_local_catalog_info
-
-/*!
-  @function img_resize
-  @discussion this automaticly resizes the image for thumbnail viewing
-  only works on gif/jpg/png this function also checks to make
-  sure php-gd is enabled
- */
-function img_resize($image,$size,$type){
+function img_resize($image,$size,$type,$album_id) {
 
 	/* Make sure they even want us to resize it */
-	if (!conf('resize_images')) {
-		return false;
+	if (!Config::get('resize_images')) {
+		return $image['raw'];
 	}
+	// Already resized
+	if ($image['db_resized']) { 
+		debug_event('using_resized','using resized image for Album:' . $album_id,'2'); 
+		return $image['raw']; 
+	}
+
+	$image = $image['raw'];
 
 	if (!function_exists('gd_info')) { return false; }
 
@@ -589,7 +248,10 @@ function img_resize($image,$size,$type){
 
 	$src = imagecreatefromstring($image);
 	
-	if (!$src) { return false; } 
+	if (!$src) { 
+		debug_event('IMG_RESIZE','Failed to create from string','3');
+		return false; 
+	} 
 
 	$width = imagesx($src);
 	$height = imagesy($src);
@@ -600,8 +262,11 @@ function img_resize($image,$size,$type){
 	$img = imagecreatetruecolor($new_w,$new_h);
 	
 	if (!imagecopyresampled($img,$src,0,0,0,0,$new_w,$new_h,$width,$height)) { 
+		debug_event('IMG_RESIZE','Failed to copy resample image','3');
 		return false;
 	}
+
+	ob_start(); 
 
 	// determine image type and send it to the client
 	switch ($type) {
@@ -610,121 +275,51 @@ function img_resize($image,$size,$type){
 			imagejpeg($img,null,100);
 			break;
 		case 'gif':
-			imagegif($img,null,100);
+			imagegif($img);
 			break;
 		case 'png':
-			imagepng($img,null,100);
+			imagepng($img);
 			break;
 	}
+
+	// Grab this image data and save it into the thumbnail
+	$data = ob_get_contents(); 
+	ob_end_clean();
+
+	// If our image create failed don't save it, just return
+	if (!$data) { 
+		debug_event('IMG_RESIZE','Failed to resize Art from Album:' . $album_id,'3'); 
+		return $image;
+	}
+
+	// Save what we've got
+	Album::save_resized_art($data,'image/' . $type,$album_id); 
+
+	return $data; 
 
 } // img_resize
 
 /**
  * show_genres
  * this shows the 'many' genre form, it takes an array of genre objects and the view object
- * @package Genre
- * @catagory Display
  */
 function show_genres($genres,$view) {
 
-	require (conf('prefix') . '/templates/show_genres.inc.php');
+	require Config::get('prefix') . '/templates/show_genres.inc.php';
 
 } // show_genres
 
 /**
  * show_genre
  * this shows a single genre item which is basicly just a link to the albums/artists/songs of said genre
- * @package Genre
- * @catagory Display
  */
 function show_genre($genre_id) {
 
 	$genre = new Genre($genre_id);
 
-	require (conf('prefix') . '/templates/show_genre.inc.php');
+	require Config::get('prefix') . '/templates/show_genre.inc.php';
 
 } // show_genre
-
-function show_random_play_bar() {
-
-	require (conf('prefix') . '/templates/show_random_play_bar.inc.php');
-
-} // show_random_play_bar()
-
-
-/*
- * show_artist_pulldown()
- *
- * Helper functions for album and artist functions
- *
- */
-function show_artist_pulldown ($artist_id,$select_name='artist') {
-
-	$query = "SELECT id FROM artist ORDER BY name";
-	$db_result = mysql_query($query, dbh());
-
-	echo "\n<select name=\"$select_name\">\n";
-
-	while ($r = mysql_fetch_assoc($db_result)) {
-
-		$artist = new Artist($r['id']);
-		$artist->get_count();
-
-		if ( $artist_id == $r['id'] ) {
-			echo "\t<option value=\"" . $artist->id . "\" selected=\"selected\">". scrub_out($artist->name) . "</option>\n";
-		}
-		else {
-			echo "\t<option value=\"" . $artist->id . "\">". scrub_out($artist->name) ."</option>\n";
-		}
-
-	} // end while fetching artists
-
-	echo "</select>\n";
-
-} // show_artist_pulldown
-
-/**
- * show_catalog_pulldown
- * This has been changed, first is the name of the
- * dropdown select, the second is the style to be applied
- *
- */
-function show_catalog_pulldown ($name='catalog',$style) {
-
-	$sql = "SELECT id,name FROM catalog ORDER BY name";
-	$db_result = mysql_query($sql, dbh());
-
-	echo "\n<select name=\"" . $name . "\" style=\"" . $style . "\">\n";
-
-	echo "<option value=\"-1\">All</option>\n";
-
-	while ($r = mysql_fetch_assoc($db_result)) {
-		$catalog_name = scrub_out($r['name']);
-
-		if ( $catalog == $r['id'] ) {
-			echo "  <option value=\"" .$r['id'] . "\" selected=\"selected\">$catalog_name</option>\n";
-		}
-		else {
-			echo "  <option value=\"" . $r['id'] . "\">$catalog_name</option>\n";
-		}
-	}
-	echo "\n</select>\n";
-
-} // show_catalog_pulldown
-
-
-/**
- * show_submenu
- * This shows the submenu mojo for the sidebar, and I guess honestly anything
- * else you would want it to... takes an array of items which have ['url'] ['title']
- * and ['active']
- */
-function show_submenu($items) {
-
-	require (conf('prefix') . '/templates/subnavbar.inc.php');
-
-} // show_submenu
-
 
 /**
  * get_location
@@ -749,7 +344,7 @@ function get_location() {
 	}
 
 	/* Sanatize the $_SERVER['PHP_SELF'] variable */
-	$source			= str_replace(conf('raw_web_path'),"",$source);
+	$source			= ltrim($source, Config::get('raw_web_path')); 
 	$location['page'] 	= preg_replace("/^\/(.+\.php)\/?.*/","$1",$source);
 
 	switch ($location['page']) {
@@ -838,53 +433,9 @@ function get_location() {
  */
 function show_preference_box($preferences) { 
 	
-	include (conf('prefix') . '/templates/show_preference_box.inc.php');
+	require Config::get('prefix') . '/templates/show_preference_box.inc.php';
 
 } // show_preference_box
-
-
-/**
- * show_genre_pulldown
- * This shows a select of all of the genres, it takes the name of the select
- * the currently selected and then the size
- *
- */
-
-function show_genre_pulldown ($name,$selected='',$size=1,$width=0,$style='') {
-
-	/* Get them genre hippies */        
-	$sql = "SELECT genre.id,genre.name FROM genre ORDER BY genre.name";
-        $db_result = mysql_query($sql, dbh());
-
-	if ($size > 0) { 
-		$multiple_txt = "multiple=\"multiple\" size=\"$size\"";
-	}
-	if ($style) { 
-		$style_txt = "style=\"$style\"";
-	}
-
-        echo "<select name=\"" . $name . "[]\" $multiple_txt $style_txt>\n";
-	echo "\t<option value=\"-1\">" . _("All") . "</option>\n";
-
-        while ($r = mysql_fetch_assoc($db_result)) {
-		
-		if ($width > 0) { 
-			$r['name'] = truncate_with_ellipsis($r['name'],$width);
-		}
-		
-		$r['name'] = scrub_out($r['name']);
-		
-                if ( $selected == $r['id'] ) {
-                        echo "\t<option value=\"" . $r['id'] . "\" selected=\"selected\">" . $r['name'] . "</option>\n";
-                }
-                else {
-                        echo "  <option value=\"" . $r['id'] . "\">" . $r['name'] . "</option>\n";
-                }
-        } // end while
-
-        echo "</select>\n";
-
-} // show_genre_pulldown
 
 /**
  * good_email
@@ -922,141 +473,26 @@ function good_email($email) {
 } //good_email
 
 /**
- * str_rand
- *
- *
- */
-function str_rand($length = 8, $seeds = 'abcdefghijklmnopqrstuvwxyz0123456789'){
-    $str = '';
-    $seeds_count = strlen($seeds);
-
-    // Seed
-    list($usec, $sec) = explode(' ', microtime());
-    $seed = (float) $sec + ((float) $usec * 100000);
-    mt_srand($seed);
-
-    // Generate
-    for ($i = 0; $length > $i; $i++) {
-        $str .= $seeds{mt_rand(0, $seeds_count - 1)};
-    }
-
-    return $str;
-} //str_rand
-
-/**
- * send_confirmation
- *
- *
- */
-function send_confirmation($username, $fullname, $email, $password, $validation) {
-
-$title = conf('site_title');
-$from = "From: Ampache <".conf('mail_from').">";
-$body = "Welcome to $title
-
-Please keep this email for your records. Your account information is as follows: 
-
-----------------------------
-Username: $username
-Password: $password
-----------------------------
-
-Your account is currently inactive. You cannot use it until you visit the following link:
-"
-. conf('web_path'). "/activate.php?mode=activate&u=$username&act_key=$validation
-
-Please do not forget your password as it has been encrypted in our database and we cannot retrieve it for you. However, should you forget your password you can request a new one which will be activated in the same way as this account.
-
-Thank you for registering.";
-
-
-mail($email, "Welcome to $title" , $body, $from);
-
-if (conf('admin_notify_reg')){
-
-$admin_body = "A new user has registered at $title
-
-The following values where entered;
-
-Username: $username
-Fullname: $fullname
-E-Mail: $email
-
-Click here to view user:
-"
- . conf('web_path') . "/admin/users.php?action=edit&user=$username";
-
-
-
-mail (conf('mail_from'), "New user registration at $title", $admin_body, $from);
-}
-
-
-} //send_confirmation
-
-/**
- * show_registration_agreement
- * This function reads in /config/registration_agreement.php
- * Plaintext Only
- */
-function show_registration_agreement() { 
-
-	$filename = conf('prefix') . '/config/registration_agreement.php';
-
-	/* Check for existance */
-	$fp = fopen($filename,'r');
-
-	if (!$fp) { return false; }
-
-	$data = fread($fp,filesize($filename));
-
-	/* Scrub and show */
-	echo $data;
-		
-} // show_registration_agreement
-
-
-/**
- * show_playlist_import
- * This shows the playlist import templates
- */
-function show_playlist_import() { 
-
-	require (conf('prefix') . '/templates/show_import_playlist.inc.php');
-
-} // show_playlist_import
-
-/**
- * show_songs
- * Still not happy with this function, but at least it's in the right 
- * place now
- */
-function show_songs ($song_ids, $playlist, $album=0) {
-
-        $dbh = dbh();
-
-        $totaltime = 0;
-        $totalsize = 0;
-
-        require (conf('prefix') . "/templates/show_songs.inc");
-
-        return true;
-
-} // show_songs
-
-/**
  * show_album_select
  * This displays a select of every album that we've got in Ampache, (it can be hella long) it's used
  * by the Edit page, it takes a $name and a $album_id 
  */
-function show_album_select($name='album',$album_id=0) { 
+function show_album_select($name='album',$album_id=0,$allow_add=0,$song_id=0) { 
+	// Generate key to use for HTML element ID
+	static $id_cnt;
+	if ($song_id) {
+		$key = "album_select_$song_id";
+	} else {
+		$key = "album_select_c" . ++$id_cnt;
+	}
 
-	echo "<select name=\"$name\">\n";
+	// Added ID field so we can easily observe this element
+	echo "<select name=\"$name\" id=\"$key\">\n";
 
-	$sql = "SELECT id, name, prefix FROM album ORDER BY name";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "SELECT `id`, `name`, `prefix` FROM `album` ORDER BY `name`";
+	$db_results = Dba::query($sql);
 
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	while ($r = Dba::fetch_assoc($db_results)) { 
 		$selected = '';
 		$album_name = trim($r['prefix'] . " " . $r['name']);
 		if ($r['id'] == $album_id) { 
@@ -1067,6 +503,11 @@ function show_album_select($name='album',$album_id=0) {
 		
 	} // end while
 
+	if ($allow_add) {
+		// Append additional option to the end with value=-1
+		echo "\t<option value=\"-1\">" . _('Add New') . "...</option>\n";
+	}
+
 	echo "</select>\n";
 
 } // show_album_select
@@ -1075,14 +516,21 @@ function show_album_select($name='album',$album_id=0) {
  * show_artist_select
  * This is the same as the album select except it's *gasp* for artists how inventive!
  */
-function show_artist_select($name='artist', $artist_id=0) { 
+function show_artist_select($name='artist', $artist_id=0, $allow_add=0, $song_id=0) { 
+	// Generate key to use for HTML element ID
+	static $id_cnt;
+	if ($song_id) {
+		$key = "artist_select_$song_id";
+	} else {
+		$key = "artist_select_c" . ++$id_cnt;
+	}
 
-	echo "<select name=\"$name\">\n";
+	echo "<select name=\"$name\" id=\"$key\">\n";
 	
-	$sql = "SELECT id, name, prefix FROM artist ORDER BY name";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "SELECT `id`, `name`, `prefix` FROM `artist` ORDER BY `name`";
+	$db_results = Dba::query($sql);
 	
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	while ($r = Dba::fetch_assoc($db_results)) { 
 		$selected = '';
 		$artist_name = trim($r['prefix'] . " " . $r['name']);
 		if ($r['id'] == $artist_id) { 
@@ -1093,6 +541,11 @@ function show_artist_select($name='artist', $artist_id=0) {
 
 	} // end while
 
+	if ($allow_add) {
+		// Append additional option to the end with value=-1
+		echo "\t<option value=\"-1\">Add New...</option>\n";
+	}
+
 	echo "</select>\n";
 
 } // show_artist_select
@@ -1102,14 +555,25 @@ function show_artist_select($name='artist', $artist_id=0) {
  * It's amazing we have three of these funtions now, this one shows a select of genres and take s name
  * and a selected genre... Woot!
  */
-function show_genre_select($name='genre',$genre_id=0) { 
+function show_genre_select($name='genre',$genre_id=1,$size='', $allow_add=0, $song_id=0) { 
+	// Generate key to use for HTML element ID
+	static $id_cnt;
+	if ($song_id) {
+		$key = "genre_select_$song_id";
+	} else {
+		$key = "genre_select_c" . ++$id_cnt;
+	}
 
-	echo "<select name=\"$name\">\n";
+        if ($size > 0) {
+                $multiple_txt = " multiple=\"multiple\" size=\"$size\"";
+        }
 
-	$sql = "SELECT id, name FROM genre ORDER BY name";
-	$db_results = mysql_query($sql, dbh());
+	echo "<select name=\"$name\"$multiple_txt id=\"$key\">\n";
 
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	$sql = "SELECT `id`, `name` FROM `genre` ORDER BY `name`";
+	$db_results = Dba::query($sql);
+
+	while ($r = Dba::fetch_assoc($db_results)) { 
 		$selected = '';
 		$genre_name = $r['name'];
 		if ($r['id'] == $genre_id) { 
@@ -1119,6 +583,11 @@ function show_genre_select($name='genre',$genre_id=0) {
 		echo "\t<option value=\"" . $r['id'] . "\" $selected>" . scrub_out($genre_name) . "</option>\n";
 	
 	} // end while
+
+	if ($allow_add) {
+		// Append additional option to the end with value=-1
+		echo "\t<option value=\"-1\">Add New...</option>\n";
+	}
 
 	echo "</select>\n";
 
@@ -1132,10 +601,10 @@ function show_catalog_select($name='catalog',$catalog_id=0,$style='') {
 
 	echo "<select name=\"$name\" style=\"$style\">\n";
 
-	$sql = "SELECT id, name FROM catalog ORDER BY name";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "SELECT `id`, `name` FROM `catalog` ORDER BY `name`";
+	$db_results = Dba::query($sql);
 
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	while ($r = Dba::fetch_assoc($db_results)) { 
 		$selected = '';
 		if ($r['id'] == $catalog_id) { 
 			$selected = "selected=\"selected\"";
@@ -1149,7 +618,6 @@ function show_catalog_select($name='catalog',$catalog_id=0,$style='') {
 
 } // show_catalog_select
 
-
 /**
  * show_user_select
  * This one is for users! shows a select/option statement so you can pick a user
@@ -1158,31 +626,60 @@ function show_catalog_select($name='catalog',$catalog_id=0,$style='') {
 function show_user_select($name,$selected='',$style='') { 
 
 	echo "<select name=\"$name\" style=\"$style\">\n";
-	echo "\t<option value=\"\">" . _('None') . "</option>\n";
+	echo "\t<option value=\"\">" . _('All') . "</option>\n";
 
-	$sql = "SELECT username as id,fullname FROM user ORDER BY fullname";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "SELECT `id`,`username`,`fullname` FROM `user` ORDER BY `fullname`";
+	$db_results = Dba::query($sql);
 
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	while ($row = Dba::fetch_assoc($db_results)) { 
 		$select_txt = '';
-		if ($r['id'] == $selected) { 
+		if ($row['id'] == $selected) { 
 			$select_txt = 'selected="selected"';
 		}
+		// If they don't have a full name, revert to the username
+		$row['fullname'] = $row['fullname'] ? $row['fullname'] : $row['username']; 
 
-		echo "\t<option value=\"" . $r['id'] . "\" $select_txt>" . scrub_out($r['fullname']) . "</option>\n";
-		
+		echo "\t<option value=\"" . $row['id'] . "\" $select_txt>" . scrub_out($row['fullname']) . "</option>\n";
 	} // end while users
 
+	echo "</select>\n";
+
 } // show_user_select
+
+/**
+ * show_playlist_select
+ * This one is for users! shows a select/option statement so you can pick a user
+ * to blame
+ */
+function show_playlist_select($name,$selected='',$style='') { 
+
+	echo "<select name=\"$name\" style=\"$style\">\n";
+	echo "\t<option value=\"\">" . _('None') . "</option>\n";
+
+	$sql = "SELECT `id`,`name` FROM `playlist` ORDER BY `name`";
+	$db_results = Dba::query($sql);
+
+	while ($row = Dba::fetch_assoc($db_results)) { 
+		$select_txt = '';
+		if ($row['id'] == $selected) { 
+			$select_txt = 'selected="selected"';
+		}
+		// If they don't have a full name, revert to the username
+		echo "\t<option value=\"" . $row['id'] . "\" $select_txt>" . scrub_out($row['name']) . "</option>\n";
+	} // end while users
+
+	echo "</select>\n";
+
+} // show_playlist_select
 
 /**
  * show_box_top
  * This function requires the top part of the box
  * it takes title as an optional argument
  */
-function show_box_top($title='') { 
+function show_box_top($title='',$class='') { 
 
-	require (conf('prefix') . '/templates/show_box_top.inc.php');	
+	require Config::get('prefix') . '/templates/show_box_top.inc.php';	
 
 } // show_box_top
 
@@ -1193,7 +690,7 @@ function show_box_top($title='') {
  */
 function show_box_bottom() { 
 
-	require (conf('prefix') . '/templates/show_box_bottom.inc.php');
+	require Config::get('prefix') . '/templates/show_box_bottom.inc.php';
 
 } // show_box_bottom
 
@@ -1202,10 +699,22 @@ function show_box_bottom() {
  * this function takes a name and a returns either a text representation
  * or an <img /> tag 
  */
-function get_user_icon($name,$hover_name='') { 
+function get_user_icon($name,$title='',$id='') { 
 	
 	/* Because we do a lot of calls cache the URLs */
 	static $url_cache = array(); 
+
+	// If our name is an array
+	if (is_array($name)) { 
+		$hover_name = $name['1']; 
+		$name = $name['0']; 
+	} 
+
+	if (!$title) { $title = $name; } 
+
+	if ($id) { 
+		$id_element = 'id="' . $id . '"'; 
+	} 
 
 	if (isset($url_cache[$name])) { 
 		$img_url = $url_cache[$name]; 
@@ -1223,33 +732,33 @@ function get_user_icon($name,$hover_name='') {
 		$icon_name = 'icon_' . $name . '.png';
 
 		/* Build the image url */
-		if (file_exists(conf('prefix') . '/themes/' . $GLOBALS['theme']['path'] . '/images/' . $icon_name)) { 
-			$img_url = conf('web_path') . conf('theme_path') . '/images/' . $icon_name;
+		if (file_exists(Config::get('prefix') . Config::get('theme_path') . '/images/icons/' . $icon_name)) { 
+			$img_url = Config::get('web_path') . Config::get('theme_path') . '/images/icons/' . $icon_name;
 		}
 		else { 
-			$img_url = conf('web_path') . '/images/' . $icon_name; 
+			$img_url = Config::get('web_path') . '/images/' . $icon_name; 
 		}
 
 		/* If Hover, then build its url */
 		if (!empty($hover_name)) { 
 			$hover_icon = 'icon_' . $hover_name . '.png';
-			if (file_exists(conf('prefix') . '/themes/' . $GLOBALS['theme']['path'] . '/images/' . $icon_name)) { 
-				$hov_url = conf('web_path') . conf('theme_path') . '/images/' . $hover_icon;
+			if (file_exists(Config::get('prefix') . Config::get('theme_path') . '/images/icons/' . $icon_name)) { 
+				$hov_url = Config::get('web_path') . Config::get('theme_path') . '/images/icons/' . $hover_icon;
 			}
 			else { 
-				$hov_url = conf('web_path') . '/images/' . $hover_icon;
+				$hov_url = Config::get('web_path') . '/images/' . $hover_icon;
 			}
 			
-			$hov_txt = "onMouseOver=\"this.src='$hov_url'; return true;\" onMouseOut=\"this.src='$img_url'; return true;\"";
+			$hov_txt = "onmouseover=\"this.src='$hov_url'; return true;\" onmouseout=\"this.src='$img_url'; return true;\"";
 		} // end hover
 
 	} // end if not cached
 
-	$string = "<img style=\"cursor: pointer;\" src=\"$img_url\" border=\"0\" alt=\"" . ucfirst($name) . "\" title=\"" . ucfirst($name) . "\" $hov_txt/>";
+	$string = "<img src=\"$img_url\" $id_element alt=\"" . ucfirst($title) . "\" title=\"" . ucfirst($title) . "\" $hov_txt/>";
 
 	return $string;
 
-} // show_icon
+} // get_user_icon
 
 /**
  * xml_from_array
@@ -1258,8 +767,12 @@ function get_user_icon($name,$hover_name='') {
  * primarly by the ajax mojo
  */
 function xml_from_array($array,$callback=0,$type='') { 
+
+	// If we weren't passed an array then return a blank string
+	if (!is_array($array)) { return ''; } 
+
+	// The type is used for the different XML docs we pass
 	switch ($type) {
-	
 	case 'itunes':
 	        foreach ($array as $key=>$value) {
 	                if (is_array($value)) {
@@ -1269,7 +782,7 @@ function xml_from_array($array,$callback=0,$type='') {
         	        else {
                 	        if ($key == "key"){
                         	$string .= "\t\t<$key>$value</$key>\n";
-	                        } elseif (is_numeric($value)) {
+	                        } elseif (is_int($value)) {
         	                $string .= "\t\t\t<key>$key</key><integer>$value</integer>\n";
                 	        } elseif ($key == "Date Added") {
                         	$string .= "\t\t\t<key>$key</key><date>$value</date>\n";
@@ -1279,7 +792,7 @@ function xml_from_array($array,$callback=0,$type='') {
 	                        }
         	        }
 
-	        }
+	        } // end foreach
 
 		return $string;
 	break;
@@ -1300,7 +813,7 @@ function xml_from_array($array,$callback=0,$type='') {
 	                        }
         	        }
 
-	        }
+	        } // end foreach
 
 		return $string;
 	break;
@@ -1351,9 +864,9 @@ function xml_get_header($type){
                 $header = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" .
                 	  "<playlist version = \"1\" xmlns=\"http://xspf.org/ns/0/\">\n ".
                 	  "<title>Ampache XSPF Playlist</title>\n" .
-                	  "<creator>" . conf('site_title') . "</creator>\n" .
-                	  "<annotation>" . conf('site_title') . "</annotation>\n" .
-                	  "<info>". conf('web_path') ."</info>\n" .
+                	  "<creator>" . Config::get('site_title') . "</creator>\n" .
+                	  "<annotation>" . Config::get('site_title') . "</annotation>\n" .
+                	  "<info>". Config::get('web_path') ."</info>\n" .
                 	  "<trackList>\n\n\n\n";
 		return $header;	
 	break;
@@ -1385,24 +898,36 @@ function xml_get_footer($type){
 
 	break;
 	}
-} //xml_get_footer
+} // xml_get_footer
 
 /**
- * get_users
- * This returns an array of user objects and takes an sql statement
+ * ajax_include
+ * This does an ob_start, getcontents, clean
+ * on the specified require, only works if you
+ * don't need to pass data in
  */
-function get_users($sql) { 
+function ajax_include($include) { 
 
-	$db_results = mysql_query($sql,dbh()); 
-	
-	$results = array(); 
-
-	while ($u = mysql_fetch_assoc($db_results)) { 
-		$results[] = new User($u['id']); 
-	} 
+	ob_start(); 
+	require_once Config::get('prefix') . '/templates/' . $include; 
+	$results = ob_get_contents(); 
+	ob_end_clean(); 
 
 	return $results; 
 
-} // get_users
+} // ajax_include
+
+/**
+ * toggle_visible
+ * this is identicla to the javascript command that it actually calls
+ */
+function toggle_visible($element) { 
+
+	echo "<script type=\"text/javascript\">\n"; 
+	echo "toggle_visible('$element');"; 
+	echo "\n</script>\n"; 
+
+} // toggle_visible
+
 
 ?>

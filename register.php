@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,45 +19,37 @@
 
 */
 
-/*!
-	@header User Registration page
-	@discussion this page handles new user
-		registration, this is by default disabled
-		(it allows public reg)
-
-*/
-
 define('NO_SESSION','1');
-require_once ('lib/init.php');
-
-/* Load the preferences */
-init_preferences();
-
-$web_path = conf('web_path');
+require_once 'lib/init.php';
 
 /* Check Perms */
-if (!conf('allow_public_registration') || conf('demo_mode')) {
+if (!Config::get('allow_public_registration') || Config::get('demo_mode')) {
+	debug_event('DENIED','Error Attempted registration','1');
 	access_denied();
+	exit(); 
 }
 
 /**
  * These are only needed for this page so they aren't included in init.php 
  * this is for email validation and the cool little graphic
 */
-require_once (conf('prefix') . '/modules/validatemail/validateEmailFormat.php');
-require_once (conf('prefix') . '/modules/validatemail/validateEmail.php');
+require_once Config::get('prefix') . '/modules/validatemail/validateEmailFormat.php';
+require_once Config::get('prefix') . '/modules/validatemail/validateEmail.php';
 
 /* Don't even include it if we aren't going to use it */
-if (conf('captcha_public_reg')) { 
-	define ("CAPTCHA_INVERSE, 1");
-	require_once (conf('prefix') . '/modules/captcha/captcha.php');
+if (Config::get('captcha_public_reg')) { 
+	define ("CAPTCHA_INVERSE", 1);
+	include Config::get('prefix') . '/modules/captcha/captcha.php';
 }
 
 
-$action = scrub_in($_REQUEST['action']);
-
 /* Start switch based on action passed */
-switch ($action) {
+switch ($_REQUEST['action']) {
+	case 'validate': 
+		$username 	= scrub_in($_GET['username']); 
+		$validation	= scrub_in($_GET['auth']); 
+		require_once Config::get('prefix') . '/templates/show_user_activate.inc.php'; 
+	break; 
 	case 'add_user':
 		/** 
 		 * User information has been entered
@@ -68,7 +60,6 @@ switch ($action) {
 		 * possibly by logging them in right then and there with their current info
 		 * and 'click here to login' would just be a link back to index.php
 		 */
-		$accept_agreement 	= scrub_in($_REQUEST['accept_agreement']);
 		$fullname 		= scrub_in($_REQUEST['fullname']);
 		$username		= scrub_in($_REQUEST['username']);
 		$email 			= scrub_in($_REQUEST['email']);
@@ -76,33 +67,33 @@ switch ($action) {
 		$pass2 			= scrub_in($_REQUEST['password_2']);
 
 		/* If we're using the captcha stuff */
-		if (conf('captcha_public_reg')) { 
-		    	$captcha 		= captcha::check(); 
+		if (Config::get('captcha_public_reg')) { 
+		    	$captcha 		= captcha::solved(); 
 			if(!isset ($captcha)) {
-				$GLOBALS['error']->add_error('captcha',_('Error Captcha Required'));
+				Error::add('captcha',_('Error Captcha Required'));
 			}	
 			if (isset ($captcha)) {
 				if ($captcha) {
 					$msg="SUCCESS";
 				}
 		    		else {
-			    		$GLOBALS['error']->add_error('captcha',_('Error Captcha Failed'));
+			    		Error::add('captcha',_('Error Captcha Failed'));
 		    		}
 			} // end if we've got captcha
 		} // end if it's enabled
 
-		if(conf('user_agreement')) {
-			if(!$accept_agreement) {
-				$GLOBALS['error']->add_error('user_agreement',_("You <U>must</U> accept the user agreement"));
+		if (Config::get('user_agreement')) {
+			if (!$_POST['accept_agreement']) {
+				Error::add('user_agreement',_("You <U>must</U> accept the user agreement"));
 			} 
 		} // if they have to agree to something
 
-		if(!$username) {
-			$GLOBALS['error']->add_error('username',_("You did not enter a username"));
+		if (!$_POST['username']) {
+			Error::add('username',_("You did not enter a username"));
 		}
 
 		if(!$fullname) {
-			$GLOBALS['error']->add_error('fullname',_("Please fill in your full name (Firstname Lastname)"));
+			Error::add('fullname',_("Please fill in your full name (Firstname Lastname)"));
 		}
 
 		/* Check the mail for correct address formation. */
@@ -119,64 +110,66 @@ switch ($action) {
 			$attempt++;
 		}
 
-		if ($validate_results[0]) {
+		if ($validate_results[0] OR strstr($validate_results[1],"greylist")) {
 			$mmsg = "MAILOK";
 		}
 	        else {
-	                $GLOBALS['error']->add_error('email',_("Error Email address not confirmed<br>$validate_results[1]"));
+	                Error::add('email',_("Error Email address not confirmed<br />$validate_results[1]"));
 	        }
 		/* End of mailcheck */
 	
-		if(!$pass1){
-			$GLOBALS['error']->add_error('password',_("You must enter a password"));
+		if (!$pass1) {
+			Error::add('password',_("You must enter a password"));
 		}
 
 		if ( $pass1 != $pass2 ) {
-			$GLOBALS['error']->add_error('password',_("Your passwords do not match"));
+			Error::add('password',_("Your passwords do not match"));
 		}
 
-		if (!check_username($username)) { 
-			$GLOBALS['error']->add_error('duplicate_user',_("Error Username already exists"));
+		if (!User::check_username($username)) { 
+			Error::add('duplicate_user',_("Error Username already exists"));
 		}
 
-		if($GLOBALS['error']->error_state){
-			show_user_registration($values);
+		// If we've hit an error anywhere up there break!
+		if (Error::$state) {
+			require_once Config::get('prefix') . '/templates/show_user_registration.inc.php';
 			break;
 		}
 
 		/* Attempt to create the new user */
 		$access = '5';
-		if (conf('auto_user')) { 
-		    if (conf('auto_user') == "guest"){$access = "5";}
-		    elseif (conf('auto_user') == "user"){$access = "25";}
-		    elseif (conf('auto_user') == "admin"){$access = "100";}
-		}	
-		$new_user = $GLOBALS['user']->create($username,$fullname,$email,$pass1,$access);
+		switch (Config::get('auto_user')) { 
+			case 'admin': 
+				$access = '100'; 
+			break;
+			case 'user': 
+				$access = '25'; 
+			break;
+			default: 
+			case 'guest': 
+				$access = '5'; 
+			break;
+		} // auto-user level
+
+			
+		$new_user = User::create($username,$fullname,$email,$pass1,$access);
 
 		if (!$new_user) {
-			$GLOBALS['error']->add_error('duplicate_user',_("Error: Insert Failed"));
-			show_user_registration($values);
+			Error::add('duplicate_user',_("Error: Insert Failed"));
+			require_once Config::get('prefix') . '/templates/show_user_registration.inc.php';
 			break;
 		}
 
-		$user_object = new User($new_user);
-		$validation = str_rand(20);
-		$user_object->update_validation($validation);
+		$client = new User($new_user);
+		$validation = md5(uniqid(rand(), true));
+		$client->update_validation($validation);
 
-		$message = 'Your account has been created. However, this application requires account activation.' .
-				' An activation key has been sent to the e-mail address you provided. ' .
-				'Please check your e-mail for further information';
-
-		send_confirmation($username, $fullname, $email, $pass1, $validation);
-		?>
-		<link rel="stylesheet" href="<?php echo $web_path; ?><?php echo conf('theme_path'); ?>/templates/default.css" type="text/css" />
-		<?php
-		show_confirmation(_('Registration Complete'),$message,'/login.php');	
+		Registration::send_confirmation($username, $fullname, $email, $pass1, $validation);
+		require_once Config::get('prefix') . '/templates/show_registration_confirmation.inc.php'; 
 	break;
 	case 'show_add_user':
 	default:
-		$values = array('type'=>"new_user");
-		show_user_registration($values);
+		require_once Config::get('prefix') . '/templates/show_user_registration.inc.php'; 
 	break;
 } // end switch on action
 ?>

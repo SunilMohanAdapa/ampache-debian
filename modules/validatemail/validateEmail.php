@@ -148,10 +148,11 @@ function validateEmail ( $email, $verbose=0 ) {
     // Leave blank to use $SERVER_NAME.
     // Note that most modern MTAs will ignore (but require) whatever you say here ...
     // the server will determine your domain via other means.
-    if (conf('mail_domain')){
-    $serverName = conf('mail_domain');
-    } else {
-    $serverName = "domain.tld";
+    if (Config::get('mail_domain')) {
+	    $serverName = Config::get('mail_domain');
+    } 
+    else {
+    	$serverName = "domain.tld";
     }
     // MAIL FROM -- who's asking?
     // Good values: nobody, postmaster, info, buckwheat, gumby
@@ -275,6 +276,7 @@ function validateEmail ( $email, $verbose=0 ) {
             
             // check that an MX record exists for Top-Level domain
             // If it exists, start our email address checking
+	    if (function_exists('checkdnsrr')) { 
             if ( checkdnsrr ( $domain, "MX" ) ) {
                 
                 // Okay -- we've got a valid DNS reverse record.
@@ -617,6 +619,8 @@ function validateEmail ( $email, $verbose=0 ) {
                 $return[0] = false;
                 $return[1] = "554 No DNS reverse record found for $domain";
             } // end checkdnsrr test
+
+	} // if function doesn't exist
             
         } // end walking through each domain possibility
     

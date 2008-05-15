@@ -19,25 +19,28 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-$web_path 	= conf('web_path');
-$catalog	= new Catalog(); 
-$catalogs 	= $catalog->get_catalogs();
+$web_path 	= Config::get('web_path');
+$catalogs 	= Catalog::get_catalogs();
 
 ?>
 <?php show_box_top(_('Catalogs')); ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
-<tr class="table-header">
-	<th><?php echo _('Name'); ?></th>
-	<th align="center"><?php echo _('Action'); ?></th>
+<colgroup>
+  <col id="col_name" />
+  <col id="col_action" />
+</colgroup>
+<tr class="th-top">
+	<th class="cel_name"><?php echo _('Name'); ?></th>
+	<th class="cel_action"><?php echo _('Action'); ?></th>
 </tr>
 <?php foreach ($catalogs as $catalog) { ?>
 <tr class="<?php echo flip_class(); ?>">
-	<td>
+	<td class="cel_name">
 		<a href="<?php echo $web_path; ?>/admin/catalog.php?action=show_customize_catalog&amp;catalog_id=<?php echo $catalog->id; ?>">
 		<?php echo scrub_out($catalog->name); ?></a>
 		&nbsp;&nbsp;(<?php echo scrub_out($catalog->path); ?>)
 	</td>
-	<td>
+	<td class="cel_action">
 		<a href="<?php echo $web_path; ?>/admin/catalog.php?action=add_to_catalog&amp;catalogs[]=<?php echo $catalog->id; ?>">
 		<?php echo _('Add'); ?></a>&nbsp;|&nbsp;
 		<a href="<?php echo $web_path; ?>/admin/catalog.php?action=update_catalog&amp;catalogs[]=<?php echo $catalog->id; ?>">
@@ -66,26 +69,30 @@ $catalogs 	= $catalog->get_catalogs();
 	</td>
 </tr>
 <?php } // end if no catalogs ?>
+<tr class="th-bottom">
+	<th class="cel_name"><?php echo _('Name'); ?></th>
+	<th class="cel_action"><?php echo _('Action'); ?></th>
+</tr>
 </table>
-<div class="text-action">
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=clean_all_catalogs"><?php echo _('Clean All'); ?></a>&nbsp;
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=update_all_catalogs"><?php echo _('Verify All'); ?></a>&nbsp;
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=add_to_all_catalogs"><?php echo _('Add to All'); ?></a>&nbsp;
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=full_service"><?php echo _('Update All'); ?></a>&nbsp;<hr noshade="noshade" size="3" />
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=show_add_catalog"><?php echo _('Add a Catalog'); ?></a>
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=show_clear_stats"><?php echo _('Clear Catalog Stats'); ?></a>
-<a href="<?php echo $web_path; ?>/admin/catalog.php?action=gather_album_art"><?php echo _('Gather Album Art'); ?></a>
-
+<div>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=clean_all_catalogs"><?php echo _('Clean All'); ?></a>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=update_all_catalogs"><?php echo _('Verify All'); ?></a>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=add_to_all_catalogs"><?php echo _('Add to All'); ?></a>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=full_service"><?php echo _('Update All'); ?></a><hr noshade="noshade" size="3" />
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=show_add_catalog"><?php echo _('Add a Catalog'); ?></a>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=show_clear_stats"><?php echo _('Clear Catalog Stats'); ?></a>
+<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=gather_album_art"><?php echo _('Gather Album Art'); ?></a>
 </div>
 <?php show_box_bottom(); ?>
+
 <?php show_box_top(_('Other Tools')); ?>
-<div class="text-action">
-	<a href="<?php echo $web_path; ?>/admin/duplicates.php"><?php echo _('Show Duplicate Songs'); ?></a>
-	<a href="<?php echo $web_path; ?>/admin/catalog.php?action=clear_now_playing"><?php echo _('Clear Now Playing'); ?></a>
-	<a href="<?php echo $web_path; ?>/admin/system.php?action=generate_config"><?php echo _('Generate New Config'); ?></a>
-	<a href="<?php echo $web_path; ?>/admin/preferences.php?action=show_set_preferences"><?php echo _('Preferences Permissions'); ?></a>
-	<a href="<?php echo $web_path; ?>/admin/system.php?action=export&amp;export=itunes"><?php echo _('Export To Itunes DB'); ?></a>
-	<a href="<?php echo $web_path; ?>/admin/users.php?action=show_inactive&amp;days=30"><?php echo _('Show Inactive Users'); ?></a>
-<!--	<a href="<?php echo $web_path; ?>/admin/system.php?action=check_version"><?php echo _('Check for New Version'); ?></a>-->
+<div>
+	<a class="button" href="<?php echo $web_path; ?>/admin/duplicates.php"><?php echo _('Show Duplicate Songs'); ?></a>
+	<a class="button" href="<?php echo $web_path; ?>/admin/catalog.php?action=clear_now_playing"><?php echo _('Clear Now Playing'); ?></a>
+	<a class="button" href="<?php echo $web_path; ?>/admin/system.php?action=generate_config"><?php echo _('Generate New Config'); ?></a>
+	<a class="button" href="<?php echo $web_path; ?>/admin/preferences.php?action=show_set_preferences"><?php echo _('Preferences Permissions'); ?></a>
+	<a class="button" href="<?php echo $web_path; ?>/admin/system.php?action=export&amp;export=itunes"><?php echo _('Export To Itunes DB'); ?></a>
+	<a class="button" href="<?php echo $web_path; ?>/admin/users.php?action=show_inactive&amp;days=30"><?php echo _('Show Inactive Users'); ?></a>
+<!--	<a class="button" href="<?php echo $web_path; ?>/admin/system.php?action=check_version"><?php echo _('Check for New Version'); ?></a>-->
 </div>
 <?php show_box_bottom(); ?>

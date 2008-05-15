@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -18,81 +18,61 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-/*!
-	@header Show Albums
-	@discussion shows a list of albums
-*/
-$web_path = conf('web_path');
-// Build array of the table classes we are using
-$total_items = $view->total_items;
+$web_path = Config::get('web_path');
+$ajax_url = Config::get('ajax_url'); 
 ?>
-<?php require(conf('prefix') . '/templates/show_box_top.inc.php'); ?>
-<table class="tabledata" cellspacing="0" cellpadding="0" border="0">
-<tr class="table-header">
-	<td colspan="5">
-	<?php if ($view->offset_limit) { require (conf('prefix') . "/templates/list_header.inc"); } ?>
-	</td>
+<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
+<table class="tabledata" cellpadding="0" cellspacing="0">
+<colgroup>
+  <col id="col_add" />
+	<?php if (Browse::get_filter('show_art')) { ?>
+  <col id="col_cover" />
+	<?php } ?>
+  <col id="col_album" />
+  <col id="col_artist" />
+  <col id="col_songs" />
+  <col id="col_year" />
+  <col id="col_rating" />
+  <col id="col_action" />
+</colgroup>
+<tr class="th-top">
+	<th class="cel_add"><?php echo _('Add'); ?></th>
+	<?php if (Browse::get_filter('show_art')) { ?>
+	<th class="cel_cover"><?php echo _('Cover'); ?></th>
+	<?php } ?>
+	<th class="cel_album"><?php echo Ajax::text('?page=browse&action=set_sort&sort=name',_('Album'),'album_sort_name'); ?></th>
+	<th class="cel_artist"><?php echo _('Artist'); ?></th>
+	<th class="cel_songs"><?php echo _('Songs'); ?></th>
+	<th class="cel_year"><?php echo Ajax::text('?page=browse&action=set_sort&sort=year',_('Year'),'album_sort_year'); ?></th>
+	<th class="col_rating"><?php echo _('Rating'); ?></th>
+	<th class="cel_action"><?php echo _('Actions'); ?></th>
 </tr>
-<tr class="table-header">
-	<td>
-		<a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=album.name&amp;sort_order=0"><?php echo _("Album"); ?></a>
-	</td>
-	<td>
-		<?php echo _('Artist'); ?>
-	</td>
-	<td> <?php echo _('Songs'); ?>  </td>
-	<td>
-		<a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=album.year&amp;sort_order=0"><?php echo _("Year"); ?></a>
-	</td>
-	<td> <?php echo _("Action"); ?> </td>
-</tr>
-
 <?php 
-/* Foreach through the albums */
-foreach ($albums as $album) { 
+	/* Foreach through the albums */
+	foreach ($object_ids as $album_id) { 
+		$album = new Album($album_id); 
+		$album->format(); 
 ?>
-	<tr class="<?php echo flip_class(); ?>">
-			<td><?php echo $album->f_name; ?></td>
-			<td><?php echo $album->f_artist; ?></td>
-			<td><?php echo $album->songs; ?></td>
-			<td><?php echo $album->year; ?></td>
-			<td nowrap="nowrap"> 
-			<a href="<?php echo $web_path; ?>/song.php?action=album&amp;album_id=<?php echo $album->id; ?>">
-				<?php echo get_user_icon('all'); ?>
-			</a>
-			<a href="<?php echo $web_path; ?>/song.php?action=album_random&amp;album_id=<?php echo $album->id; ?>">
-				<?php echo get_user_icon('random'); ?>
-			</a>
-			<?php if (batch_ok()) { ?>
-				<a href="<?php echo $web_path; ?>/batch.php?action=alb&amp;id=<?php echo $album->id; ?>">
-				<?php echo get_user_icon('batch_download'); ?>
-				</a>
-			<?php } ?>
-			<?php if ($GLOBALS['user']->has_access('50')) { ?>
-				<a href="<?php echo $web_path; ?>/admin/flag.php?action=show_edit_album&amp;album_id=<?php echo $album->id; ?>">
-				<?php echo get_user_icon('edit'); ?>
-				</a>
-			<?php } ?>
-			</td>
-	</tr>
-<?php } //end foreach ($albums as $album) ?>
-<tr class="table-header">
-	<td>
-		<a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=album.name&amp;sort_order=0"><?php echo _("Album"); ?></a>
-	</td>
-	<td>
-		<?php echo _('Artist'); ?>
-	</td>
-	<td><?php echo _('Songs'); ?></td>
-	<td>
-		<a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=album.year&amp;sort_order=0"><?php echo _("Year"); ?></a>
-	</td>
-	<td><?php echo _('Action'); ?></td>
+<tr id="album_<?php echo $album->id; ?>" class="<?php echo flip_class(); ?>">
+	<?php require Config::get('prefix') . '/templates/show_album_row.inc.php'; ?> 
 </tr>
-<tr class="even" align="center">
-	<td colspan="5">
-	<?php if ($view->offset_limit) { require (conf('prefix') . "/templates/list_header.inc"); } ?>
-	</td>
+<?php } //end foreach ($albums as $album) ?>
+<?php if (!count($object_ids)) { ?>
+<tr class="<?php echo flip_class(); ?>">
+	<td colspan="7"><span class="fatalerror"><?php echo _('Not Enough Data'); ?></span></td>
+</tr>
+<?php } ?>
+<tr class="th-bottom">
+	<th class="cel_add"><?php echo _('Add'); ?></th>
+	<?php if (Browse::get_filter('show_art')) { ?>
+	<th class="cel_cover"><?php echo _('Cover'); ?></th>
+	<?php } ?>
+	<th class="cel_album"><?php echo Ajax::text('?page=browse&action=set_sort&sort=name',_('Album'),'album_sort_name_bottom'); ?></th>
+	<th class="cel_artist"><?php echo _('Artist'); ?></th>
+	<th class="cel_songs"><?php echo _('Songs'); ?></th>
+	<th class="cel_year"><?php echo Ajax::text('?page=browse&action=set_sort&sort=year',_('Year'),'album_sort_year_bottom'); ?></th>
+	<th class="col_rating"><?php echo _('Rating'); ?></th>
+	<th class="cel_action"><?php echo _('Actions'); ?></th>
 </tr>
 </table>
-<?php require(conf('prefix') . '/templates/show_box_bottom.inc.php'); ?>
+<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>

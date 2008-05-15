@@ -1,8 +1,7 @@
-# Basque translations for ampache package debconf
-# PACKAGE paketearen Ingelesezko itzulpena.
-# Copyright (C) 2007 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# Piarres Beobide <pi@beobide.net>, 2007.
+# Basque translations for Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org
+# This file is distributed under the same license as the Ampache package.
+# 2007 Piarres Beobide <pi@beobide.net>.
 #
 msgid ""
 msgstr ""

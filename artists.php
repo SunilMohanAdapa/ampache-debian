@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,79 +19,41 @@
 
 */
 
-/*
+require_once 'lib/init.php';
 
- Do most of the dirty work of displaying the mp3 catalog
+show_header(); 
 
-*/
-
-require_once('lib/init.php');
-
-if (!isset($_REQUEST['match'])) { $_REQUEST['match'] = "Browse"; }
-if (!isset($_REQUEST['action'])) { $_REQUEST['action'] = "match"; }
-$action = scrub_in($_REQUEST['action']);
-
-show_template('header');
-
-
-switch($action) {
-    case 'show':
-    case 'Show':
-	show_box_top();
-	show_alphabet_list('artists','artists.php');
-	show_box_bottom();
-
-        // Setup the View Ojbect
-        $view = new View();
-        $view->import_session_view();
-
-
-	$artist = new Artist($_REQUEST['artist']);
-
-        $sql = "SELECT DISTINCT(album.id) FROM song,album WHERE song.album=album.id AND song.artist='$artist->id'";
-
-	if ($_REQUEST['keep_view']) {
-                $view->initialize();
-        }
-
-        // If we aren't keeping the view then initlize it
-        elseif ($sql) {
-                if (!$sort_order) { $sort_order = 'album.name'; }
-                $db_results = mysql_query($sql, dbh());
-                $total_items = mysql_num_rows($db_results);
-		$offset_limit = $total_items;
-                $view = new View($sql, 'artists.php',$sort_order,$total_items,$offset_limit);
-        }
-
-        else { $view = false; }
-
-        if ($view->base_sql) {
-                $artist->show_albums($view->sql);
-        }
-
+/**
+ * Display Switch 
+ */
+switch($_REQUEST['action']) {
+	case 'show':
+		$artist = new Artist($_REQUEST['artist']);
+		$artist->format(); 
+		$albums = $artist->get_albums(); 
+		require_once Config::get('prefix') . '/templates/show_artist.inc.php';
 	break;
-
-    case 'show_all_songs':
-    	$artist = new Artist($_REQUEST['artist']);
-	$artist->format_artist();
-	$song_ids = $artist->get_song_ids();
-	$artist_id = $artist->id;
-	require(conf('prefix') . '/templates/show_artist_box.inc.php');
-        show_songs($song_ids,'');
+	case 'show_all_songs':
+	    	$artist = new Artist($_REQUEST['artist']);
+		$artist->format();
+		require_once Config::get('prefix') . '/templates/show_artist_box.inc.php';
+		$song_ids = $artist->get_songs();
+		Browse::set_type('song'); 
+		Browse::set_static_content(1); 
+		Browse::save_objects($song_ids);
+		Browse::show_objects($song_ids); 
         break;
+	case 'update_from_tags':
 
-    case 'update_from_tags':
+	        $artist = new Artist($_REQUEST['artist']);
 
-        $artist = new Artist($_REQUEST['artist']);
+        	show_box_top(_('Starting Update from Tags')); 
 
-        echo "<br /><b>" . _("Starting Update from Tags") . ". . .</b><br />\n";
+		Catalog::update_single_item('artist',$_REQUEST['artist']);
 
-        $catalog = new Catalog();
-        $catalog->update_single_item('artist',$_REQUEST['artist']);
-
-        echo "<br /><b>" . _("Update From Tags Complete") . "</b> &nbsp;&nbsp;";
-        echo "<a href=\"" . conf('web_path') . "/artists.php?action=show&amp;artist=" . $_REQUEST['artist'] . "\">[" . _("Return") . "]</a>";
-
+        	echo "<br /><strong>" . _('Update From Tags Complete') . "</strong> &nbsp;&nbsp;";
+	        echo "<a href=\"" . Config::get('web_path') . "/artists.php?action=show&amp;artist=" . $_REQUEST['artist'] . "\">[" . _('Return') . "]</a>";
+		show_box_bottom(); 
 	break;
 	case 'rename_similar':
 		if (!$user->has_access('100')) { access_denied(); }
@@ -129,26 +90,26 @@ switch($action) {
 		
 	break;
 	case 'show_similar':
-		if (!$user->has_access('100')) { access_denied(); }
-	
-		if (isset($_REQUEST['artist'])) {
-			$artist = new Artist($_REQUEST['artist']);
-			//options
-			$similar_artists = $artist->get_similar_artists(
-							make_bool($_POST['n_rep_uml']),
-							$_POST['n_filter'],
-							$_POST['n_ignore'],
-							$_POST['c_mode'],
-							$_POST['c_count_w'],
-							$_POST['c_percent_w'],
-							$_POST['c_distance_l'],
-							make_bool($_POST['c_ignins_l']));
-			$artist_id = $artist->id;
-			$artist_name = $artist->name;
-			require (conf('prefix') . '/templates/show_similar_artists.inc');
-		} else {
-			$GLOBALS['error']->add_error('general',"Error: No artist given");
-		} 
+		if (!$GLOBALS['user']->has_access('75')) { 
+			access_denied(); 
+			exit; 
+		}
+		
+		$artist = new Artist($_REQUEST['artist']);
+		//options
+		$similar_artists = $artist->get_similar_artists(
+						make_bool($_POST['n_rep_uml']),
+						$_POST['n_filter'],
+						$_POST['n_ignore'],
+						$_POST['c_mode'],
+						$_POST['c_count_w'],
+						$_POST['c_percent_w'],
+						$_POST['c_distance_l'],
+						make_bool($_POST['c_ignins_l']));
+		$artist_id = $artist->id;
+		$artist_name = $artist->name;
+		require Config::get('prefix') . '/templates/show_similar_artists.inc.php';
+		 
 	break;
 	case 'rename':
 		//die if not enough permissions
@@ -227,8 +188,6 @@ switch($action) {
 		show_alphabet_form($chr,_('Show Artists starting with'),"artists.php?action=match");
 		require (conf('prefix') . '/templates/show_box_bottom.inc.php');
 
-		$offset_limit = $GLOBALS['user']->prefs['offset_limit']; 
-		
 		if ($match === "Browse") {
 			show_artists();
 		}
@@ -245,12 +204,6 @@ switch($action) {
 			}
 		}
 	break;	
-	default:
-		//FIXME: This is being moved to browse
-		show_alphabet_list('artists','artists.php');
-		show_alphabet_form('',_("Show Artists starting with"),"artists.php?action=match");
-		show_artists('A');
-	break;
 } // end switch
 
 show_footer();

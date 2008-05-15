@@ -1,13 +1,21 @@
 #!/bin/sh
 # postrm script for Ampache
+#
+# see: dh_installdeb(1)
+
 set -e
 
 . /usr/share/debconf/confmodule
 
 case "$1" in
-    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
+upgrade)
+
+    ;;    
     remove)
+
+	
 	# Handling web server reconfiguration
 	db_get ampache/configure-webserver
 	webserver="apache2"
@@ -42,14 +50,16 @@ case "$1" in
         fi
     ;;
     purge)
-#this is needed to remove ampache.cfg.php as it is added by the
-#user and not removed during purge.
+#this is needed to remove ampache.cfg.php as it is added by the user
 	rm -r -f /etc/ampache
+       
     ;;
     *)
         echo "postrm called with unknown argument \`$1'" >&2
         exit 1
     ;;
 esac
+
 exit 0
+
 #DEBHELPER#

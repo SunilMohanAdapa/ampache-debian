@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -20,8 +20,8 @@
 */
 ?>
 <?php show_box_top(_('Settings for') . ' ' . $catalog->name . ' (' . $catalog->path . ')'); ?>
-<form method="post" action="<?php echo conf('web_path'); ?>/admin/catalog.php" enctype="multipart/form-data">
-<table cellspacing="0" cellpadding="0" border="0">
+<form method="post" action="<?php echo Config::get('web_path'); ?>/admin/catalog.php" enctype="multipart/form-data">
+<table cellspacing="0" cellpadding="0">
 <tr>
 	<td><?php echo _('Name'); ?>:</td>
 	<td><input size="60" type="text" name="name" value="<?php echo scrub_out($catalog->name); ?>"></input></td>
@@ -40,6 +40,7 @@
 <tr>
 	<td><?php echo _('Catalog Type'); ?></td>
 	<td><?php echo scrub_out(ucfirst($catalog->catalog_type)); ?></td>
+</tr>
 <tr>
 	<td><?php echo _('XML-RPC Key'); ?>:</td>
 	<td>
@@ -60,14 +61,11 @@
 		<input size="60" type="text" name="sort_pattern" value="<?php echo scrub_out($catalog->sort_pattern);?>" />
 	</td>
 </tr>
-<tr>
-	<td>&nbsp;</td>
-	<td>
+</table>
+<div class="formValidation">
 	<input type="hidden" name="catalog_id" value="<?php echo scrub_out($catalog->id); ?>" />
 	<input type="hidden" name="action" value="update_catalog_settings" />
 	<input type="submit" value="<?php echo _('Save Catalog Settings'); ?>" />
-	</td>
-</tr>
-</table>
+</div>
 </form>
 <?php show_box_bottom(); ?>

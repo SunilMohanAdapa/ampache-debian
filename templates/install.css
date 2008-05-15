@@ -1,35 +1,39 @@
-<!-- 
-/*
+/**
+  *
+  *  Copyright (c) 2001 - 2007 Ampache.org
+  *  All rights reserved.
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License v2
+  *  as published by the Free Software Foundation.
+  *
+  *  This program is distributed in the hope that it will be useful,
+  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+  *  along with this program; if not, write to the Free Software
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  *
+  **/
 
- Copyright (c) 2001 - 2006 Ampache.org
- All rights reserved.
 
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
--->
-
-<style type="text/css">
-<!--
 body {
 	font-family:Arial, Helvetica, sans-serif;
 	font-size: 1em;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-	background: #FFFFFF url(images/top_bg.jpg) repeat-x top left;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	background: #FFFFFF url(../images/top_bg.jpg) repeat-x top left;
 }
+
+h3 { 
+	text-align:left; 
+	border-bottom: 1px dotted #cccccc;
+	padding-left: 10px;
+} 
+
 
 /* Header */
 #header {
@@ -68,7 +72,10 @@ body {
     text-align: left;
     font-size: smaller;
 }
-
+.error { 
+	color: #ff0033; 
+	font-weight: bold; 
+} 
 .notify {
     border: 1px solid #cccccc;
 	background-color: #f4f4f4;
@@ -85,7 +92,7 @@ body {
 /* Table style */
 td{
 	padding:5px;
-	background-color: #D9E0E8;
+	//background-color: #D9E0E8;
     font-size: smaller;
 }
 
@@ -124,8 +131,8 @@ margin:10px 10 10px 10px;
 
 /* Bottom */
 #bottom {
-    border-top: 1px dotted #cccccc;
-    margin-top: 10px;
+	 border-top: 1px dotted #cccccc;
+	margin-top: 10px;
 	margin-bottom: 10px;
 	padding:5px;
 }
@@ -133,8 +140,3 @@ margin:10px 10 10px 10px;
 #bottom p {
 	font-size:10px;
 }
-
--->
-</style>
-
-

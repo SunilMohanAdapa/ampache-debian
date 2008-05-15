@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,31 +19,42 @@
 
 */
 ?>
+<div id="xspf_player"><!-- Start XSPF Player -->
 <?php
-if (isset($_REQUEST['xspf']) && isset ($_REQUEST['play_info'])){
-
-require_once(conf('prefix') . '/templates/show_embed_xspf.inc.php');
-}
-
+    if (isset($_REQUEST['xspf']) && isset ($_REQUEST['tmpplaylist_id'])){ 
+      require_once Config::get('prefix') . '/templates/show_embed_xspf.inc.php';
+    }
 ?>
+</div><!-- End XSPF Player -->
 
-<div id="np_data">
+
+
+<div id="now_playing">
         <?php show_now_playing(); ?>
 </div> <!-- Close Now Playing Div -->
-<!-- Recently Played -->
+<!-- Randomly selected albums of the moment --> 
+	<?php echo Ajax::observe('window','load',Ajax::action('?page=index&action=random_albums','random_albums')); ?>
 <div id="random_selection">
-	<?php
-		$albums = get_random_albums('6'); 
-		if (count($albums)) { require_once(conf('prefix') . '/templates/show_random_albums.inc.php'); } 
-	?>
+	<?php show_box_top(_('Albums of the Moment')); echo _('Loading...'); show_box_bottom(); ?>
 </div> 
+<!-- Recently Played -->
 <div id="recently_played">
         <?php
-                $data = get_recently_played();
-                if (count($data)) { require_once(conf('prefix') . '/templates/show_recently_played.inc.php'); }
+                $data = Song::get_recently_played();
+		show_box_top(_('Recently Played')); 
+                if (count($data)) { require_once Config::get('prefix') . '/templates/show_recently_played.inc.php'; }
+		show_box_bottom(); 
         ?>
 </div>
-<div id="catalog_info">
-        <?php show_local_catalog_info(); ?>
+<!-- Shoutbox Objects, if shoutbox is enabled --> 
+<?php if (Config::get('shoutbox')) { ?>
+<div id="shout_objects">
+	<?php 
+		$shouts = shoutBox::get_top('5'); 
+		if (count($shouts)) { 
+			require_once Config::get('prefix') . '/templates/show_shoutbox.inc.php'; 
+		} 
+	?>
 </div>
+<?php } ?>
 

@@ -1,3 +1,8 @@
+# fi translations for Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org
+# This file is distributed under the same license as the Ampache package.
+# 2007 Esko Arajarvi <edu@iki.fi>.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ampache\n"

@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,248 +20,18 @@
 */
 
 
-/*
-	@header General Library
-	This is the general library that contains misc functions
-	that doesn't have a home elsewhere
-*/
-
-/*!
-	@function sql_escape
-	@discussion this takes a sql statement
-	and properly escapes it before a query is run 
-	against it. 
-*/
-function sql_escape($sql,$dbh=0) {
-
-	if (!is_resource($dbh)) { 
-		$dbh = dbh();
-	}
-
-	if (function_exists('mysql_real_escape_string')) {
-		$sql = mysql_real_escape_string($sql,$dbh);
-	}
-	else {
-		$sql = mysql_escape_string($sql);
-	}
-
-	return $sql;
-
-} // sql_escape
-
-/*!
-	@function ip2int
-	@discussion turns a dotted quad ip into an
-		int
-*/
-function ip2int($ip) { 
-
-        $a=explode(".",$ip);
-	return $a[0]*256*256*256+$a[1]*256*256+$a[2]*256+$a[3];
-
-} // ip2int
-
-/*!
-	@function int2ip
-	@discussion turns a int into a dotted quad
-*/
-function int2ip($i) { 
-        $d[0]=(int)($i/256/256/256);
-        $d[1]=(int)(($i-$d[0]*256*256*256)/256/256);
-        $d[2]=(int)(($i-$d[0]*256*256*256-$d[1]*256*256)/256);
-        $d[3]=$i-$d[0]*256*256*256-$d[1]*256*256-$d[2]*256;
-	return "$d[0].$d[1].$d[2].$d[3]";
-} // int2ip
-
-/*!
-	@function show_template
-	@discussion show a template from the /templates directory, automaticly appends .inc
-		to the passed filename
-	@param 	$template	Name of Template
-*/
-function show_template($template) {
-	global $user;
-
-	/* Check for a 'Theme' template */
-	if (is_readable(conf('prefix') . conf('theme_path') . "/templates/$template".".inc")) { 
-		require (conf('prefix') . conf('theme_path') . "/templates/$template".".inc");
-	}
-	else {
-	        require (conf('prefix') . "/templates/$template".".inc");
-	}
-
-} // show_template
-
-
-/*!
-	@function read_config
-	@discussion reads the config file for ampache
-*/
-function read_config($config_file, $debug=0, $test=0) {
-
-    $fp = @fopen($config_file,'r');
-    if(!is_resource($fp)) return false;
-    $file_data = fread($fp,filesize($config_file));
-    fclose($fp);
-
-    // explode the var by \n's
-    $data = explode("\n",$file_data);
-    if($debug) echo "<pre>";
-
-    $count = 0;
-
-    foreach($data as $value) {
-        $count++;
-
-        $value = trim($value);
-
-	if (substr($value,0,1) == '#') { continue; } 
-
-        if (preg_match("/^([\w\d]+)\s+=\s+[\"]{1}(.*?)[\"]{1}$/",$value,$matches)
-                        || preg_match("/^([\w\d]+)\s+=\s+[\']{1}(.*?)[\']{1}$/", $value, $matches)
-                        || preg_match("/^([\w\d]+)\s+=\s+[\'\"]{0}(.*)[\'\"]{0}$/",$value,$matches)) {
-
-
-                if (is_array($results[$matches[1]]) && isset($matches[2]) ) {
-                        if($debug) echo "Adding value <strong>$matches[2]</strong> to existing key <strong>$matches[1]</strong>\n";
-                        array_push($results[$matches[1]], $matches[2]);
-                }
-
-                elseif (isset($results[$matches[1]]) && isset($matches[2]) ) {
-                        if($debug) echo "Adding value <strong>$matches[2]</strong> to existing key $matches[1]</strong>\n";
-                        $results[$matches[1]] = array($results[$matches[1]],$matches[2]);
-                }
-
-                elseif ($matches[2] !== "") {
-                        if($debug) echo "Adding value <strong>$matches[2]</strong> for key <strong>$matches[1]</strong>\n";
-                        $results[$matches[1]] = $matches[2];
-                }
-
-                // if there is something there and it's not a comment
-                elseif ($value{0} !== "#" AND strlen(trim($value)) > 0 AND !$test AND strlen($matches[2]) > 0) {
-                        echo "Error Invalid Config Entry --> Line:$count"; return false;
-                } // elseif it's not a comment and there is something there
-
-                else {
-                        if($debug) echo "Key <strong>$matches[1]</strong> defined, but no value set\n";
-                }
-
-        } // end else
-
-    } // foreach
-
-    if ($debug) { echo "</pre>\n"; }
-
-    return $results;
-
-} // read_config
-
-/*
- * Conf function by Robert Hopson
- * call it with a $parm name to retrieve
- * a var, pass it a array to set them
- * to reset a var pass the array plus
- * Clobber! replaces global $conf;
-*/
-function conf($param,$clobber=0)
-{
-        static $params = array();
-
-        if(is_array($param))
-        //meaning we are setting values
-        {
-                foreach ($param as $key=>$val)
-                {
-                        if(!$clobber && isset($params[$key]))
-                        {
-                                echo "Error: attempting to clobber $key = $val\n";
-                                exit();
-                        }
-                        $params[$key] = $val;
-                }
-                return true;
-        }
-        else
-        //meaning we are trying to retrieve a parameter
-        {
-                if($params[$param]) return $params[$param];
-                else return;
-        }
-} //conf
-
-function error_results($param,$clobber=0)
-{               
-        static $params = array();
-        
-        if(is_array($param))
-        //meaning we are setting values
-        {
-                foreach ($param as $key=>$val)
-                {       
-                        if(!$clobber && isset($params[$key]))
-                        {
-                                echo "Error: attempting to clobber $key = $val\n";
-                                exit(); 
-                        }
-                        $params[$key] = $val;
-                }
-                return true;
-        }               
-        else            
-        //meaning we are trying to retrieve a parameter
-        {
-                if($params[$param]) return $params[$param];
-                else return;
-        }
-} //error_results
-
-
-/**
- * dbh
- * Alias for the vauth_dbh function
- */
-function dbh() {  
-
-	return vauth_dbh();
-
-} // dbh
-
-/*!
-	@function fix_preferences
-	@discussion cleans up the preferences
-*/
-function fix_preferences($results) { 
-
-	foreach ($results as $key=>$data) { 
-		if (strcasecmp($data, "yes") == "0") { $data = 1; }
-		if (strcasecmp($data,"true") == "0") { $data = 1; }
-		if (strcasecmp($data,"enabled") == "0") { $data = 1; }
-		if (strcasecmp($data,"disabled") == "0") { $data = 0; }
-		if (strcasecmp($data,"false") == "0") { $data = 0; }
-		if (strcasecmp($data,"no") == "0") { $data = 0; }
-		$results[$key] = $data;
-	}
-
-	return $results;
-
-} // fix_preferences
-
 /**
  * session_exists
  * checks to make sure they've specified a valid session, can handle xmlrpc
- * @package General
- * @cataogry Verify
- * @todo Have XMLRPC check extend remote session 
- * @todo actually check
  */
 function session_exists($sid,$xml_rpc=0) { 
 
 	$found = true;
 
-	$sql = "SELECT * FROM session WHERE id = '$sid'";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "SELECT * FROM `session` WHERE `id` = '$sid'";
+	$db_results = Dba::query($sql);
 
-	if (!mysql_num_rows($db_results)) { 
+	if (!Dba::num_rows($db_results)) { 
 		$found = false;
 	}
 
@@ -300,18 +69,19 @@ function session_exists($sid,$xml_rpc=0) {
 
 } // session_exists
 
-/*!
-	@function extend_session
-	@discussion just update the expire time
-*/
+/**
+ * extend_session
+ * just updates the expire time of the specified session this 
+ * is used by the the play script after a song finishes
+ */
 function extend_session($sid) { 
 
-	$new_time = time() + conf('local_length');
+	$new_time = time() + Config::get('session_length');
 
 	if ($_COOKIE['amp_longsess'] == '1') { $new_time = time() + 86400*364; }
 
-	$sql = "UPDATE session SET expire='$new_time' WHERE id='$sid'";
-	$db_results = mysql_query($sql, dbh());
+	$sql = "UPDATE `session` SET `expire`='$new_time' WHERE `id`='$sid'";
+	$db_results = Dba::query($sql);
 
 } // extend_session
 
@@ -326,7 +96,7 @@ function extend_session($sid) {
 function get_tag_type($results) {
 
 	/* Pull In the config option */
-	$order = conf('tag_order');
+	$order = Config::get('tag_order');
 
         if (!is_array($order)) {
 		$order = array($order);
@@ -372,17 +142,21 @@ function clean_tag_info($results,$key,$filename) {
 	$info['title']        	= stripslashes(trim($results[$key]['title']));
 	$info['year']         	= intval($results[$key]['year']);
 	$info['track']		= intval($results[$key]['track']);
-	$info['comment']      	= sql_escape(str_replace($clean_array,$wipe_array,$results[$key]['comment']));
-
-	if (strlen($info['comment']) > 254) { 
-		debug_event('catalog','Error: Comment over 254 Char, truncating',4);
-		$info['comment'] = substr($info['comment'],0,254);
-	}
+	$info['disk']		= intval($results[$key]['disk']);
+	$info['comment']      	= Dba::escape(str_replace($clean_array,$wipe_array,$results[$key]['comment']));
+	$info['language']	= Dba::escape($results[$key]['language']); 
+	$info['lyrics']		= Dba::escape($results[$key]['lyricist']); 
 
 	/* This are pulled from the info array */
 	$info['bitrate']      	= intval($results['info']['bitrate']);
 	$info['rate']         	= intval($results['info']['sample_rate']);
 	$info['mode']         	= $results['info']['bitrate_mode'];
+
+	// Convert special version of constant bitrate mode to cbr
+	if($info['mode'] == 'con') {
+		$info['mode'] = 'cbr';
+	}
+
 	$info['size']         	= $results['info']['filesize']; 
 	$info['mime']		= $results['info']['mime'];
 	$into['encoding']	= $results['info']['encoding'];
@@ -415,27 +189,6 @@ function scrub_in($str) {
 } // scrub_in
 
 /*!
-       @function batch_ok()
-       @discussion return boolean if user can batch download
-       //FIXME: This needs to be fixed, it shouldn't be an independent function
-       //FIXME: It should reference a central one maybe the access object? 
-*/
-function batch_ok( ) {
-
-	/* Also make sure that they have ZLIB */
-	if (!function_exists('gzcompress')) { return false; }
-
-	// i check this before showing any link
-	// should make it easy to tie to a new pref if you choose to add it
-	if (conf('allow_zip_download') AND $GLOBALS['user']->has_access(25)) { 
-		return( $GLOBALS['user']->prefs['download'] );
-	} // if allowed zip downloads
-
-	return false;
-
-} // batch_ok
-
-/*!
 	@function set_memory_limit
 	@discussion this function attempts to change the
 		php memory limit using init_set but it will 
@@ -455,147 +208,6 @@ function set_memory_limit($new_limit) {
 
 } // set_memory_limit
 
-/*!
-	@function get_random_songs
-	@discussion Returns a random set of songs/albums or artists
-		matchlist is an array of the WHERE mojo and options
-		defines special unplayed,album,artist,limit info
-*/
-function get_random_songs( $options, $matchlist) {
-
-        $dbh = dbh();
-	
-        /* Define the options */
-        $limit          = intval($options['limit']);
-
-        /* If they've passed -1 as limit then don't get everything */
-        if ($options['limit'] == "-1") { unset($options['limit']); }
-	elseif ($options['random_type'] == 'length') { /* Rien a faire */ } 
-        else { $limit_sql = "LIMIT " . $limit; }
-
-
-        $where = "1=1 ";
-	$catalog = "";
-        if(is_array($matchlist)) {
-            foreach ($matchlist as $type => $value) {
-                        if (is_array($value)) {
-                                foreach ($value as $v) {
-                                        $v = sql_escape($v);
-                                        if ($v != $value[0]) { $where .= " OR $type='$v' "; }
-                                        else { $where .= " AND ( $type='$v'"; }
-                                }
-                                $where .= " ) ";
-                        }
-                        elseif (strlen($value)) {
-                                $value = sql_escape($value);
-                                $where .= " AND $type='$value' ";
-                        }
-            }
-
-	    if ($matchlist['catalog']) {
-		$catalog = " AND catalog='".$matchlist['catalog']."'";
-	    }
-	}
-
-
-        if ($options['random_type'] == 'full_album') {
-                $query = "SELECT album.id FROM song,album WHERE song.album=album.id AND $where GROUP BY song.album ORDER BY RAND() " . $limit_sql;
-                $db_results = mysql_query($query, $dbh);
-                while ($data = mysql_fetch_row($db_results)) {
-                        $albums_where .= " OR song.album=" . $data[0];
-                }
-                $albums_where = "(".ltrim($albums_where," OR").")";
-                $query = "SELECT song.id,song.size,song.time FROM song WHERE $albums_where $catalog ORDER BY song.album,song.track ASC";
-        }
-        elseif ($options['random_type'] == 'full_artist') {
-                $query = "SELECT artist.id FROM song,artist WHERE song.artist=artist.id AND $where GROUP BY song.artist ORDER BY RAND() " . $limit_sql;
-                $db_results = mysql_query($query, $dbh);
-                while ($data = mysql_fetch_row($db_results)) {
-                        $artists_where .= " OR song.artist=" . $data[0];
-                }
-                $artists_where = "(".ltrim($artists_where," OR").")";
-                $query = "SELECT song.id,song.size,song.time FROM song WHERE $artists_where $catalog ORDER BY RAND()";
-        }
-/* TEMP DISABLE */
-//        elseif ($options['random_type'] == 'unplayed') {
-//                $uid = $GLOBALS['user']->id;
-//                $query = "SELECT song.id,song.size FROM song LEFT JOIN object_count ON song.id = object_count.object_id " .
-//                         "WHERE ($where) AND ((object_count.object_type='song' AND user = '$uid') OR object_count.count IS NULL ) " .
-//                         "ORDER BY CASE WHEN object_count.count IS NULL THEN RAND() WHEN object_count.count > 4 THEN RAND()*RAND()*object_count.count " .
-//                         "ELSE RAND()*object_count.count END " . $limit_sql;
-//        } // If unplayed
-        else {
-                $query = "SELECT id,size,time FROM song WHERE $where ORDER BY RAND() " . $limit_sql;
-        }
-        
-	$db_result = mysql_query($query, $dbh);
-
-        $songs = array();
-
-        while ( $r = mysql_fetch_assoc($db_result) ) {
-		/* If they've specified a filesize limit */
-		if ($options['size_limit']) { 
-			/* Turn it into MB */
-			$new_size = ($r['size'] / 1024) / 1024;
-
-			/* If we would go over the allowed size skip to the next song */
-			if (($total + $new_size) > $options['size_limit']) { continue; }
-			
-			$total = $total + $new_size;
-			$songs[] = $r['id']; 
-
-			/* If we are within 4mb then that's good enough for Vollmer work */
-			if (($options['size_limit'] - floor($total)) < 4) { return $songs; }
-
-		} // end if we are defining a size limit
-
-		/* If they've specified a length */
-		if ($options['random_type'] == 'length') { 
-			/* Turn the length into min's */
-			$new_time = floor($r['time'] / 60); 
-
-			if ($fuzzy_count > 10) { return $songs; } 
-
-			/* If the new one would go over skip to the next song with a limit */
-			if (($total + $new_time) > $options['limit']) { $fuzzy_count++; continue; } 
-
-			$total = $total + $new_time; 
-			$songs[] = $r['id'];	
-
-			if (($options['limit'] - $total) < 2) { return $songs; } 
-
-		} // if length
-
-		/* If we aren't using a limit */
-		else { 
-	                $songs[] = $r['id'];
-		}
-        } // while we fetch results
-
-        return $songs;
-
-} // get_random_songs
-
-/**
- *	cleanup_and_exit
- *	used specificly for the play/index.php file
- *		this functions nukes now playing and then exits
- * 	@package Streaming
- * 	@catagory Clean
- */
-function cleanup_and_exit($playing_id) { 
-
-	/* Clear now playing */
-	// 900 = 15 min
-	$expire = time() - 900;
-	$sql = "DELETE FROM now_playing WHERE now_playing.id='$lastid' OR now_playing.start_time < $expire";
-
-	$db_results = @mysql_query($sql, dbh());
-
-	exit();
-
-} // cleanup_and_exit
-
 /** 
  * 	get_global_popular
  *	this function gets the current globally popular items
@@ -606,8 +218,8 @@ function cleanup_and_exit($playing_id) {
 function get_global_popular($type) {
 
 	$stats = new Stats();
-	$count = conf('popular_threshold');
-        $web_path = conf('web_path');
+	$count = Config::get('popular_threshold');
+        $web_path = Config::get('web_path');
 
 	/* Pull the top */
 	$results = $stats->get_top($count,$type);
@@ -616,98 +228,44 @@ function get_global_popular($type) {
 		/* If Songs */
                 if ( $type == 'song' ) {
                         $song = new Song($r['object_id']);
-			$song->format_song();
+			$song->format();
                         $text = "$song->f_artist_full - $song->title";
                         /* Add to array */
-                        $song->link = "<a href=\"$web_path/song.php?action=single_song&amp;song_id=$song->id\" title=\"". scrub_out($text) ."\">" .
-	                           	scrub_out(truncate_with_ellipse($text, conf('ellipse_threshold_title')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
+                        $song->link = "<a href=\"$web_path/stream.php?action=single_song&amp;song_id=$song->id\" title=\"". scrub_out($text) ."\">" .
+	                           	scrub_out(truncate_with_ellipsis($text, Config::get('ellipse_threshold_title')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
 			$items[] = $song;
                 } // if it's a song
                 
 		/* If Artist */
                 elseif ( $type == 'artist' ) {
                         $artist = new Artist($r['object_id']);
-			$artist->format_artist();
+			$artist->format();
                         $artist->link = "<a href=\"$web_path/artists.php?action=show&amp;artist=" . $r['object_id'] . "\" title=\"". scrub_out($artist->full_name) ."\">" .
-                        	           truncate_with_ellipse($artist->full_name, conf('ellipse_threshold_artist')+3) . "&nbsp;(" . $r['count'] . ")</a>";
+                        	           truncate_with_ellipsis($artist->full_name, Config::get('ellipse_threshold_artist')+3) . "&nbsp;(" . $r['count'] . ")</a>";
 			$items[] = $artist;
                 } // if type isn't artist
 
 		/* If Album */
                 elseif ( $type == 'album' ) {
                         $album   = new Album($r['object_id']);
+			$album->format(); 
                         $album->link = "<a href=\"$web_path/albums.php?action=show&amp;album=" . $r['object_id'] . "\" title=\"". scrub_out($album->name) ."\">" . 
-                        	           scrub_out(truncate_with_ellipse($album->name,conf('ellipse_threshold_album')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
+                        	           scrub_out(truncate_with_ellipsis($album->name,Config::get('ellipse_threshold_album')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
 			$items[] = $album;
                 } // else not album
 
 		elseif ($type == 'genre') { 
 			$genre 	 = new Genre($r['object_id']);
+			$genre->format(); 
 			$genre->link = "<a href=\"$web_path/browse.php?action=genre&amp;genre=" . $r['object_id'] . "\" title=\"" . scrub_out($genre->name) . "\">" .
-					scrub_out(truncate_with_ellipse($genre->name,conf('ellipse_threshold_title')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
+					scrub_out(truncate_with_ellipsis($genre->name,Config::get('ellipse_threshold_title')+3)) . "&nbsp;(" . $r['count'] . ")</a>";
 			$items[] = $genre;
 		} // end if genre
         } // end foreach
        
-/*	if (count($items) == 0) { 
-		$itemis[''] = "<li style=\"list-style-type: none\"><span class=\"error\">" . _('Not Enough Data') . "</span></li>\n";
-	}
- */
         return $items;
 
 } // get_global_popular
-
-/** 
- * gen_newest
- * Get a list of newest $type (which can then be handed to show_info_box
- * @package Web Interface
- * @catagory Get
- * @todo Add Genre
- */
-function get_newest ($type = 'artist',$limit='') {
-
-        $dbh = dbh();
-
-	if (!$limit) { $limit = conf('popular_threshold'); } 
-
-        $sql = "SELECT DISTINCT $type FROM song ORDER BY addition_time " .
-                "DESC LIMIT " . conf('popular_threshold');
-        $db_result = mysql_query($sql, $dbh);
-
-        $items = array();
-
-        while ($r = mysql_fetch_array($db_result)) {
-                if ( $type == 'artist' ) {
-                        $artist = new Artist($r[0]);
-                        $artist->format_artist();
-			$items[] = $artist;
-			
-                }
-                elseif ( $type == 'album' ) {
-                        $album = new Album($r[0]);
-                        $album->format();
-			$album->link = $album->f_link;
-			$items[] = $album;
-                }
-        }
-
-        return $items;
-} // get_newest
-
-/** 
- * show_info_box
- * This shows the basic box that popular and newest stuff goes into
- * @package Web Interface
- * @catagory Display
- * @todo make this use a template
- */
-function show_info_box ($title, $type, $items) {
-
-        $web_path = conf('web_path');
-        $popular_threshold = conf('popular_threshold');
-	require (conf('prefix') . '/templates/show_box.inc.php');
-
-} // show_info_box
 
 /*!
 	@function get_file_extension
@@ -724,59 +282,32 @@ function get_file_extension( $filename ) {
 	}
 } // get_file_extension
 
-/** 
- * tbl_name
- * This function takes a SQL table name and returns it with any prefix 
- * that might be needed to make it work, 
- * @package General
- * @catagory Database
- */
-function tbl_name($table) { 
-
-	/* For now we just return the table name */
-	return $table;
-
-} // tbl_name
-
 /**
- * clear_catalog_stats()
- *
- * Use this to clear the stats for the entire Ampache server.
- * @package Catalog
- * @catagory Clear
+ * generate_password
+ * This generates a random password, of the specified
+ * length
  */
-function clear_catalog_stats() {
+function generate_password($length) { 
 
-        $dbh = dbh();
+    $vowels = 'aAeEuUyY12345';
+    $consonants = 'bBdDgGhHjJmMnNpPqQrRsStTvVwWxXzZ6789';
+    $password = '';
+    
+    $alt = time() % 2;
 
-        /* Wipe out the object_count table */
-        $sql = "TRUNCATE object_count";
-        $results = mysql_query($sql, $dbh);
+    for ($i = 0; $i < $length; $i++) {
+        if ($alt == 1) {
+            $password .= $consonants[(rand() % 39)];
+            $alt = 0;
+        } else {
+            $password .= $vowels[(rand() % 17)];
+            $alt = 1;
+        }
+    }
 
-        /* Set every song to unplayed */
-        $sql = "UPDATE song SET played='0'";
-        $results = mysql_query($sql, $dbh);
-     
-} // clear_catalog_stats
-
-/**
- * check_username
- * this function checks to make sure the specified username doesn't already exist 
- * @package General
- * @catagory Users
- */
-function check_username($username) { 
-
-	$sql = "SELECT username FROM user WHERE username = '" . sql_escape($username) . "'";
-	$db_results = mysql_query($sql, dbh());
-
-	if (mysql_fetch_row($db_results)) { 
-		return false; 
-	}
-
-	return true;
-
-} // check_username
+    return $password;
+	
+} // generate_password
 
 /**
  * scrub_out
@@ -789,7 +320,7 @@ function scrub_out($str) {
 		$str = stripslashes($str);
 	}
 
-        $str = htmlentities($str,ENT_QUOTES,conf('site_charset'));
+        $str = htmlentities($str,ENT_QUOTES,Config::get('site_charset'));
 
         return $str;
 
@@ -842,7 +373,7 @@ function make_bool($string) {
 function get_languages() { 
 
 	/* Open the locale directory */
-	$handle	= @opendir(conf('prefix') . '/locale');
+	$handle	= @opendir(Config::get('prefix') . '/locale');
 
 	if (!is_resource($handle)) { 
 		debug_event('language','Error unable to open locale directory','1'); 
@@ -851,25 +382,27 @@ function get_languages() {
 	$results = array(); 
 
 	/* Prepend English */
-	$results['en_US'] = _('English');
+	$results['en_US'] = 'English';
 
 	while ($file = readdir($handle)) { 
 
-		$full_file = conf('prefix') . '/locale/' . $file;
+		$full_file = Config::get('prefix') . '/locale/' . $file;
 
 		/* Check to see if it's a directory */
 		if (is_dir($full_file) AND substr($file,0,1) != '.' AND $file != 'base') { 
 				
 			switch($file) { 
 				case 'de_DE'; $name = 'Deutsch'; break;
-				case 'en_US'; $name = _('English'); break;
-				case 'en_GB'; $name = _('British English'); break;
+				case 'en_US'; $name = 'English'; break;
+				case 'ca_CA'; $name = 'Catal&#224;'; break;
+				case 'en_GB'; $name = 'British English'; break;
 				case 'es_ES'; $name = 'Espa&ntilde;ol'; break;
+				case 'el_GR'; $name = 'Greek (&#x0395;&#x03bb;&#x03bb;&#x03b7;&#x03bd;&#x03b9;&#x03ba;&#x03ac;)'; break; 
 				case 'fr_FR'; $name = 'Fran&ccedil;ais'; break;
 				case 'it_IT'; $name = 'Italiano'; break;
 				case 'is_IS'; $name = '&Iacute;slenska'; break;
 				case 'nl_NL'; $name = 'Nederlands'; break;
-				case 'tr_TR'; $name = _('Turkish'); break;
+				case 'tr_TR'; $name = 'Turkish'; break;
 				case 'zh_CN'; $name = _('Simplified Chinese') . " (&#x7b80;&#x4f53;&#x4e2d;&#x6587;)"; break;
 				case 'ru_RU'; $name = 'Russian (&#x0420;&#x0443;&#x0441;&#x0441;&#x043a;&#x0438;&#x0439;)'; break;
 				default: $name = _('Unknown'); break;
@@ -884,22 +417,6 @@ function get_languages() {
 	return $results;
 
 } // get_languages
-
-/**
- * logout
- * This is the function that is called to log a user out! 
- */
-function logout() { 
-
-	/* First destory their session */
-	vauth_logout(session_id());
-
-	/* Redirect them to the login page */
-	header ('Location: ' . conf('web_path') . '/login.php');
-	
-	return true;
-
-} // logout
 
 /**
  * format_time
@@ -937,7 +454,6 @@ function translate_pattern_code($code) {
 	
 } // translate_pattern_code
 
-
 /**
  * print_boolean
  * This function takes a boolean value and then print out  a friendly
@@ -974,62 +490,6 @@ function invert_boolean($value) {
 } // invert_boolean
 
 /**
- * get_user_from_username
- * As we are moving away from user from username to user from 
- * unique ID (smaller/faster/more powerful!) this can be used
- * to return a user object if all you've got is the username
- */
-function get_user_from_username($username) { 
-
-	$sql = "SELECT `id` FROM `user` WHERE `username`='" . sql_escape($username) . "'";
-	$db_results = mysql_query($sql, dbh());
-
-	$results = mysql_fetch_assoc($db_results); 
-
-	$user = new User($results['id']);
-
-	return $user;
-
-} // get_user_from_username
-
-/**
- * get_plugins
- * This returns a list of the plugins and their information
- */
-function get_plugins() { 
-
-	/* Init our vars */
-	$plugins = array(); 
-
-	/* Open the dir */
-	$handle = opendir(conf('prefix') . '/modules/plugins'); 
-
-	if (!is_resource($handle)) { 
-		debug_event('plugins','Error: Unable to read plugins directory','1');
-	}
-
-	while ($file = readdir($handle)) {	
-		if (substr($file,-10,10) != 'plugin.php') { continue; } 
-		
-		/* Make sure it isn't a subdir */
-		if (!is_dir($file)) { 
-
-			/* Get the Basename */
-			$plugin_name = basename($file,'.plugin.php');
-
-			/* Load it */
-			$plugin = new Plugin($plugin_name); 
-			$plugins[$plugin_name] = $plugin;
-		} // if its not a subdir
-
-	} // end while 
-
-
-	return $plugins;
-
-} // get_plugins
-
-/**
  * unhtmlentities
  * This is required to make thing work.. but holycrap is it ugly
  */
@@ -1042,5 +502,30 @@ function unhtmlentities ($string)  {
 
 } // unhtmlentities
 
+/**
+ * __autoload
+ * This function automatically loads any missing
+ * classes as they are called so that we don't have to have
+ * a million include statements, and load more then we need
+ */
+function __autoload($class) {
+	// Lowercase the class
+        $class = strtolower($class);
+
+	$file = Config::get('prefix') . "/lib/class/$class.class.php";
+
+	// See if it exists
+        if (is_readable($file)) {
+                require_once $file;
+                if (is_callable($class . '::_auto_init')) {
+                        call_user_func(array($class, '_auto_init'));
+                }               
+        }
+	// Else log this as a fatal error
+        else {
+                debug_event('__autoload', "'$class' not found!",'1');
+        }
+
+} // __autoload
 
 ?>

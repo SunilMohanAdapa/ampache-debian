@@ -5,9 +5,8 @@
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -33,7 +32,7 @@ function log_event($username='Unknown',$event_name,$event_description,$log_name=
 	/* must have some name */
 	if (!strlen($log_name)) { $log_name = 'ampache'; } 
 
-        $log_filename   = conf('log_path') . "/$log_name." . date("Ymd",$log_time) . ".log";
+        $log_filename   = Config::get('log_path') . "/$log_name." . date("Ymd",$log_time) . ".log";
         $log_line       = date("Y-m-d H:i:s",$log_time) . " { $username } ( $event_name ) - $event_description \n";  
 
 	$log_write = error_log($log_line, 3, $log_filename);
@@ -85,9 +84,14 @@ function ampache_error_handler($errno, $errstr, $errfile, $errline) {
 	 * Yea now getid3() spews errors I love it :(
 	 */
 	if (strstr($errstr,"var: Deprecated. Please use the public/private/protected modifiers") OR
-	    strstr($errstr,"getimagesize() [") OR strstr($errstr,"Non-static method getid3")) { 
+	    strstr($errstr,"getimagesize() [") OR strstr($errstr,"Non-static method getid3") OR
+	    strstr($errstr,"Assigning the return value of new by reference is deprecated")) { 
 		return false; 
 	}
+
+	if (strstr($errstr,"date.timezone")) { 
+		$errstr = "You have not set a timezone (date.timezone) in your php.ini file. Please set it. This error is non-critical, and not caused by Ampache."; 
+	} 
 
 	/* The XML-RPC lib is broken, well kind of 
 	 * shut your pie hole 
@@ -109,7 +113,7 @@ function ampache_error_handler($errno, $errstr, $errfile, $errline) {
  */
 function debug_event($type,$message,$level,$file='',$username='') { 
 
-	if (!conf('debug') || $level > conf('debug_level')) { 
+	if (!Config::get('debug') || $level > Config::get('debug_level')) { 
 		return false;
 	}
 

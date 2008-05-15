@@ -1,7 +1,7 @@
-# ampache Brazilian Portuguese translation
-# Copyright (C) 2007 THE ampache'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the ampache package.
-# Felipe Augusto van de Wiel (faw) <faw@debian.org>, 2007.
+# Brazilian Portuguese translation of Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org.
+# This file is distributed under the same license as the Ampache package.
+# 2007 Felipe Augusto van de Wiel (faw) <faw@debian.org>.
 #
 msgid ""
 msgstr ""

@@ -6,8 +6,8 @@ set -e
 . /usr/share/debconf/confmodule
 
 case "$1" in
-    configure)
-
+    configure)	
+	
 # Handle webserver reconfiguration/restart ; stolen from zabbix package
 	db_get ampache/configure-webserver || true
 	webserver="apache2"
@@ -38,7 +38,12 @@ case "$1" in
 		fi
             done
 	fi
-     
+	if [ -e /etc/ampache/ampache.cfg.php ]; then
+	   cd /usr/share/ampache/www/bin
+	   php /usr/share/ampache/www/bin/migrate_config.inc
+	fi
+    ;;
+	*)	
     ;;
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;

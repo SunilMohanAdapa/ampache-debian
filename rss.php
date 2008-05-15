@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,14 +20,26 @@
 */
 
 define('NO_SESSION','1');
-require('lib/init.php');
+require 'lib/init.php';
 
 /* Check Perms */
-if (!conf('use_rss') || conf('demo_mode')) {
+if (!Config::get('use_rss') || Config::get('demo_mode')) {
         access_denied();
+	exit;
 }
 
-#show_now_playingRSS($_REQUEST['username']);
+
+switch ($_REQUEST['action']) { 
+	case 'user':
+
+	break;
+	case 'catalog_add': 
+
+	default: 
+
+	break; 
+} // end data collection 
+
 show_RSS($_REQUEST['type'],$_REQUEST['username']);
 
 ?>

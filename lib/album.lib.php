@@ -1,8 +1,22 @@
 <?php
 /*
+Copyright (c) 2001 - 2007 Ampache.org
+All Rights Reserved
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License v2
+as published by the Free Software Foundation.
+
+This program is distributed int he hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANT ABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See, the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,USA.
 
  This library handles album related functions.... wooo!
- //FIXME: Remove this in favor of /modules/class/album
 */
 
 /*!
@@ -40,6 +54,16 @@ function get_image_from_source($data) {
 		return $data['raw'];
 	}
 
+	// If it came from the database
+	if (isset($data['db'])) { 
+		// Repull it 
+		$album_id = Dba::escape($data['db']); 
+		$sql = "SELECT * FROM `album_data` WHERE `album_id`='$album_id'"; 
+		$db_results = Dba::query($sql); 
+		$row = Dba::fetch_assoc($db_results); 
+		return $row['art']; 
+	} // came from the db
+
 	// Check to see if it's a URL
 	if (isset($data['url'])) { 
 		$snoopy = new Snoopy(); 
@@ -54,6 +78,23 @@ function get_image_from_source($data) {
 		fclose($handle); 
 		return $image_data; 
 	} 
+	
+	// Check to see if it is embedded in id3 of a song
+	if (isset($data['song'])) { 
+        	// If we find a good one, stop looking
+		$getID3 = new getID3();
+		$id3 = $getID3->analyze($data['song']);
+
+		if ($id3['format_name'] == "WMA") { 
+			return $id3['asf']['extended_content_description_object']['content_descriptors']['13']['data'];
+		}
+		elseif (isset($id3['id3v2']['APIC'])) { 
+			// Foreach incase they have more then one 
+			foreach ($id3['id3v2']['APIC'] as $image) { 
+				return $image['data'];
+			} 
+		}
+	} // if data song
 
 	return false; 
 
@@ -64,38 +105,35 @@ function get_image_from_source($data) {
  * This returns a random number of albums from the catalogs
  * this is used by the index to return some 'potential' albums to play
  */
-function get_random_albums($count='') { 
+function get_random_albums($count=6) {
 
-	if (!$count) { $count = 5; }
+        $sql = 'SELECT `id` FROM `album` ORDER BY RAND() LIMIT ' . ($count*2);
+        $db_results = Dba::query($sql);
 
-        $count = intval($count);
+	$in_sql = '`album_id` IN ('; 
 
-        // We avoid a table scan by using the id index and then using a rand to pick a row #
-        $sql = "SELECT `id` FROM `album` WHERE `art` IS NOT NULL";
-        $db_results = mysql_query($sql,dbh());
-
-        while ($r = mysql_fetch_assoc($db_results)) {
-                $albums[] = $r['id'];
+        while ($row = Dba::fetch_assoc($db_results)) { 
+		$in_sql .= "'" . $row['id'] . "',"; 
+		$total++; 
         }
+       
+	if ($total < $count) { return false; } 
 
-        $total = count($albums);
+	$in_sql = rtrim($in_sql,',') . ')'; 
 
-	// We've gotta have some chance
-	if ($total < $count+2) { return array(); } 
+	$sql = "SELECT `album_id`,ISNULL(`art`) AS `no_art` FROM `album_data` WHERE $in_sql"; 
+	$db_results = Dba::query($sql);
+        $results = array();
 
-        for ($i=0; $i <= $count; $i++) {
-		$tries++; 
-                $record = rand(0,$total);
-		// If we've already set this one, we gotta get another!
-		if (isset($results[$record]) || !$albums[$record]) { $i--; continue; } 
-                $results[$record] = $albums[$record];
-		
-		// If we still can't get this figured out just give up
-		if ($tries > 50) { return array(); } 
-        }
+	while ($row = Dba::fetch_assoc($db_results)) { 
+	        $results[$row['album_id']] = $row['no_art'];
+        } // end for
+
+	asort($results); 
+	$albums = array_keys($results); 
+	$results = array_slice($albums,0,$count); 
 
         return $results;
-
 } // get_random_albums
 
 ?>

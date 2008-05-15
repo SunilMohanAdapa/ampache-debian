@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,91 +19,104 @@
 
 */
 
-/*!
-	@header Preferences page
-	Preferences page for whole site, and where
-	the admins do editing of other users preferences
+require 'lib/init.php';
 
-*/
-
-require('lib/init.php');
-
-/* Scrub in the needed mojo */
-if (!$_REQUEST['tab']) { $_REQUEST['tab'] = 'interface'; } 
-$user_id = scrub_in($_REQUEST['user_id']);
-
-
-switch(scrub_in($_REQUEST['action'])) { 
-	case 'update_user':
-		/* Verify permissions */
-		if (!$GLOBALS['user']->has_access(25) || conf('demo_mode') || ($GLOBALS['user']->id != $user_id && !$GLOBALS['user']->has_access(100))) { 
-			show_access_denied(); 
-			exit();
-		}
-		
-		/* Go ahead and update normal stuff */
-		$this_user = new User($user_id);
-		$this_user->update_fullname($_REQUEST['fullname']);
-		$this_user->update_email($_REQUEST['email']);
-
-		
-		/* Check for password change */
-		if ($_REQUEST['password1'] !== $_REQUEST['password2'] && !empty($_REQUEST['password1'])) { 
-			$GLOBALS['error']->add_error('password',_('Error: Password Does Not Match or Empty'));
-			break;
-		}
-		elseif (!empty($_REQUEST['password1'])) { 	
-			/* We're good change the mofo! */
-			$this_user->update_password($_REQUEST['password1']);
-		
-			/* Haha I'm fired... it's not an error but screw it */
-			$GLOBALS['error']->add_error('password',_('Password Updated'));
-		}
-
-		/* Check for stats */
-		if ($_REQUEST['clear_stats'] == '1') { 
-			$this_user->delete_stats();
-		}
-	break;
+// Switch on the action 
+switch($_REQUEST['action']) { 
 	case 'update_preferences':
+		if ($_REQUEST['method'] == 'admin' && !Access::check('interface','100')) { 
+			access_denied(); 
+			exit; 
+		} 
 		
-		/* Do the work */
-		update_preferences($user_id);	
-		
-		/* Reload the Preferences */
-		$GLOBALS['user']->set_preferences();
-
-		/* Reset the conf values */
-		init_preferences();
-
 		/* Reset the Theme */
-		set_theme();
-	default:
-		if (!$user_id) { $user_id = $GLOBALS['user']->id; }
-		$preferences = $GLOBALS['user']->get_preferences(0,$_REQUEST['tab']);		
-	break;
+		if ($_REQUEST['method'] == 'admin') { 
+			$user_id = '-1'; 
+			$fullname = _('Server'); 
+			$_REQUEST['action'] = 'admin'; 
+		}
+		else { 
+			$user_id = $GLOBALS['user']->id; 
+			$fullname = $GLOBALS['user']->fullname; 
+		} 
 
+		/* Update and reset preferences */
+		update_preferences($user_id);	
+		Preference::init();
+
+		$preferences = $GLOBALS['user']->get_preferences($user_id,$_REQUEST['tab']);		
+	break;
+	case 'admin_update_preferences': 
+		// Make sure only admins here
+		if (!Access::check('interface','100')) { 
+			access_denied(); 
+			exit; 
+		} 
+
+		update_preferences($_REQUEST['user_id']); 
+		header("Location: " . Config::get('web_path') . "/admin/users.php?action=show_preferences&user_id=" . scrub_out($_REQUEST['user_id'])); 
+	break;
+	case 'admin': 
+		// Make sure only admins here
+		if (!Access::check('interface','100')) { 
+			access_denied(); 
+			exit;
+		} 
+		$fullname= _('Server');
+		$preferences = $GLOBALS['user']->get_preferences(-1,$_REQUEST['tab']); 
+	break;
+	case 'user':
+		if (!Access::check('interface','100')) { 
+			access_denied(); 
+			exit; 
+		} 
+		$client = new User($_REQUEST['user_id']); 
+		$fullname = $client->fullname; 
+		$preferences = $client->get_preferences(0,$_REQUEST['tab']); 
+	break; 
+	case 'update_user': 
+		// Make sure we're a user and they came from the form
+		if (!Access::check('interface','25') || $_POST['form_string'] != $_SESSION['forms']['account'] || !strlen($_SESSION['forms']['account'])) { 
+			access_denied(); 
+			exit; 
+		} 
+		// Remove the value
+		unset($_SESSION['forms']['account']); 
+
+		// Don't let them change access, or username here
+		unset($_POST['access']); 
+		$_POST['username'] = $GLOBALS['user']->username; 
+
+		if (!$GLOBALS['user']->update($_POST)) { 
+			Error::add('general',_('Error Update Failed')); 
+		} 
+		else { 
+			$_REQUEST['action'] = 'confirm'; 
+			$title = _('Updated'); 
+			$text = _('Your Account has been updated'); 
+			$next_url = Config::get('web_path') . '/preferences.php?tab=account'; 
+		} 
+	break;
+	default: 
+		$fullname = $GLOBALS['user']->fullname; 
+		$preferences = $GLOBALS['user']->get_preferences(0,$_REQUEST['tab']); 
+	break;
 } // End Switch Action
 
-if (!$GLOBALS['user']->fullname) { 
-	$fullname = "Site";
-}
-else {
-	$fullname = $GLOBALS['user']->fullname;
-}
+show_header(); 
 
+/**
+ * switch on the view
+ */
+switch ($_REQUEST['action']) { 
+	case 'confirm': 
+		show_confirmation($title,$text,$next_url,$cancel); 
+	break;
+	default: 
+		// Show the default preferences page
+		require Config::get('prefix') . '/templates/show_preferences.inc.php';
+	break;
+} // end switch on action
 
-// HEADER
-show_template('header');
-// HEADER
-
-// Set Target
-$target = "/preferences.php";
-
-// Show the default preferences page
-require (conf('prefix') . "/templates/show_preferences.inc");
-
-
-// FOOTER
 show_footer();
 ?>

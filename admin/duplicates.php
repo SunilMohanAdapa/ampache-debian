@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,30 +19,24 @@
 
 */
 
+require_once '../lib/init.php';
 
-// Allows users to search for duplicate songs in their catalogs
-
-require_once ('../lib/init.php');
-require_once( conf('prefix').'/lib/duplicates.php');
-
-if (!$GLOBALS['user']->has_access(100)) {
+if (!Access::check('interface','100')) { 
 	access_denied(); 
 	exit;
 }
 
-$action = scrub_in($_REQUEST['action']);
-$search_type = scrub_in($_REQUEST['search_type']);
-
-show_template('header');
+show_header(); 
 
 /* Switch on Action */
-switch ($action) {
-	case 'search':
-        	$flags = get_duplicate_songs($search_type);
-	        show_duplicate_songs($flags,$search_type);
+switch ($_REQUEST['action']) {
+	case 'find_duplicates':
+		$duplicates = Catalog::get_duplicate_songs($_REQUEST['search_type']); 
+		require_once Config::get('prefix') . '/templates/show_duplicate.inc.php'; 
+		require_once Config::get('prefix') . '/templates/show_duplicates.inc.php'; 	
 	break;
 	default:
-	        show_duplicate_searchbox($search_type);
+		require_once Config::get('prefix') . '/templates/show_duplicate.inc.php'; 
 	break;
 } // end switch on action
 

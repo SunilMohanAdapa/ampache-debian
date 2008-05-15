@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved
 
  This program is free software; you can redistribute it and/or
@@ -42,14 +42,17 @@ $path = dirname(__FILE__);
 $prefix = realpath($path . '/../'); 
 require_once $prefix . '/lib/init.php';
 
+ob_end_clean(); 
+
 /* First Clean the catalog to we don't try to write anything we shouldn't */
 
-$sql = "SELECT id FROM catalog WHERE catalog_type='local'";
-$db_results = mysql_query($sql, dbh());
+$sql = "SELECT `id` FROM `catalog` WHERE `catalog_type`='local'";
+$db_results = Dba::query($sql);
 
 $catalogs = array();
 
-while ($r = mysql_fetch_row($db_results)) { 
+while ($r = Dba::fetch_row($db_results)) { 
+
 
 	$catalog = new Catalog($r['0']);
 	$songs = $catalog->get_catalog_files();
@@ -59,9 +62,10 @@ while ($r = mysql_fetch_row($db_results)) {
 	/* Foreach through each file and find it a home! */
 	foreach ($songs as $song) { 
 		/* Find this poor song a home */
-		$song->format_song();
+		$song->format();
+		$song->format_pattern();
 		$directory 	= sort_find_home($song,$catalog->sort_pattern,$catalog->path);
-		$filename 	= sort_find_filename($song,$catalog->rename_pattern);
+		$filename 	= $song->f_file; 
 		$fullpath = $directory . "/" . $filename;
 
 		/* Check for Demo Mode */
@@ -77,43 +81,12 @@ while ($r = mysql_fetch_row($db_results)) {
 			sort_move_file($song,$fullpath);
 		}
 
-
-
 	} // end foreach song
 
 } // end foreach catalogs
 
 
 /************** FUNCTIONS *****************/
-/**
- * sort_find_filename 
- * This gets the filename that this file should have, it takes the rename pattern of the catalog
- * along with the song object. Nothing Special Here
- */
-function sort_find_filename($song,$rename_pattern) { 
-	
-	$extension = ltrim(substr($song->file,strlen($song->file)-4,4),".");
-	
-	/* Create the filename that this file should have */
-	$album 	= sort_clean_name($song->f_album_full);
-	$artist = sort_clean_name($song->f_artist_full);
-	$genre 	= sort_clean_name($song->f_genre);
-	$track	= sort_clean_name($song->track);
-	$title	= sort_clean_name($song->title);
-	$year	= sort_clean_name($song->year);
-        
-	/* Start replacing stuff */
-	$replace_array = array('%a','%A','%t','%T','%y','%g');
-	$content_array = array($artist,$album,$title,$track,$year,$genre);
-	
-	$rename_pattern = str_replace($replace_array,$content_array,$rename_pattern);
-
-	$rename_pattern = preg_replace("[\-\:\!]","_",$rename_pattern);
-
-	return $rename_pattern . "." . $extension;
-
-} // sort_find_filename
-
 /**
  * sort_find_home
  * Get the directory for this file from the catalog and the song info using the sort_pattern 
@@ -134,6 +107,7 @@ function sort_find_home($song,$sort_pattern,$base) {
 
 	/* Do the various check */
 	$album_object = new Album($song->album);
+	$album_object->format(); 
 	if ($album_object->artist_count != '1') { 
 		$artist = "Various";
 	}
@@ -266,8 +240,9 @@ function sort_move_file($song,$fullname) {
 	/* Now that we've got the correct directory structure let's try to copy it */
 	if ($GLOBALS['test_mode']) { 
 		echo "\tCopying $file to $directory\n";
-		$sql = "UPDATE song SET file='" . sql_escape($fullname) . "' WHERE id='" . sql_escape($song->id) . "'";
+		$sql = "UPDATE song SET file='" . Dba::escape($fullname) . "' WHERE id='" . Dba::escape($song->id) . "'";
 		echo "\tSQL: $sql\n";
+		flush(); 
 	}
 	else { 
 
@@ -282,13 +257,13 @@ function sort_move_file($song,$fullname) {
 		debug_event('copy','Copied ' . $song->file . ' to ' . $fullname,'5'); 
 		
 		/* Look for the folder art and copy that as well */
-		if (!conf('album_art_preferred_filename')) { 
+		if (!Config::get('album_art_preferred_filename')) { 
 			$folder_art 	= $directory . '/folder.jpg';
 			$old_art 	= $old_dir . '/folder.jpg';
 		}
 		else { 
-			$folder_art 	= $directory . "/" . conf('album_art_preferred_filename'); 
-			$old_art 	= $old_dir . "/" . conf('album_art_preferred_filename');
+			$folder_art 	= $directory . "/" . Config::get('album_art_preferred_filename'); 
+			$old_art 	= $old_dir . "/" . Config::get('album_art_preferred_filename');
 		}
 
 		debug_event('copy_art','Copied ' . $old_art . ' to ' . $folder_art,'5');
@@ -310,8 +285,8 @@ function sort_move_file($song,$fullname) {
 		if (!$results) { echo "Error: Unable to delete " . $song->file . "\n"; }
 
 		/* Update the catalog */
-		$sql = "UPDATE song SET file='" . sql_escape($fullname) . "' WHERE id='" . sql_escape($song->id) . "'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "UPDATE song SET file='" . Dba::escape($fullname) . "' WHERE id='" . Dba::escape($song->id) . "'";
+		$db_results = Dba::query($sql);
 
 	} // end else
 

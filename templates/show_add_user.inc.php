@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,18 +19,20 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+$form_string = generate_password('32'); 
+$_SESSION['forms']['adminuser'] = $form_string; 
 ?>
 <?php show_box_top(_('Adding a New User')); ?>
-<?php $GLOBALS['error']->print_error('general'); ?>
-<form name="add_user" enctype="multpart/form-data" method="post" action="<?php echo conf('web_path') . "/admin/users.php"; ?>">
-<table class="tabledata" cellspacing="0" cellpadding="0" border="0">
+<?php Error::display('general'); ?>
+<form name="add_user" enctype="multpart/form-data" method="post" action="<?php echo Config::get('web_path') . "/admin/users.php?action=add_user"; ?>">
+<table class="tabledata" cellspacing="0" cellpadding="0">
 <tr>
 	<td>
 		<?php echo  _('Username'); ?>:
 	</td>
 	<td>
 		<input type="text" name="username" size="30" maxlength="128" value="<?php echo scrub_out($_POST['username']); ?>" />
-		<?php $GLOBALS['error']->print_error('username'); ?>
+		<?php Error::display('username'); ?>
 	</td>
 </tr>
 <tr>
@@ -53,7 +55,7 @@
 	</td>
 	<td>
 		<input type="password" name="password_1" size="30" value="" />
-		<?php $GLOBALS['error']->print_error('password'); ?>
+		<?php Error::display('password'); ?>
 	</td>
 </tr>
 <tr>
@@ -69,19 +71,20 @@
 		<?php echo  _('User Access Level'); ?>:
 	</td>
         <td>
-                <?php $var_name = "on_" . $working_user->access; ${$var_name} = 'selected="selected"'; ?>
+                <?php $var_name = "on_" . $client->access; ${$var_name} = 'selected="selected"'; ?>
                 <select name="access">
                 <option value="5" <?php echo $on_5; ?>><?php echo _('Guest'); ?></option>
                 <option value="25" <?php echo $on_25; ?>><?php echo _('User'); ?></option>
+		<option value="50" <?php echo $on_50; ?>><?php echo _('Content Manager'); ?></option>
+		<option value="75" <?php echo $on_75; ?>><?php echo _('Catalog Manager'); ?></option>
                 <option value="100" <?php echo $on_100; ?>><?php echo _('Admin'); ?></option>
                 </select>
         </td>
 </tr>
-	<td colspan="2">
-		<input type="submit" value="<?php echo _('Add User'); ?>" />
-		<input type="hidden" name="action" value="add_user" />
-	</td>
-</tr>
 </table>
+<div class="formValidation">
+  <input type="hidden" name="formkey" value="<?php echo $form_string; ?>" />
+  <input type="submit" value="<?php echo _('Add User'); ?>" />
+</div>
 </form>
 <?php show_box_bottom(); ?>

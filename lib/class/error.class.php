@@ -1,92 +1,126 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
- All rights reserved.
+ Copyright (c) Ampache.org
+ All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ MERCHANT ABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
+ USA.
 
 */
 
-/*!
-	@header Error handler requires error_results() function
+/**
+ * Error class
+ * This is the baic error class, its better now that we can use php5
+ * hello static functions and variables
+ */
+class Error { 
 
-*/
-class Error {
+	public static $state = false; // set to one when an error occurs
+	public static $errors = array(); // Errors array key'd array with errors that have occured
 
-	//Basic Componets
-	var $error_state=0;
+	/**
+	 * __constructor
+	 * This does nothing... amazing isn't it!
+	 */
+	private function __construct() { 
 
-	/* Generated values */
-	var $errors = array();
+		// Rien a faire
+	
+	} // __construct
 
-	/*!
-		@function error
-		@discussion this is the constructor for the error class
-	*/
-	function Error() { 
-
-		return true;
-
-	} //constructor
-
-	/*!
-		@function add_error
-		@discussion adds an error to the static array stored in 
-			error_results()
-	*/
-	function add_error($name,$description) { 
-
-		$array = array($name=>$description);
-
-		error_results($array,1);
-		$this->error_state = 1;
-
-		return true;
-		
-	} // add_error
+	/**
+	 * __destruct
+	 * This saves all of the errors that are left into the session
+	 */
+	public function __destruct() { 
 
 
-	/*!
-		@function has_error
-		@discussion returns true if the name given has an error, 
-			false if it doesn't
-	*/
-	function has_error($name) { 
+		foreach (self::$errors as $key=>$error) { 
+			$_SESSION['errors'][$key] = $error; 
+		} 
 
-		$results = error_results($name);
+	} // __destruct
 
-		if (!empty($results)) { 
-			return true;
-		}
+	/**
+	 * add
+	 * This is a public static function it adds a new error message to the array 
+	 * It can optionally clobber rather then adding to the error message
+	 */
+	public static function add($name,$message,$clobber=0) { 
 
-		return false;
+		// Make sure its set first 
+		if (!isset(Error::$errors[$name])) { 
+			Error::$errors[$name] = $message; 
+			Error::$state = 1;
+			$_SESSION['errors'][$key] = $message; 
+		} 
+		// They want us to clobber it
+		elseif ($clobber) { 
+			Error::$state = 1;
+			Error::$errors[$name] = $message;
+			$_SESSION['errors'][$key] = $message; 
+		} 
+		// They want us to append the error, add a BR\n and then the message
+		else { 
+			Error::$state = 1;
+			Error::$errors[$name] .= "<br />\n" . $message;
+			$_SESSION['errors'][$key] .=  "<br />\n" . $message; 
+		} 
 
-	} // has_error
+	} // add
 
-	/*!
-		@function print_error
-		@discussion prints out the error for a name if it exists
-	*/
-	function print_error($name) { 
+	/**
+	 * get
+	 * This returns an error by name
+	 */
+	public static function get($name) { 
 
-		if ($this->has_error($name)) { 
-			echo "<div class=\"fatalerror\">" . error_results($name) . "</div>\n"; 
-		}
+		if (!isset(Error::$errors[$name])) { return ''; } 
 
-	} // print_error
+		return Error::$errors[$name];
 
-} //end error class
-?>
+	} // get
+
+	/**
+	 * display
+	 * This prints the error out with a standard Error class span
+	 * Ben Goska: Renamed from print to display, print is reserved
+	 */
+	public static function display($name) { 
+
+		// Be smart about this, if no error don't print
+		if (!isset(Error::$errors[$name])) { return ''; } 
+
+		echo '<span class="error">' . Error::$errors[$name] . '</span>';
+
+	} // display
+
+	/**
+ 	 * auto_init 
+	 * This loads the errors from the session back into Ampache
+	 */
+	public static function auto_init() { 
+
+		if (!is_array($_SESSION['errors'])) { return false; } 
+
+		// Re-insert them 
+		foreach ($_SESSION['errors'] as $key=>$error) { 
+			self::add($key,$error);
+		} 
+
+	} // auto_init
+
+
+} // Error

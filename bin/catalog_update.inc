@@ -5,9 +5,8 @@
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,21 +24,22 @@ $path = dirname(__FILE__);
 $prefix = realpath($path . '/../'); 
 require_once $prefix . '/lib/init.php';
 
+
 echo "[catalog_update.php.inc]\nStarting Catalog Clean/Update And Add\n\n";
 
 if (count($_SERVER['argv']) > 1) {
        for ($x = 1; $x < count($_SERVER['argv']); $x++) {
                if ($where) $where .= " OR ";
-               $where .= "name LIKE '%" . preg_replace("/[^a-z0-9\. -]/i", "", $_SERVER['argv'][$x]) . "%'";
+               $where .= "name LIKE '%" . Dba::escape(preg_replace("/[^a-z0-9\. -]/i", "", $_SERVER['argv'][$x])) . "%'";
        }
 }
 if ($where) $where = "($where) AND catalog_type='local'";
 else $where = "catalog_type='local'";
 $sql = "SELECT id FROM catalog";
 if ($where) $sql .= " WHERE $where";
-$db_results = mysql_query($sql, dbh());
+$db_results = Dba::query($sql);
 
-while ($r = mysql_fetch_row($db_results)) { 
+while ($r = Dba::fetch_row($db_results)) { 
 
 	$catalog = new Catalog($r[0]);
 	

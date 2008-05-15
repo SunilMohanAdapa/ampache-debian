@@ -1,6 +1,7 @@
-# Translation of ampache debconf templates to German
-# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2007.
-# This file is distributed under the same license as the ampache package.
+# German translation of Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org.
+# This file is distributed under the same license as the Ampache package.
+# 2007 Helge Kreutzmann <debian@helgefjell.de>
 #
 msgid ""
 msgstr ""

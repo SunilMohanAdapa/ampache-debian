@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -18,37 +18,46 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-
-$songs = $localplay->get();
-$status = $localplay->status();
 ?>
-<table cellspacing="0">
-<tr class="table-header">
-	<th><?php echo _('Track'); ?></th>
-	<th><?php echo _('Name'); ?></th>
-	<th><?php echo _('Action'); ?></th>
+<?php Ajax::start_container('localplay_playlist'); ?>
+<?php show_box_top(_('Current Playlist')); ?>
+<table class="tabledata" cellpadding="0" cellspacing="0">
+<colgroup>
+  <col id="col_track" />
+  <col id="col_name" />
+  <col id="col_action" />
+</colgroup>
+<tr class="th-top">
+	<th class="cel_track"><?php echo _('Track'); ?></th>
+	<th class="cel_name"><?php echo _('Name'); ?></th>
+	<th class="cel_action"><?php echo _('Action'); ?></th>
 </tr>
 <?php 
-foreach ($songs as $song) { 
-	$class = '';
-	if ($status['track'] == $song['track']) { $class=' class="lp_current"'; } 	
+foreach ($objects as $object) { 
+	$class = ' class="cel_name"';
+	if ($status['track'] == $object['track']) { $class=' class="cel_name lp_current"'; } 	
 ?>
-<tr class="<?php echo flip_class(); ?>">
-	<td>
-		<?php echo scrub_out($song['track']); ?>
+<tr class="<?php echo flip_class(); ?>" id="localplay_playlist_<?php echo $object['id']; ?>">
+	<td class="cel_track">
+		<?php echo scrub_out($object['track']); ?>
 	</td>
 	<td<?php echo $class; ?>>
-		<?php echo $localplay->format_name($song['name'],$song['id']); ?>
+		<?php echo $localplay->format_name($object['name'],$object['id']); ?>
 	</td>
-	<td>
-	<a href="<?php echo $web_path; ?>/localplay.php?action=delete_song&amp;song_id=<?php echo scrub_out($song['id']); ?>">
-		<?php echo get_user_icon('delete'); ?>
-	</a>
+	<td class="cel_action">
+	<?php echo Ajax::button('?page=localplay&action=delete_track&id=' . intval($object['id']),'delete',_('Delete'),'localplay_delete_' . intval($object['id'])); ?>
 	</td>
 </tr>
-<?php } if (!count($songs)) { ?>
+<?php } if (!count($objects)) { ?>
 <tr class="<?php echo flip_class(); ?>">
 	<td colspan="3"><span class="error"><?php echo _('No Records Found'); ?></span></td>
 </tr>
 <?php } ?>
+<tr class="th-bottom">
+	<th class="cel_track"><?php echo _('Track'); ?></th>
+	<th class="cel_name"><?php echo _('Name'); ?></th>
+	<th class="cel_action"><?php echo _('Action'); ?></th>
+</tr>
 </table>
+<?php show_box_bottom(); ?>
+<?php Ajax::end_container(); ?>

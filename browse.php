@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,127 +25,71 @@
  * This page shows the browse menu, which allows you to browse by many different
  * fields including genre, artist, album, catalog, ??? 
  * this page also handles the actuall browse action
- * @package Web Interface
- * @catagory Browse
- * @author Karl Vollmer 06/24/05
  *
  */
 
 /* Base Require */
-require_once('lib/init.php');
+require_once 'lib/init.php';
 
-/* Clean up incomming variables */
-$action		= scrub_in($_REQUEST['action']);
+// This page is a little wonky we don't want the sidebar until we know what type we're dealing with
+// so we've got a little switch here that creates the type.. this feels hackish...
 
-/* Display the headers and menus */
-show_template('header');
+switch ($_REQUEST['action']) { 
+	case 'file': 
+	case 'album': 
+	case 'artist': 
+	case 'genre': 
+	case 'playlist': 
+	case 'live_stream': 
+	case 'song': 
+		Browse::reset_filters(); 
+		Browse::set_type($_REQUEST['action']); 
+		Browse::set_simple_browse(1); 
+	break; 
+} // end switch 
 
-switch($action) {
+show_header(); 
+
+switch($_REQUEST['action']) {
 	case 'file':
+	break; 
 	case 'album':
-		show_alphabet_list('albums','albums.php',$match);
-		show_alphabet_form($match,_("Show Albums starting with"),"albums.php?action=match");
-		
-		/* Get the results and show them */
-		$sql = "SELECT id FROM album WHERE name LIKE '$match%'";
-
-		$view = new View();
-		$view->import_session_view();
-
-	        // if we are returning
-	        if ($_REQUEST['keep_view']) {
-	                $view->initialize();
-	        }
-
-	        // If we aren't keeping the view then initlize it
-	        elseif ($sql) {
-	                $db_results = mysql_query($sql, dbh());
-	                $total_items = mysql_num_rows($db_results);
-	                if ($match != "Show_all") { $offset_limit = $user->prefs['offset_limit']; }
-	                $view = new View($sql, 'albums.php','name',$total_items,$offset_limit);
-	        }
-
-	        else { $view = false; }
-
-	        if ($view->base_sql) {
-	                $albums = get_albums($view->sql);
-                	show_albums($albums,$view);
-		}		
+		Browse::set_sort('name','ASC');
+		$album_ids = Browse::get_objects(); 
+		Browse::show_objects($album_ids); 
 	break;
 	case 'artist':
-                show_alphabet_list('artists','artists.php');
-                show_alphabet_form('',_("Show Artists starting with"),"artists.php?action=match");
-                show_artists();
+		Browse::set_sort('name','ASC');
+		$artist_ids = Browse::get_objects(); 
+		Browse::show_objects($artist_ids); 
 	break;
 	case 'genre':
-		/* Create the Needed Object */
-		$genre = new Genre();
-
-		$match = scrub_in($_REQUEST['match']); 
-
-		/* Setup the View object */
-		$view = new View();
-		$view->import_session_view();
-		$genre->show_match_list($_REQUEST['match']);
-		$sql = $genre->get_sql_from_match($_REQUEST['match']);
-
-		if ($_REQUEST['keep_view']) { 
-			$view->initialize();
-		}
-		else { 
-			$db_results = mysql_query($sql, dbh());
-			$total_items = mysql_num_rows($db_results);
-			$offset_limit = 999999;
-			if ($match != 'Show_all') { $offset_limit = $user->prefs['offset_limit']; }
-			$view = new View($sql, 'browse.php?action=genre','name',$total_items,$offset_limit);
-		}
-	
-	        if ($view->base_sql) {
-			$genres = $genre->get_genres($view->sql);
-	                show_genres($genres,$view);
-        	}
-		
+		Browse::set_sort('name','ASC');
+		$genre_ids = Browse::get_objects(); 
+		Browse::show_objects($genre_ids); 
 	break;
-	default:
-	case 'song_title':
-		/* Create the Needed Object */
-		$song = new Song();
-
-
-		/* Setup the View Object */
-		$view = new View();
-		$view->import_session_view();
-
-		$match = scrub_in($_REQUEST['match']);
-
-		require (conf('prefix') . '/templates/show_box_top.inc.php');
-	        show_alphabet_list('song_title','browse.php',$match,'song_title');
-                /* Detect if it's Browse, and if so don't fill it in */
-                if ($match == 'Browse') { $match = ''; }
-                show_alphabet_form($match,_('Show Titles Starting With'),"browse.php");
-		require (conf('prefix') . '/templates/show_box_bottom.inc.php');
-	
-		$sql = $song->get_sql_from_match($_REQUEST['match']);
-
-		if ($_REQUEST['keep_view']) { 
-			$view->initialize();
-		}
-		else { 
-			$db_results = mysql_query($sql, dbh());
-			$total_items = mysql_num_rows($db_results);
-			$offset_limit = 999999;
-			if ($match != 'Show_all') { $offset_limit = $user->prefs['offset_limit']; } 
-			$view = new View($sql, 'browse.php?action=song_title','title',$total_items,$offset_limit);
-		}
-
-		if ($view->base_sql) { 
-			$songs = $song->get_songs($view->sql);
-			show_songs($songs,0,0);
-		}
+	case 'song':
+		Browse::set_sort('title','ASC');
+		$song_ids = Browse::get_objects(); 
+		Browse::show_objects($song_ids); 
+	break;
+	case 'live_stream':
+		Browse::set_sort('name','ASC');
+		$live_stream_ids = Browse::get_objects(); 
+		Browse::show_objects($live_stream_ids); 
 	break;
 	case 'catalog':
 	
 	break;
+	case 'playlist': 
+		Browse::set_sort('type','ASC');
+		Browse::set_filter('playlist_type','1');
+		$playlist_ids = Browse::get_objects(); 
+		Browse::show_objects($playlist_ids); 
+	break;
+	default: 
+
+	break; 
 } // end Switch $action
 
 /* Show the Footer */

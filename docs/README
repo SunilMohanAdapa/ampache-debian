@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
----------                        README - Ampache                   -----------
+---------                    README - Ampache v.3.4                 -----------
 -------------------------------------------------------------------------------
 
 Contents:
@@ -8,12 +8,11 @@ Contents:
      a) Supported File-Types
      b) Supported Stream Methods
      c) Current Translations
-     d) Thanx
+     d) Special Thanks
  2. Getting all the components
  3. Setting Up
      a) Upgrading
  4. License
-     a) Donations (Beer!)
  5. Contact info
 
 1. Intro:
@@ -62,17 +61,16 @@ Contents:
 		- ASX
 		- RAM
 		- XSPF
-	- Realtime Downsampled
-	- XSPF Based Flash Player
+	- Realtime Downsampling
+	- Integrated Flash Player
 	- Automatic Downsampling based on load
 	- Local/Remote network definition based downsampling
 	- On the Fly Transcoding
 	- Localplay
 		- Music Player Daemon (MPD)
-		- Xbox Media Center (XMBC)
-		- Icecast2
 		- Winamp using (HTTPQ)
-	- Democratic Vote based play
+	- Democratic Vote based playback
+	- 3rd Party clients using API (Amarok,Coherence)
 	
   C) Current Translations
 
@@ -97,7 +95,7 @@ Contents:
 	 Robert Hopson - Libglue, Playlists, Ogg support.. and much more
 	 Andy Morgan - Protagonist
 	 RosenSama - Previous Developer
-	 Ben Shields - Graphics Boy
+	 Ben Shields - Ampache Logo
 	 Randall Ehren (Initial XML-RPC)
 	 s1amson (lots of beta testing)
 	 Caleb Crome (bug fixes and enhancements)
@@ -110,20 +108,19 @@ Contents:
          Maan Bsat (random fixes)
          latka (from media.tangent.org site) for orphaned song ideas
 	 Lamar Hansford (README/INSTALL improvements) & Upload
-	 Enrico Lai http://www.enricolai.com for the XSPF Flash Player
+	 Lacy Morrow (Flash Player)
 	 And many many more...
 
 2. Getting all the components
 
-  Apache >= 1.3.19 http://www.apache.org OR other webserver
-  PHP >= 4.3.x http://www.php.net
-  	PHP4-Mysql
-	PHP4-Session
-	PHP4-gd (recommended)
-	PHP4 ICONV 
-	PHP4 ZLIB support (recommended)
-  MySQL >= 4.x http://www.mysql.com
-  24MB of Ram
+  Apache >= 1.3.x http://www.apache.org OR other webserver
+  PHP >= 5.1.x http://www.php.net
+  	PHP5-Mysql
+	PHP5-Session
+	PHP5-gd (recommended)
+	PHP5 ICONV 
+	PHP5 ZLIB support (recommended)
+  MySQL >= 4.1+ http://www.mysql.com
 
 3. Setting Up
 
@@ -136,7 +133,7 @@ Contents:
 
   If you are upgrading from an older version of Ampache we recommend
   moving the old directory out of the way, extracting the new copy in 
-  its place and then re-creating the config file. All database updates
+  its place and then copying the old config file. All database updates
   will be handled by the /update.php script. There is no need to insert
   the /sql/ampache.sql if you have an existing installation.
 
@@ -144,14 +141,6 @@ Contents:
 
   This Application falls under the Standard GPL v2. See Licence 
   included with this tar file
-
-4a. Donations
-
-  We don't want your money but we will take your beer. If you 
-  love ampache and want to encourage us to write more please
-  visit ampache.org for information on how to donate some beer
-  to our cause. If you can't send beer a postcard would also 
-  be great. E-mail beer@ampache.org for shipping address 
 
 5. Contact Info
 
@@ -161,10 +150,9 @@ Contents:
   Public SVN: https://svn.ampache.org/
   IRC: irc.ampache.org #ampache (Freenode)
   Forums: http://ampache.org/forums
-  Bugs: https://ampache.bountysource.com/development/
-  Wiki: https://ampache.bountysource.com/wiki/
+  Bugs: http://ampache.org/bugs
+  Wiki: http://ampache.org/bugs/wiki
   Demo: http://ampache.org/demo
 
-  -Karl Vollmer
   Ampache Development Team
   vollmer@ampache.org

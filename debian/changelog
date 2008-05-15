@@ -1,3 +1,16 @@
+ampache (3.4-2) unstable; urgency=high
+
+    * Included some upstream gather album art fixes.
+    
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 15 May 2008 18:44:23 -0500
+
+ampache (3.4-1) unstable; urgency=high
+
+    * New Upstream version release.
+    * Added updated nl.po translation.  Thanks Bart Cornelis. Closes: #463441
+    
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 10 May 2008 07:53:23 -0500
+
 ampache (3.3.3.5-dfsg1-1) unstable; urgency=high
 
     * Removed COLLEGE.ttf from the org.tar.gz. Closes: #455698

@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
  
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,19 +24,19 @@
  * get_song_files
  * tmakes array of song ids and returns
  *	array of path to actual files
- * @param $song_ids        an array of song ids whose filenames you need
  */
-function get_song_files( $song_ids ) {
-        global $user;
+function get_song_files($song_ids) {
+
         $song_files = array();
-        foreach( $song_ids as $song_id ) {
-                $song = new Song( $song_id );
+        foreach ($song_ids as $song_id) {
+                $song = new Song($song_id);
 		/* Don't archive disabled songs */
-		if ($song->status != 'disabled') { 
+		if ($song->enabled) { 
 	                $total_size += sprintf("%.2f",($song->size/1048576));
-	                array_push( $song_files, $song->file );
+	                array_push($song_files, $song->file);
 		} // if song isn't disabled
         }
+
         return array($song_files,$total_size);
 } //get_song_files
 
@@ -51,23 +50,45 @@ function get_song_files( $song_ids ) {
  */
 function send_zip( $name, $song_files ) {
 
+	// Check if they want to save it to a file, if so then make sure they've got
+	// a defined path as well and that it's writeable
+	if (Config::get('file_zip_download') && Config::get('file_zip_path')) { 
+		// Check writeable
+		if (!is_writable(Config::get('file_zip_path'))) { 
+			$in_memory = '1'; 
+			debug_event('Error','File Zip Path:' . Config::get('file_zip_path') . ' is not writeable','1'); 
+		} 
+		else { 
+			$in_memory = '0'; 
+			$basedir = Config::get('file_zip_path'); 
+		} 
+
+	} else {
+		$in_memory = '1'; 
+	} // if file downloads
+
 	/* Require needed library */
-        require_once(conf('prefix') . '/modules/archive/archive.lib.php' );
+        require_once Config::get('prefix') . '/modules/archive/archive.lib.php';
         $arc = new zip_file( $name . ".zip" );
         $options = array(
-                'inmemory'      => 1,   // create archive in memory
+                'inmemory'      => $in_memory,   // create archive in memory
+		'basedir'	=> $basedir,
                 'storepaths'    => 0,   // only store file name, not full path
-                'level'         => 0    // no compression
+                'level'         => 0,    // no compression
+		'comment'	=> Config::get('file_zip_comment')
         );
 	
         $arc->set_options( $options );
         $arc->add_files( $song_files );
+
 	if (count($arc->error)) { 
 		debug_event('archive',"Error: unable to add songs",'3');
+		return false; 
 	} // if failed to add songs
 	
         if (!$arc->create_archive()) { 
 		debug_event('archive',"Error: unable to create archive",'3');
+		return false; 
 	} // if failed to create archive
 	
         $arc->download_file();

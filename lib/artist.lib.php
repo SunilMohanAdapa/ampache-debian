@@ -5,9 +5,8 @@
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -67,7 +66,7 @@ function format_artist($artist) {
 function show_artists ($match = '') {
 
         $dbh = dbh();
-	$match = sql_escape($match);
+
         $view = new View();
         $view->import_session_view();
 
@@ -80,7 +79,7 @@ function show_artists ($match = '') {
         else {
 
 		// Pull in the min object count
-		$min_object_count	= intval(conf('min_object_count'));
+		$min_object_count	= conf('min_object_count');
 		$min_join	= " LEFT JOIN song ON song.artist=artist.id"; 
 		$min_group	= "GROUP BY song.artist HAVING COUNT(song.id) > $min_object_count"; 
 
@@ -99,13 +98,13 @@ function show_artists ($match = '') {
                         $offset_limit = 999999;
                 }
                 else {
-                         $offset_limit = $GLOBALS['user']->prefs['offset_limit'];
+                         $offset_limit = $user->prefs['offset_limit'];
                 }
                 $view = new View($query,'artists.php','name',$total_items,$offset_limit);
 		
         } // end if creating view object
-        
-	if (is_array($match)) {
+
+        if (is_array($match)) {
                 $artists = $match;
                 $_SESSION['view_script'] = false;
         }

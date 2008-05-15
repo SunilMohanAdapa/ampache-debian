@@ -1,7 +1,7 @@
-# Italian (it) translation of debconf templates for ampache
-# Copyright (C) 2007 Free Software Foundation, Inc.
-# This file is distributed under the same license as the ampache package.
-# Luca Monducci <luca.mo@tiscali.it>, 2007.
+# Italian translation of Ampache debconf templates.
+# Copyright (C) 2007 Ampache.org.
+# This file is distributed under the same license as the Ampache package.
+# 2007 Luca Monducci <luca.mo@tiscali.it>.
 #
 msgid ""
 msgstr ""

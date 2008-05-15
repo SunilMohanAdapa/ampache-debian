@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,112 +25,272 @@
  */
 
 define('NO_SESSION','1');
-require_once('../lib/init.php');
+require_once '../lib/init.php';
+
+// If it's not a handshake then we can allow it to take up lots of time
+if ($_REQUEST['action'] != 'handshake') { 
+	set_time_limit(0); 
+} 
+
+/* Set the correct headers */
+header("Content-type: text/xml; charset=" . Config::get('site_charset'));
+header("Content-Disposition: attachment; filename=information.xml");
+
+// If we don't even have access control on then we can't use this!
+if (!Config::get('access_control')) { 
+	ob_end_clean(); 
+	debug_event('Access Control','Error Attempted to use XML API with Access Control turned off','3'); 
+	echo xmlData::error('501','Access Control not Enabled');
+	exit; 
+}  
 
 /** 
  * Verify the existance of the Session they passed in we do allow them to
  * login via this interface so we do have an exception for action=login
  */
-if (!session_exists($_REQUEST['sessid']) AND $_REQUEST['action'] !== 'login') { exit(); }
+if (!Access::check_network('init-api',$_SERVER['REMOTE_ADDR'],$_REQUEST['user'],'5')) { 
+	debug_event('Access Denied','Unathorized access attempt to API [' . $_SERVER['REMOTE_ADDR'] . ']', '3');
+	ob_end_clean(); 
+        echo xmlData::error('403','ACL Error');
+	exit(); 
+}
 
-$GLOBALS['user'] = new User($_REQUEST['user_id']);
-$action = scrub_in($_REQUEST['action']);
+if ((!vauth::session_exists('api', $_REQUEST['auth']) AND $_REQUEST['action'] != 'handshake')) { 
+	debug_event('Access Denied','Invalid Session attempt to API [' . $_REQUEST['action'] . ']','3'); 
+	ob_end_clean(); 
+	echo xmlData::error('401','Session Expired');
+	exit(); 
+}
 
-/* Set the correct headers */
-header("Content-type: text/xml; charset=utf-8");
+// If we make it past the check and we're not a hand-shaking then we should extend the session
+if ($_REQUEST['action'] != 'handshake') { 
+	vauth::session_extend($_REQUEST['auth']); 
+	$session = vauth::get_session_data($_REQUEST['auth']);
+	$GLOBALS['user'] = User::get_from_username($session['username']);
+} 
 
-switch ($action) { 
-	/* Returns an array of artist information */
-	case 'get_artists': 
-		$sql = "SELECT id FROM artist ORDER BY name";
-		$db_results = mysql_query($sql,dbh());
+switch ($_REQUEST['action']) { 
+	case 'handshake': 
+		// Send the data we were sent to the API class so it can be chewed on 
+		$token = Api::handshake($_REQUEST['timestamp'],$_REQUEST['auth'],$_SERVER['REMOTE_ADDR'],$_REQUEST['user']); 
 		
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$artist = new Artist($r['id']);
-			$artist->format_artist();
-			$results[] = array('id'=>$artist->id,'name'=>$artist->full_name);
-		} // end while results
+		if (!$token) { 
+			ob_end_clean(); 
+			echo xmlData::error('401','Error Invalid Handshake, attempt logged'); 
+		} 
+		else { 
+			ob_end_clean(); 
+			echo xmlData::keyed_array($token); 
+		} 
 
-		$xml_doc = xml_from_array($results);
-		echo $xml_doc;
-	break;
-	case 'get_albums':
-		$sql = "SELECT id FROM album ORDER BY name";
-		$db_results = mysql_query($sql,dbh()); 
-
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$album = new Album($r['id']);
-			$results[] = array('id'=>$r['id'],'year'=>$album->year,'name'=>$album->name);
-		} // end while results
-
-		$xml_doc = xml_from_array($results);
-		echo $xml_doc;
-	break;
-	case 'get_genres':
-		$sql = "SELECT id FROM genre ORDER BY name";
-		$db_results = mysql_query($sql,dbh());
+	break; 
+	case 'artists': 
+		Browse::reset_filters(); 
+		Browse::set_type('artist'); 
+		Browse::set_sort('name','ASC'); 
 	
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$genre = new Genre($r['id']); 
-			$results[] = array('id'=>$r['id'],'name'=>$genre->name);
-		}
+		if ($_REQUEST['filter']) { 
+			Browse::set_filter('alpha_match',$_REQUEST['filter']); 
+		} 
+
+		// Set the offset
+		xmlData::set_offset($_REQUEST['offset']); 
+		xmlData::set_limit($_REQUEST['limit']); 
+
+		$artists = Browse::get_objects(); 
+		// echo out the resulting xml document
+		ob_end_clean(); 
+		echo xmlData::artists($artists);
+	break; 
+	case 'artist': 
+		$uid = scrub_in($_REQUEST['filter']); 
+		echo xmlData::artists(array($uid)); 
+	break; 
+	case 'artist_albums': 
+		$artist = new Artist($_REQUEST['filter']); 
+
+		$albums = $artist->get_albums(); 
+
+                // Set the offset
+                xmlData::set_offset($_REQUEST['offset']);
+		xmlData::set_limit($_REQUEST['limit']); 
+		ob_end_clean(); 
+		echo xmlData::albums($albums); 
+	break; 
+	case 'artist_songs': 
+		$artist = new Artist($_REQUEST['filter']); 
+		$songs = $artist->get_songs(); 
+
+		// Set the offset
+		xmlData::set_offset($_REQUEST['offset']); 
+		xmlData::set_limit($_REQUEST['limit']); 
+		ob_end_clean(); 
+		echo xmlData::songs($songs); 
+	break; 
+	case 'albums': 
+		Browse::reset_filters(); 
+		Browse::set_type('album'); 
+		Browse::set_sort('name','ASC'); 
 		
-		$xml_doc = xml_from_array($results);
-		echo $xml_doc;
+		if ($_REQUEST['filter']) { 
+			Browse::set_filter('alpha_match',$_REQUEST['filter']); 
+		} 
+		$albums = Browse::get_objects(); 
+
+                // Set the offset
+                xmlData::set_offset($_REQUEST['offset']);
+		xmlData::set_limit($_REQUEST['limit']); 
+		ob_end_clean(); 
+		echo xmlData::albums($albums); 
+	break; 
+	case 'album': 
+		$uid = scrub_in($_REQUEST['filter']); 
+		echo xmlData::albums(array($uid)); 
+	break; 
+	case 'album_songs': 
+		$album = new Album($_REQUEST['filter']); 
+		$songs = $album->get_songs(); 
+
+                // Set the offset
+                xmlData::set_offset($_REQUEST['offset']);
+		xmlData::set_limit($_REQUEST['limit']); 
+
+		ob_end_clean(); 
+		echo xmlData::songs($songs); 
+	break; 
+	case 'genres': 
+		Browse::reset_filters(); 
+		Browse::set_type('genre'); 
+		Browse::set_sort('name','ASC'); 
+		
+		if ($_REQUEST['filter']) { 
+			Browse::set_filter('alpha_match',$_REQUEST['filter']); 
+		} 
+		$genres = Browse::get_objects(); 
+
+                // Set the offset
+                xmlData::set_offset($_REQUEST['offset']);
+		xmlData::set_limit($_REQUEST['limit']); 
+
+		ob_end_clean(); 
+		echo xmlData::genres($genres); 
+	break; 
+	case 'genre': 
+		$uid = scrub_in($_REQUEST['filter']); 
+		ob_end_clean();
+		echo xmlData::genres(array($uid)); 
+	break; 
+	case 'genre_artists': 
+		$genre = new Genre($_REQUEST['filter']); 
+		$artists = $genre->get_artists(); 
+
+                xmlData::set_offset($_REQUEST['offset']);
+                xmlData::set_limit($_REQUEST['limit']);
+
+		ob_end_clean(); 
+		echo xmlData::artists($artists); 	
+	break; 
+	case 'genre_albums': 
+		$genre = new Genre($_REQUEST['filter']); 
+		$albums = $genre->get_albums(); 
+
+                xmlData::set_offset($_REQUEST['offset']);
+                xmlData::set_limit($_REQUEST['limit']);
+
+		ob_end_clean(); 
+		echo xmlData::albums($albums); 
 	break;
-	/* Return results of a quick search */
-	case 'search': 
-		/* We need search string */
-		$_REQUEST['s_all'] = $_REQUEST['search_string'];	
-		if (strlen($_REQUEST['s_all']) < 1) { break; } 
-		$data = run_search($_REQUEST);
+	case 'genre_songs': 
+		$genre = new Genre($_REQUEST['filter']); 
+		$songs = $genre->get_songs(); 
 
-		/* Unfortuantly these are song objects, which are not good for
-		 * xml.. turn it into an array 
-		 */
-		foreach ($data as $song) { 
-			$genre 		= $song->get_genre_name();
-			$artist 	= $song->get_artist_name();
-			$album		= $song->get_album_name();
-			$results[] 	= array('id'=>$song->id,
-						'title'=>$song->title,
-						'genre'=>$genre,
-						'artist'=>$artist,
-						'album'=>$album);	
-		} // end foreach song	
+                xmlData::set_offset($_REQUEST['offset']);
+                xmlData::set_limit($_REQUEST['limit']);
 
-		$xml_doc = xml_from_array($results);
-		echo $xml_doc;
+		ob_end_clean(); 	
+		echo xmlData::songs($songs); 
+	break; 
+	case 'songs': 
+		Browse::reset_filters(); 
+		Browse::set_type('song'); 
+		Browse::set_sort('title','ASC'); 
+		
+		if ($_REQUEST['filter']) { 
+			Browse::set_filter('alpha_match',$_REQUEST['filter']); 
+		} 
+		$songs = Browse::get_objects(); 
 
-	break;	
-	/* This takes a object_id/object_type and returns the correct PLAY url for it */
-	case 'play_url':
-		/* We need the type and id */
-		$object_type 	= scrub_in($_REQUEST['object_type']); 
-		$object_id	= scrub_in($_REQUEST['object_id']);
+                // Set the offset
+                xmlData::set_offset($_REQUEST['offset']);
+		xmlData::set_limit($_REQUEST['limit']); 
 
-		switch ($object_type) { 
-			case 'song':
-				$song = new Song($object_id);
-				$url = $song->get_url($_REQUEST['sessid']); 
-				$results[] = $url;
-			break;
-			default: 
-				// Rien a faire
-			break;
-		} // end switch on object_type
+		ob_end_clean(); 
+		echo xmlData::songs($songs); 
+	break; 
+	case 'song': 
+		$uid = scrub_in($_REQUEST['filter']); 
 
-		$xml_doc = xml_from_array($results);
-		echo $xml_doc; 
+		ob_end_clean(); 
+		echo xmlData::songs(array($uid)); 
+	break; 
+	case 'url_to_song': 
+		$url = scrub_in($_REQUEST['url']); 
 
-	break;
-	/* This allows you to login via the xml mojo */
-	case 'login':
-	
+		$song_id = Song::parse_song_url($url); 
+		ob_end_clean(); 
+		echo xmlData::songs(array($song_id)); 
+	break; 
+	case 'playlists': 
+		Browse::reset_filters(); 
+		Browse::set_type('playlist'); 
+		Browse::set_sort('name','ASC'); 
 
-	break;
+		if ($_REQUEST['filter']) { 
+			Browse::set_filter('alpha_match',$_REQUEST['filter']); 
+		} 
+
+		$playlist_ids = Browse::get_objects(); 
+
+		xmlData::set_offset($_REQUEST['offset']); 
+		xmlData::set_limit($_REQUEST['limit']); 
+
+		ob_end_clean(); 
+		echo xmlData::playlists($playlist_ids);
+	break; 
+	case 'playlist': 
+		$uid = scrub_in($_REQUEST['filter']); 
+
+		ob_end_clean(); 
+		echo xmlData::playlists(array($uid)); 
+	break; 
+	case 'playlist_songs': 
+		$playlist = new Playlist($_REQUEST['filter']); 
+		$items = $playlist->get_items(); 
+
+		foreach ($items as $object) { 
+			if ($object['type'] == 'song') { 
+				$songs[] = $object['object_id']; 
+			} 
+		} // end foreach
+
+		xmlData::set_offset($_REQUEST['offset']); 
+		xmlData::set_limit($_REQUEST['limit']); 
+		ob_end_clean(); 
+		echo xmlData::songs($songs); 
+	break; 
+	case 'search_songs': 
+		$array['s_all'] = $_REQUEST['filter']; 
+		$results = run_search($array);
+		ob_end_clean(); 
+
+		xmlData::set_offset($_REQUEST['offset']); 
+		xmlData::set_limit($_REQUEST['limit']); 
+
+		echo xmlData::songs($results); 
+	break; 
 	default:
-		// Rien a faire
+                ob_end_clean();
+                echo xmlData::error('405','Invalid Request');
 	break;
 } // end switch action
 ?>

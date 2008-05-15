@@ -4,6 +4,7 @@
  | By Devin Doucette
  | Copyright (c) 2005 Devin Doucette
  | Email: darksnoopy@shaw.ca
+ | Modification by CoF & Vollmer
  +--------------------------------------------------
  | Email bugs/suggestions to darksnoopy@shaw.ca
  +--------------------------------------------------
@@ -12,10 +13,13 @@
  | only if this copyright statement is not removed
  +--------------------------------------------------*/
 
-class archive
-{
-	function archive($name)
-	{
+class archive {
+
+	/**
+ 	 * constructor
+	 * This function is the constructor for the arcive class
+	 */
+	public function archive($name) {
 		$this->options = array (
 			'basedir' => ".",
 			'name' => $name,
@@ -35,10 +39,10 @@ class archive
 		$this->exclude = array ();
 		$this->storeonly = array ();
 		$this->error = array ();
-	}
+	} // archive 
 
-	function set_options($options)
-	{
+	public function set_options($options) {
+
 		foreach ($options as $key => $value)
 			$this->options[$key] = $value;
 		if (!empty ($this->options['basedir']))
@@ -59,27 +63,30 @@ class archive
 			$this->options['prepend'] = preg_replace("/\/+/", "/", $this->options['prepend']);
 			$this->options['prepend'] = preg_replace("/\/$/", "", $this->options['prepend']) . "/";
 		}
-	}
 
-	function create_archive()
-	{
+		// Generate a tmpname
+		$this->options['tmpname'] = time() . '_' . session_id(); 
+
+	} // set_options 
+
+	public function create_archive() {
 		$this->make_list();
 
 		if ($this->options['inmemory'] == 0)
 		{
 			$pwd = getcwd();
 			chdir($this->options['basedir']);
-			if ($this->options['overwrite'] == 0 && file_exists($this->options['name'] . ($this->options['type'] == "gzip" || $this->options['type'] == "bzip" ? ".tmp" : "")))
+			if ($this->options['overwrite'] == 0 && file_exists($this->options['tmpname'] . ($this->options['type'] == "gzip" || $this->options['type'] == "bzip" ? ".tmp" : "")))
 			{
-				$this->error[] = "File {$this->options['name']} already exists.";
+				$this->error[] = "File {$this->options['tmpname']} already exists.";
 				chdir($pwd);
 				return 0;
 			}
-			else if ($this->archive = @fopen($this->options['name'] . ($this->options['type'] == "gzip" || $this->options['type'] == "bzip" ? ".tmp" : ""), "wb+"))
+			else if ($this->archive = @fopen($this->options['tmpname'] . ($this->options['type'] == "gzip" || $this->options['type'] == "bzip" ? ".tmp" : ""), "wb+"))
 				chdir($pwd);
 			else
 			{
-				$this->error[] = "Could not open {$this->options['name']} for writing.";
+				$this->error[] = "Could not open {$this->options['tmpname']} for writing.";
 				chdir($pwd);
 				return 0;
 			}
@@ -132,7 +139,7 @@ class archive
 		{
 			fclose($this->archive);
 			if ($this->options['type'] == "gzip" || $this->options['type'] == "bzip")
-				unlink($this->options['basedir'] . "/" . $this->options['name'] . ".tmp");
+				unlink($this->options['basedir'] . "/" . $this->options['tmpname'] . ".tmp");
 		}
 
 		return true;
@@ -271,15 +278,14 @@ class archive
 		return $files;
 	}
 
-	function download_file()
-	{
-		if ($this->options['inmemory'] == 0)
-		{
-			$this->error[] = "Can only use download_file() if archive is in memory. Redirect to file otherwise, it is faster.";
-			return;
-		}
-		switch ($this->options['type'])
-		{
+	/**
+	 * download_file
+	 * Modified by COF
+	 */
+	public function download_file() {
+
+		// Always send this header
+		switch ($this->options['type']) {
 		case "zip":
 			header("Content-Type: application/zip");
 			break;
@@ -291,18 +297,50 @@ class archive
 			break;
 		case "tar":
 			header("Content-Type: application/x-tar");
+		} // end switch 
+
+		if ($this->options['inmemory'] == 0) {
+
+                        $full_arc_name = $this->options['basedir']."/".$this->options['tmpname'];
+			if (file_exists($full_arc_name)) {
+	                        $fsize = filesize($full_arc_name);
+
+	                        //Send some headers which can be useful...
+	                        $header = "Content-Disposition: attachment; filename=\"";
+	                        $header .= strstr($this->options['name'], "/") ? substr($this->options['name'], strrpos($this->options['name'], "/") + 1) : $this->options['name'];
+	                        $header .= "\"";
+	                        header($header);
+	                        header("Content-Length: " . $fsize);
+	                        header("Content-Transfer-Encoding: binary");
+	                        header("Cache-Control: no-cache, must-revalidate, max-age=60");
+	                        header("Expires: Sat, 01 Jan 2000 12:00:00 GMT");
+
+	                        readfile($full_arc_name);
+
+	                        //Now delete tempory file
+	                        unlink($full_arc_name);
+			} 
+			else { 
+				debug_event('ERROR','Archive does not exist, unable to download','1');
+				return false; 
+			} 
+			return true;
 		}
-		$header = "Content-Disposition: attachment; filename=\"";
-		$header .= strstr($this->options['name'], "/") ? substr($this->options['name'], strrpos($this->options['name'], "/") + 1) : $this->options['name'];
-		$header .= "\"";
-		header($header);
-		header("Content-Length: " . strlen($this->archive));
-		header("Content-Transfer-Encoding: binary");
-		header("Cache-Control: no-cache, must-revalidate, max-age=60");
-		header("Expires: Sat, 01 Jan 2000 12:00:00 GMT");
-		print($this->archive);
-	}
-}
+		// else if we're doing this baby in memory	
+		else { 
+			$header = "Content-Disposition: attachment; filename=\"";
+			$header .= strstr($this->options['name'], "/") ? substr($this->options['name'], strrpos($this->options['name'], "/") + 1) : $this->options['name'];
+			$header .= "\"";
+			header($header);
+			header("Content-Length: " . strlen($this->archive));
+			header("Content-Transfer-Encoding: binary");
+			header("Cache-Control: no-cache, must-revalidate, max-age=60");
+			header("Expires: Sat, 01 Jan 2000 12:00:00 GMT");
+			print($this->archive);
+		} 
+	} // download file
+
+} // end zip_file class
 
 class tar_file extends archive
 {

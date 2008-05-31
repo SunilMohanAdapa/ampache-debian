@@ -1,3 +1,17 @@
+ampache (3.4.1-1) unstable; urgency=low
+
+    * Included numerous upstream fixes, please see /src/docs/CHANGELOG
+      dated 05.31.2008 for more details.
+    * Removed /src/debian/preinst, was not needed.
+    * Removed Vcs entry in /src/debian/control, was not needed.
+    * Added updated sv.po translation.  Thanks Martin Bagge.  Closes: #483432
+    * Updated /src/debian/copyright with sv.po and nl.po copyright info.
+    * Updated /src/debian/copyright with /src/locale/ca_CA copyright info.
+    * Removed /src/locale/is_IS copyright info from /src/debian/copyright, 
+      /src/locale/is_IS removed by upstream.
+    
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 31 May 2008 09:32:43 -0500
+
 ampache (3.4-2) unstable; urgency=high
 
     * Included some upstream gather album art fixes.

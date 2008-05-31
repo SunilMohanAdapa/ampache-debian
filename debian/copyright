@@ -7,6 +7,7 @@ Upstream Author: Karl Vollmerk vollmerk@ampache.org
 
 Copyright:
 
+src/debian/po/sv.po is Copyright 2007 Martin Bagge.
 src/debian/po/cs.po is Copyright 2007 Miroslav Kure.
 src/debian/po/de.po is Copyright 2007 Helge Kreutzmann.
 src/debian/po/eu.po is Copyright 2007 Piarres Beobide.
@@ -20,11 +21,11 @@ src/debian/po/ru.po is Copyright 2007 Yuri Kozlov.
 src/debian/po/ta.po is Copyright 2007 Dr.T.Vasudevan.
 src/debian/po/vi.po is Copyright 2007 Clytie Siddall.
 src/debian/po/pt_BR.po is Copyright 2007 Felipe Augusto van de Wiel
-src/locale/de_DE/lC_Messages/messages.po is Copyright 2007 Nikolai Faursterling.
-src/locale/en_GB/LC_Messages/messages.po is Copyright 2005 David Lodge.
+src/locale/ca_CA/LC_MESSAGES/messages.po is Copyright 2008 Guillem Lluch Moll.
+src/locale/de_DE/LC_MESSAGES/messages.po is Copyright 2007 Nikolai Faursterling.
+src/locale/en_GB/LC_MESSAGES/messages.po is Copyright 2005 David Lodge.
 src/locale/es_ES/LC_MESSAGES/messages.po is Copyright 2007 LL.
 src/locale/fr_FR/LC_MESSAGES/messages.po is Copyright 2007 François Jan.
-src/locale/is_IS/LC_MESSAGES/messages.po is Copyright 2007 LL.
 src/locale/it_IT/LC_MESSAGES/messages.po is Copyright 2007 Mr-miky.
 src/locale/nl_NL/LC_MESSAGES/messages.po is Copyright 2007 Terence Theijn.
 src/locale/ru_RU/LC_MESSAGES/messages.po is Copyright 2007 Alexey Illarionov.

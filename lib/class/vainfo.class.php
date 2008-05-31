@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ class vainfo {
 		$this->_getID3->option_tags_html	= false;
 		$this->_getID3->option_extra_info	= false;
 		$this->_getID3->option_tag_lyrics3	= false;
-		$this->_getID3->encoding		= $this->encoding; 
+//		$this->_getID3->encoding		= $this->encoding; 
 		$this->_getID3->option_tags_process    = true; 
 
 		/* Check for ICONV */
@@ -452,7 +452,15 @@ class vainfo {
 
 		$results = array();
 
-		$pattern = $this->_dir_pattern . '/' . $this->_file_pattern;
+                // Correctly detect the slash we need to use here
+                if (strstr($filename,"/")) {
+                        $slash_type = '/';
+                }
+                else {
+                        $slash_type = '\\';
+                }
+
+                $pattern = preg_quote($this->_dir_pattern) . $slash_type . preg_quote($this->_file_pattern);
 		preg_match_all("/\%\w/",$pattern,$elements);
 		
 		$preg_pattern = preg_quote($pattern);
@@ -485,19 +493,14 @@ class vainfo {
 	 * in the file
 	 */
 	private function _clean_tag($tag,$encoding='') { 
-		
-		/* Guess that it's UTF-8 */
-		if (!$encoding) { $encoding = 'UTF-8'; }
 
-		if ($this->_iconv AND strcasecmp($encoding,$this->encoding) != 0) { 
+		// If we've got iconv then go ahead and clear her up		
+		if ($this->_iconv) { 
+			/* Guess that it's UTF-8 */
+			if (!$encoding) { $encoding = $this->_getID3->encoding; }
 			$charset = $this->encoding . '//TRANSLIT';
 			$tag = iconv($encoding,$charset,$tag);
 		}
-		elseif ($this->_iconv) { 
-			// We have to transcode anyway and protect from non-[CHARGET] chars
-			$charset = $this->encoding . '//IGNORE'; 
-			$tag = iconv($this->encoding,$charset,$tag); 
-		} 
 
 		return $tag;
 

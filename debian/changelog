@@ -1,3 +1,16 @@
+ampache (3.4.1-2) unstable; urgency=low
+
+    * Made package to depend on libjs-prototype to correct a lintian error of
+      "courtousy copies of code".  Adjusted debian/control, debian/rules,
+      debian/links, postinst, postrm to reflect this dependency.
+    * Made package to depend on libphp-snoopy due to CVE-2008-4796.  Adjusted
+      debian/control, debian/rules, debian/links, postinst, postrm to reflect
+      this dependency. Closes: #504169
+    * Removed /usr/share/ampache/www/locale/base/gather-messages.sh from package
+      to close a potential security hole.  Closes: #496369
+    
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 01 Nov 2008 13:47:43 -0500
+
 ampache (3.4.1-1) unstable; urgency=low
 
     * Included numerous upstream fixes, please see /src/docs/CHANGELOG

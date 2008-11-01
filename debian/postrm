@@ -51,7 +51,13 @@ upgrade)
     ;;
     purge)
 #this is needed to remove ampache.cfg.php as it is added by the user
-	rm -r -f /etc/ampache
+if [ -d /etc/ampache ]; then
+      rm -rf /etc/ampache
+fi
+#This is need to manually remove symlinks.
+if [ -d /usr/share/ampache ]; then
+      rm -rf /usr/share/ampache
+fi
        
     ;;
     *)

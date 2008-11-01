@@ -19,7 +19,8 @@ binary-indep: install
 	dh_testroot
 	dh_installchangelogs debian/changelog
 	dh_installdocs
-	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE -Xreadme.windows.txt
+	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
+	-Xreadme.windows.txt -Xprototype -XSnoopy -Xgather-messages.sh
 	dh_installdebconf
 	dh_link -A
 	dh_compress 

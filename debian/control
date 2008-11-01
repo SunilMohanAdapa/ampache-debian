@@ -8,7 +8,8 @@ Standards-Version: 3.7.3
 
 Package: ampache
 Architecture: all
-Depends: debconf (>= 0.5) | debconf-2.0, po-debconf, apache2-mpm-prefork, php5, php5-mysql
+Depends: debconf (>= 0.5) | debconf-2.0, po-debconf, apache2-mpm-prefork, \
+  php5, php5-mysql, libjs-prototype, libphp-snoopy
 Conflicts:  ampache-themes-3.3.3.5a-1
 Recommends: mysql-server-5.0, php5-gd, php5-cli, phpmyadmin
 Description: web-based audio file management system

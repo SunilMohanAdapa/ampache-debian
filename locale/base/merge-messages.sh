@@ -40,3 +40,5 @@ msgmerge -N ../zh_CN/LC_MESSAGES/messages.po ./messages.po --output-file=../zh_C
 msgfmt -o ../zh_CN/LC_MESSAGES/messages.mo ../zh_CN/LC_MESSAGES/messages.po
 msgmerge -N ../ru_RU/LC_MESSAGES/messages.po ./messages.po --output-file=../ru_RU/LC_MESSAGES/messages.po
 msgfmt -o ../ru_RU/LC_MESSAGES/messages.mo ../ru_RU/LC_MESSAGES/messages.po
+msgmerge -N ../ja_JP/LC_MESSAGES/messages.po ./messages.po --output-file=../ja_JP/LC_MESSAGES/messages.po
+msgfmt -o ../ja_JP/LC_MESSAGES/messages.mo ../ja_JP/LC_MESSAGES/messages.po

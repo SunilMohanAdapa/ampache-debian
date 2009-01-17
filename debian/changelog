@@ -1,3 +1,22 @@
+ampache (3.4.4-1) unstable; urgency=low
+
+    * New upstream release.
+    * Fixed debian/ampache.config so debconf now asks questions correctly.
+    * Reworked debian/ampache.postinst server restart to be server reload. 
+      Added additional check for ampache.cfg.php, then backup ampache.cfg.php
+      prior to running migrate_config.inc.  Used full pathname in 
+      migrate_config.inc.
+    * Added Suggest section to debian/control.  Demoted php5-gd and phpmyadmin
+      to the Suggest section in an attempt to keep extra fonts packages and 
+      X11 packages from being pulled in on a server setup.
+    * Added Japanese translation.  
+    * Changed debian/copyright to the machine readable debian proposed format.
+      Updated debian/copyright with Japanese translation copyright info. 
+    * Added debian/watch.
+    * Changed maintainer email address in debian/control and debian/changelog.
+
+ -- Charlie Smotherman <cjsmo@ubuntu.com>  Sat, 17 Jan 2009 18:23:43 -0500
+
 ampache (3.4.1-2) unstable; urgency=low
 
     * Made package to depend on libjs-prototype to correct a lintian error of

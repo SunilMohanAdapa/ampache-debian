@@ -3,6 +3,49 @@
 --------------------------------------------------------------------------
 
 --------------------------------------------------------------------------
+  v.3.4.4 12/26/2008
+	- Fixed catalog_update.inc so that it correctly runs verify without
+		errors
+	- Fixed democratic play url so that it respects force http play
+	- Make error messages during installation more helpful
+	- Backported fix to update language based on that selected during
+		installation
+	- Fixed potential fread() of 0 bytes if you seek to the very end
+		of a file
+
+--------------------------------------------------------------------------
+  v.3.4.3 08/31/2008 
+	- Fixed use_auth = false not correctly re-creating the session if
+		you had just switched from use_auth = true
+	- Add Links to RSS feeds and change default to use_rss=true
+	- Fixed Dynamic Random/Related URLs with players that always send
+		a byte offset (MPD)
+	- Added checkbox to allow use of existing database
+	- Fixed prevent_multiple_logins, preventing all logins (Thx hugh)
+	- Fixed headers on the Export
+	- Fixed lack of proper config loading on streams (Thx lorijho)
+	- Fixed old config test page so refresh will correctly re-direct
+		you to the test.php if your config is parseable
+
+--------------------------------------------------------------------------
+  v.3.4.2 07/26/2008 
+	- Removed //IGNORE where not nessecary fixes issues with non-gnu
+		iconv libraries
+	- Corrected some translation strings and added jp_JP (Thx momo-i)
+	- Correct confusing behavior of API to use alpha_match rather then
+		the starts_with used by the browse functions
+	- Fix an issue where downloads were not being tracked correctly
+	- Ignore Hidden Files (solves an issue with Mac . files that contain
+		supplemental information, but no data
+	- Added shoutcast controller (backport from 3.5)
+	- Avoid double stream session insertion in edge cases
+	- Fix divide by 0 error when using automatic downsampling in some
+		configurations
+	- Fix missing show album art on single artist view
+	- Fix transcode command for m4a files in ampache.cfg.php.dist
+	- Remove restriction that disallowed blank root passwords
+
+--------------------------------------------------------------------------
   v.3.4.1 05/31/2008
         - Fixed issue with art dump on jpeg files (Thx atrophic)
 	- Fixed issue with force http play and port not correctly specifying

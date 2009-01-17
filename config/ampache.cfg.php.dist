@@ -7,7 +7,7 @@
 ; if this config file is up to date 
 ; this is compared against a value hard-coded
 ; into the init script
-config_version = 7
+config_version = 8
 
 ;###################
 ; Path Vars        #
@@ -504,10 +504,14 @@ transcode_mp3_target	= mp3
 transcode_cmd_flac 	= "flac -dc %FILE% | lame -b %SAMPLE% -S - - "
 transcode_cmd_m4a 	= "faad -f 2 -w %FILE% | lame -r -b %SAMPLE% -S - -"
 transcode_cmd_mp3	= "mp3splt -qnf %FILE% %OFFSET% %EOF% -o - | lame --mp3input -q 3 -b %SAMPLE% -S - -"
+;transcode_cmd_ogg   = "mp3splt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+transcode_cmd_ogg   = "oggsplt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+; Alternative command works better for some people
+;transcode_cmd_m4a       =  "alac %FILE% | lame -h -b %SAMPLE% -S - -"
+ 
 
-# This line seems to work better for windows, switch if needed
-#transcode_cmd_mp3	= "mp3splt -qnf -o - %FILE% %OFFSET% %EOF% | lame --mp3input -q 3 -b %SAMPLE% -S - -" 
-
+; This line seems to work better for windows, switch if needed
+;transcode_cmd_mp3	= "mp3splt -qnf -o - %FILE% %OFFSET% %EOF% | lame --mp3input -q 3 -b %SAMPLE% -S - -" 
 
 ;######################################################
 ; these options allow you to configure your rss-feed
@@ -518,30 +522,6 @@ transcode_cmd_mp3	= "mp3splt -qnf %FILE% %OFFSET% %EOF% -o - | lame --mp3input -
 ;
 ; use_rss = false (values true | false)
 ;
-;DEFAULT: use_rss = false 
-;use_rss = false
-;
-;
-; rss_main_title = the title for your feed.
-; DEFAULT: Ampache for the love of Music
-rss_main_title = Ampache for the love of Music
-; rss_main_description = the description for your feed
-; DEFAULT: Rss feed for Ampache so you can monitor who is listening to what
-rss_main_description = Rss feed for Ampache so you can monitor who is listening to what
-; rss_main_copyright = here you can enter copyright information if you wish
-; DEFAULT: copyright (c) Speedy B for Ampache
-rss_main_copyright = copyright (c) Speedy B for Ampache
-; rss_song_description = The description of the song.
-;                        It has to start with <![CDATA[
-;                        and end with ]]>. this is because xml wont parse if strange
-;                        characters are used in the id3-tag
-; usable items:
-; $song->f_title
-; $song->f_album
-; $user->fullname
-; $artist
-; $album
-; DEFAULT:  <![CDATA[$song->f_title @ $album played by  $user->fullname]]>
-; FIXME it's hardcoded in lib/rss.lib.php now
-;rss_song_description = <![CDATA[$song->f_title @ $album played by  $user->fullname]]>
+;DEFAULT: use_rss = true
+use_rss = true
 ;#####################################################

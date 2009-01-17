@@ -88,9 +88,7 @@ class Api {
 				$token = vauth::session_create($data); 
 
 				// Insert the token into the streamer
-				$stream = new Stream(); 
-				$stream->user_id = $client->id; 
-				$stream->insert_session($token); 
+				Stream::insert_session($token,$client->id); 
 				debug_event('API','Login Success, passphrase matched','1'); 
 
 				// We need to also get the 'last update' of the catalog information in an RFC 2822 Format

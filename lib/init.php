@@ -64,8 +64,7 @@ else {
  script
 */
 if (!file_exists($configfile)) { 
-        $path = preg_replace("/(.*)\/(\w+\.php)$/","\${1}", $_SERVER['PHP_SELF']);
-	$link = $http_type . $_SERVER['HTTP_HOST'] . $path . "/install.php";
+	$link = $http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/install.php";
 	header ("Location: $link");
 	exit();
 }
@@ -74,15 +73,14 @@ if (!file_exists($configfile)) {
 $results = @parse_ini_file($configfile); 
 
 if (!count($results)) { 
-	$path = preg_replace("/(.*)\/(\w+\.php)$/","\${1}", $_SERVER['PHP_SELF']);
-	$link = $http_type . $_SERVER['HTTP_HOST'] . $path . "/test.php?action=config";
+	$link = $http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/test.php?action=config";
 	header ("Location: $link");
 	exit();
 } 
 
 /** This is the version.... fluf nothing more... **/
-$results['version']		= '3.4.1';
-$results['int_config_version']	= '7'; 
+$results['version']		= '3.4.4';
+$results['int_config_version']	= '8'; 
 
 $results['raw_web_path']	= $results['web_path'];
 $results['web_path']		= $http_type . $_SERVER['HTTP_HOST'] . $results['web_path'];
@@ -203,10 +201,11 @@ elseif (!Config::get('use_auth')) {
 	$auth['id'] = -1;
 	$auth['access'] = '100';
 	$auth['offset_limit'] = 50;
-	if (!vauth::check_session()) { 
+	if (!vauth::session_exists('interface',$_COOKIE[Config::get('session_name')])) { 
 		vauth::create_cookie(); 
 		vauth::session_create($auth); 
 	}
+	vauth::check_session(); 
 	$GLOBALS['user']	 	= new User(-1);
 	$GLOBALS['user']->fullname 	= 'Ampache User';
 	$GLOBALS['user']->offset_limit 	= $auth['offset_limit'];

@@ -20,10 +20,8 @@
 
 */
 ?>
-<div style="clear:both;"></div>
-</div> <!-- end id="content"-->
-<!-- I really hate IE
-</td></tr></table> -->
+<div style="clear:both;"></div> <!-- Clear things out -->
+</div><!-- end id="content"-->
 </div> <!-- end id="maincontainer"-->
 <div id="footer">
 	<a href="http://www.ampache.org/index.php">Ampache v.<?php echo Config::get('version'); ?></a><br />

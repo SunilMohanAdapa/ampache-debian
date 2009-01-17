@@ -177,33 +177,6 @@ switch($_REQUEST['action']) {
 		$artist = new Artist($_REQUEST['artist']);
 		require (conf('prefix') . '/templates/show_rename_artist.inc.php'); 
 	break;
-	case 'match':
-	case 'Match':
-		$match = scrub_in($_REQUEST['match']);
-		if ($match == "Browse" || $match == "Show_all") { $chr = ""; }
-		else { $chr = $match; } 
-		/* Enclose this in the purty box! */
-		require (conf('prefix') . '/templates/show_box_top.inc.php'); 
-		show_alphabet_list('artists','artists.php',$match);
-		show_alphabet_form($chr,_('Show Artists starting with'),"artists.php?action=match");
-		require (conf('prefix') . '/templates/show_box_bottom.inc.php');
-
-		if ($match === "Browse") {
-			show_artists();
-		}
-		elseif ($match === "Show_all") {
-			$offset_limit = 999999;
-			show_artists();
-		}		
-	        else {
-			if ($chr == '') {
-				show_artists('A');
-			}
-			else {
-				show_artists($chr);
-			}
-		}
-	break;	
 } // end switch
 
 show_footer();

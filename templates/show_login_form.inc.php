@@ -1,6 +1,6 @@
 <?php
 /*
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -55,7 +55,7 @@ function focus(){ document.login.username.focus(); }
 		<form name="login" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/login.php">
 
 			<div class="loginfield" id="usernamefield">
-        <label for="username"><?php echo  _('Login'); ; ?>:</label> 
+        <label for="username"><?php echo  _('Username'); ; ?>:</label> 
 			  <input class="text_input" type="text" id="username" name="username" value="<?php echo  $_REQUEST['username']; ; ?>" />
       </div>
 			<div class="loginfield" id="passwordfield">

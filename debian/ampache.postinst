@@ -1,0 +1,54 @@
+#!/bin/sh
+# postinst script for Ampache
+
+set -e
+
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+# Ask the question and reconfigure the webserver.
+if [ "$1" = "configure" ]; then 
+
+   db_get ampache/configure-webserver || true
+
+   if [ "$RET" = "true" ]; then
+      webserver="apache2"
+      if [ ! -f /etc/$webserver/conf.d/ampache ] && [ ! -h /etc/$webserver/conf.d/ampache ]; then
+         ln -s /etc/ampache/ampache.conf /etc/$webserver/conf.d/ampache
+      fi
+   fi
+fi
+
+#Ask the question and restart the webserver.
+
+if [ "$1" = "configure" ]; then 
+   
+   db_get ampache/restart-webserver || true
+
+   if [ "$RET" = "true" ]; then 
+      webserver="apache2"
+      for webserver in $webserver; do
+          webserver=${webserver%,}
+	  if [ -x /usr/sbin/invoke-rc.d ]; then
+	     invoke-rc.d $webserver restart 3>/dev/null || true
+	  else
+             /etc/init.d/$webserver restart 3>/dev/null || true
+	  fi
+      done
+   fi
+fi
+#Make a backup copy of ampache.cfg.php.
+if [ "$1" = "configure" ] && [ -e /etc/ampache ]; then
+   AMPCFG="/etc/ampache/ampache.cfg.php"
+   WWW="/usr/share/ampache/www"
+   if [ -f $AMPCFG ]; then
+      cp $AMPCFG $WWW
+      mv $WWW/ampache.cfg.php $WWW/old.ampache.cfg.php
+      mv $WWW/old.ampache.cfg.php /etc/ampache
+      php /usr/share/ampache/www/bin/migrate_config.inc
+   fi
+fi
+
+#DEBHELPER#
+
+exit 0

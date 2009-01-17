@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/.*-(.*)/$1/ \
+http://ampache.org/downloads/ampache-(3.*)\.tar\.gz

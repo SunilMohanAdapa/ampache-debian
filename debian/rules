@@ -20,7 +20,7 @@ binary-indep: install
 	dh_installchangelogs debian/changelog
 	dh_installdocs
 	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
-	-Xreadme.windows.txt -Xprototype -XSnoopy -Xgather-messages.sh
+	-Xreadme.windows.txt -Xprototype -XSnoopy
 	dh_installdebconf
 	dh_link -A
 	dh_compress 

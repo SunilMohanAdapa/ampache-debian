@@ -436,8 +436,8 @@ class Catalog {
 		/* Recurse through this dir and create the files array */
 		while ( false !== ( $file = readdir($handle) ) ) {
 
-			/* Skip to next if we've got . or .. */
-			if ($file == '.' || $file == '..') { continue; } 
+			/* Skip to next if we've got . or .. or a hidden file */
+			if (substr($file,0,1) == '.' || $file == '..') { continue; } 
 
 			debug_event('read',"Starting work on $file inside $path",'5','ampache-catalog');
 
@@ -509,7 +509,7 @@ class Catalog {
 
 				// Check to make sure the filename is of the expected charset
 				if (function_exists('iconv')) { 
-					if (strcmp($full_file,iconv(Config::get('site_charset'),Config::get('site_charset') . '//IGNORE',$full_file)) != '0') { 
+					if (strcmp($full_file,iconv(Config::get('site_charset'),Config::get('site_charset'),$full_file)) != '0') { 
 						debug_event('read',$full_file . ' has non-' . Config::get('site_charset') . ' characters and can not be indexed','1'); 
 						Error::add('catalog_add',$full_file . ' ' . _('does not match site charset')); 
 						continue; 
@@ -2044,7 +2044,7 @@ class Catalog {
 		$genre 		= $results['genre'];
 		$bitrate 	= $results['bitrate'];
 		$rate	 	= $results['rate'];
-		$mode 		= $results['mode'];
+		$mode 		= ($results['mode'] == 'cbr') ? 'cbr' : 'vbr'; 
 		$size	 	= $results['size'];
 		$song_time 	= $results['time'];
 		$track	 	= $results['track'];

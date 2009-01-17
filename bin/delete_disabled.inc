@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright 2001 - 2007 Ampache.org
+ Copyright Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -33,6 +33,9 @@ define('NO_SESSION','1');
 $path = dirname(__FILE__); 
 $prefix = realpath($path . '/../'); 
 require_once $prefix . '/lib/init.php';
+
+echo "- Delete Disabled -\n"; 
+ob_end_flush(); 
 
 if ($debug) { echo "DEBUG ENABLED WILL NOT DELETE FILES!\n"; } 
 

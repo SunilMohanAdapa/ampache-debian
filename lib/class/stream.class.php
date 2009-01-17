@@ -39,6 +39,9 @@ class Stream {
 	// Generate once an object is constructed
 	public static $session; 
 
+        // Let's us tell if the session has been activated
+        private static $session_inserted;
+
 	/**
 	 * Constructor for the stream class takes a type and an array
 	 * of song ids
@@ -69,7 +72,7 @@ class Stream {
 		}
 
 		// We're starting insert the session into session_stream
-		if (!$this->insert_session()) { 
+		if (!$this->get_session()) { 
 			debug_event('stream','Session Insertion failure, aborting','3'); 
 			return false; 
 		}
@@ -106,7 +109,11 @@ class Stream {
 	 */
 	public static function get_session() { 
 
-		return self::$session; 
+                if (!self::$session_inserted) {
+                        self::insert_session(self::$session);
+                }
+
+                return self::$session;
 
 	} // get_session
 
@@ -114,14 +121,16 @@ class Stream {
 	 * insert_session
 	 * This inserts a row into the session_stream table
 	 */
-	public function insert_session($sid='') { 
+	public static function insert_session($sid='',$user_id='') { 
 
 		$sid = $sid ? Dba::escape($sid) : Dba::escape(self::$session); 
 
 		$expire = time() + Config::get('stream_length'); 
 
+		$user_id = $user_id ? Dba::escape($user_id) : Dba::escape($GLOBALS['user']->id);
+
 		$sql = "INSERT INTO `session_stream` (`id`,`expire`,`user`) " . 
-			"VALUES('$sid','$expire','$this->user_id')"; 
+			"VALUES('$sid','$expire','$user_id')"; 
 		$db_results = Dba::query($sql); 
 
 		if (!$db_results) { return false; } 
@@ -238,7 +247,7 @@ class Stream {
 	 * creates an m3u file, this includes the EXTINFO and as such can be
 	 * large with very long playlsits
 	 */
-	public public function create_m3u() { 
+	public function create_m3u() { 
 
 	        // Send the client an m3u playlist
 	        header("Cache-control: public");
@@ -275,7 +284,7 @@ class Stream {
 		@function create_pls
 		@discussion creates a pls file
 	*/
-	function create_pls() { 
+	public function create_pls() { 
 
 		/* Count entries */
 		$total_entries = count($this->songs) + count($this->urls); 
@@ -354,7 +363,7 @@ class Stream {
 	 * create_xspf
 	 * creates an XSPF playlist (Thx PB1DFT)
 	 */
-	function create_xspf() { 
+	public function create_xspf() { 
 
 		$flash_hack = ''; 
 
@@ -396,7 +405,7 @@ class Stream {
 	 * have to do a little 'cheating' to make this work, we are going to take
 	 * advantage of tmp_playlists to do all of this hotness
 	 */
-	function create_xspf_player() { 
+	public function create_xspf_player() { 
 
 		/* Build the extra info we need to have it pass */
 		$play_info = "?action=show&tmpplaylist_id=" . $GLOBALS['user']->playlist->id;
@@ -440,7 +449,7 @@ class Stream {
 	 * This calls the Localplay API and attempts to 
 	 * add, and then start playback
 	 */
-	function create_localplay() { 
+	public function create_localplay() { 
 
 		// First figure out what their current one is and create the object
 		$localplay = new Localplay(Config::get('localplay_controller')); 
@@ -500,7 +509,7 @@ class Stream {
 	 * create_ram
 	 *this functions creates a RAM file for use by Real Player
 	 */
-	function create_ram() { 
+	public function create_ram() { 
 
                 header("Cache-control: public");
                 header("Content-Disposition: filename=playlist.ram");
@@ -531,7 +540,7 @@ class Stream {
 	                $song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
 	        }
 
-	        if ($max_bitrate > 1 AND $min_bitrate < $max_bitrate) {
+	        if ($max_bitrate > 1 AND $min_bitrate < $max_bitrate AND $min_bitrate) {
 	                $last_seen_time = $time - 1200; //20 min.
 
 	                $sql = "SELECT COUNT(*) FROM now_playing, user_preference, preference " .
@@ -542,19 +551,17 @@ class Stream {
 
 	                // Current number of active streams (current is already in now playing)
 	                $active_streams = $results[0];
+			if (!$active_streams) { $active_streams = '1'; } 
 
 	                /* If only one user, they'll get all available.  Otherwise split up equally. */
 	                $sample_rate = floor($max_bitrate/$active_streams);
 
 	                /* If min_bitrate is set, then we'll exit if the bandwidth would need to be split up smaller than the min. */
 	                if ($min_bitrate > 1 AND ($max_bitrate/$active_streams) < $min_bitrate) {
-
 	                        /* Log the failure */
 	                        debug_event('downsample',"Error: Max bandwidith already allocated. $active_streams Active Streams",'2');
-
 	                        echo "Maximum bandwidth already allocated.  Try again later.";
 	                        exit();
-
 	                }
         	        else {
 	                        $sample_rate = floor($max_bitrate/$active_streams);
@@ -576,7 +583,7 @@ class Stream {
 
 	        /* Never Upsample a song */
 	        if (($sample_rate*1000) > $song->bitrate) {
-	                $sample_rate = self::validate_bitrate($song->bitrate)/1000;
+	                $sample_rate = self::validate_bitrate($song->bitrate/1000);
 	                $sample_ratio = '1';
 	        }
 	        else {
@@ -625,7 +632,7 @@ class Stream {
 	public static function validate_bitrate($bitrate) {
 
 	        /* Round to standard bitrates */
-	        $sample_rate = 8*(floor($bitrate/8));
+	        $sample_rate = 16*(floor($bitrate/16));
 
 		return $sample_rate; 
 
@@ -726,6 +733,7 @@ class Stream {
 	        echo "</script>";
 
 	} // run_playlist_method
+
 
 } //end of stream class
 

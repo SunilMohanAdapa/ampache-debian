@@ -1,0 +1,41 @@
+#!/bin/sh
+# postrm script for Ampache
+
+set -e
+
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+if [ "$1" = "remove" ]; then
+   
+   #Ask the question and restart web server.
+   db_get ampache/restart-webserver || true
+   
+   if [ "$RET" = "true" ]; then
+      webserver="apache2"
+      for webserver in $webserver; do
+          webserver=${webserver%,}
+	  if [ -x /usr/sbin/invoke-rc.d ]; then
+	     invoke-rc.d $webserver reload 3>/dev/null || true
+	  else
+             /etc/init.d/$webserver reload 3>/dev/null || true
+	  fi
+      done
+   fi
+fi
+
+if [ "$1" = "purge" ]; then 
+   #This is needed to remove user added content.
+   if [ -d /etc/ampache ]; then
+      rm -rf /etc/ampache
+   fi
+   #This is need to manually remove hanging symlinks.
+   if [ -d /usr/share/ampache ]; then
+      rm -rf /usr/share/ampache
+   fi
+fi
+
+#DEBHELPER#
+
+exit 0
+

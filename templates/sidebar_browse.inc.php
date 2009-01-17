@@ -41,12 +41,12 @@ $allowed_filters = Browse::get_allowed_filters();
 <?php if (count($allowed_filters)) { ?>
   <li><h4><?php echo _('Filters'); ?></h4>
     <div class="sb3">
-	<?php if (in_array('alpha_match',$allowed_filters)) { ?>
+	<?php if (in_array('starts_with',$allowed_filters)) { ?>
 	<form id="multi_alpha_filter_form" method="post" action="javascript:void(0);">
 	 	<label id="multi_alpha_filterLabel" for="multi_alpha_filter"><?php echo _('Starts With'); ?></label>
-		<input type="textbox" id="multi_alpha_filter" name="multi_alpha_filter" value="<?php echo scrub_out(Browse::get_filter('alpha_match')); ?>" onKeyUp="DelayRun(this,'400','ajaxState','<?php echo Config::get('ajax_url'); ?>?page=browse&action=browse&key=alpha_match','multi_alpha_filter');">
+		<input type="textbox" id="multi_alpha_filter" name="multi_alpha_filter" value="<?php echo scrub_out(Browse::get_filter('starts_with')); ?>" onKeyUp="DelayRun(this,'400','ajaxState','<?php echo Config::get('ajax_url'); ?>?page=browse&action=browse&key=starts_with','multi_alpha_filter');">
 	</form>
-	<?php } // end if alpha_match ?>
+	<?php } // end if starts_with ?>
 	<?php if (in_array('minimum_count',$allowed_filters)) { ?>
 		<input id="mincountCB" type="checkbox" onclick="ajaxPut('<?php echo $ajax_info; ?>?action=browse&amp;key=min_count&amp;value=1');return true;" value="1" />
 	  	<label id="mincountLabel" for="mincountCB"><?php echo _('Minimum Count'); ?></label><br />

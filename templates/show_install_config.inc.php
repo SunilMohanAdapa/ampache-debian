@@ -26,6 +26,7 @@ if (INSTALL != '1') { exit; }
 <head>
 <title>Ampache :: For The Love Of Music - Install</title>
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
+<meta http-equiv="Content-Type" content="text/html; Charset=<?php echo $charset; ?>" />
 </head>
 <body>
 <div id="header"> 
@@ -46,19 +47,21 @@ if (INSTALL != '1') { exit; }
 
 	<div class="content">
 		<?php echo _("Step 1 - Creating and Inserting the Ampache Database"); ?><br />
-		<b><?php echo _("Step 2 - Creating the Ampache.cfg.php file"); ?></b><br />
+		<strong><?php echo _("Step 2 - Creating the Ampache.cfg.php file"); ?></strong><br />
 		<dl>
 		<dd><?php echo _("This steps takes the basic config values and generates the config file. It will prompt you to download the config file. Please put the downloaded config file in /config"); ?></dd>
 		</dl>
 		<?php echo _("Step 3 - Setup Initial Account"); ?><br />
 		<?php Error::display('general'); ?>
 		<br />
-		<span class="header2"><?php echo _('Generate Config File'); ?></span>
-		<form method="post" action="<?php echo WEB_PATH . "?action=create_config"; ?>" enctype="multipart/form-data" >
-		<table>
+
+<span class="header2"><?php echo _('Generate Config File'); ?></span>
+<?php Error::display('config'); ?>
+<form method="post" action="<?php echo WEB_PATH . "?action=create_config"; ?>" enctype="multipart/form-data" >
+<table>
 <tr>
 	<td class="align"><?php echo _('Web Path'); ?></td>
-	<td class="align"><input type="text" name="web_path" value="<?php echo dirname($_SERVER['PHP_SELF']); ?>" /></td>
+	<td class="align"><input type="text" name="web_path" value="<?php echo $web_path; ?>" /></td>
 </tr>
 <tr>
 	<td class="align"><?php echo _('Desired Database Name'); ?></td>
@@ -89,12 +92,10 @@ if (INSTALL != '1') { exit; }
         <td>[ 
         <?php
                 if (!is_readable($configfile)) {
-                        $status['read_config'] = 'false';
-                        echo " <span class=\"notok\">ERROR</span> "; 
+			echo debug_result('',false); 
                 }
                 else {
-                        $status['read_config'] = 'true';
-                        echo " <span class=\"ok\">OK</span> ";
+			echo debug_result('',true); 
                 }
         ?>
         ]
@@ -108,12 +109,10 @@ if (INSTALL != '1') { exit; }
         <?php
                 $results = @parse_ini_file($configfile);
                 if (!check_config_values($results)) { 
-                        $status['parse_config'] = 'false';
-                        echo " <span class=\"notok\">ERROR</span> ";
+			echo debug_result('',false); 
                 }
                 else {
-                        $status['parse_config'] = 'true';
-                        echo " <span class=\"ok\">OK</span> ";
+			echo debug_result('',true); 
                 }
         ?>
         ]
@@ -133,7 +132,7 @@ if (INSTALL != '1') { exit; }
 		</form>
 	</div>
 	<div id="bottom">
-    	<p><b>Ampache Installation.</b><br />
+    	<p><strong>Ampache Installation.</strong><br />
     	For the love of Music.</p>
 	</div>
 </div>

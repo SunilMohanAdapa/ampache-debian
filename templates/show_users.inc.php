@@ -36,9 +36,9 @@ $web_path = Config::get('web_path');
   <col id="col_online" />
 </colgroup>
 <tr class="th-top">
-	<th class="cel_username"><?php echo Ajax::text('?page=browse&action=set_sort&sort=fullname',_('Fullname'),'users_sort_fullname'); ?>( <?php echo Ajax::text('?page=browse&action=set_sort&sort=username',_('Username'),'users_sort_username');?>)</th>
-  <th class="cel_lastseen"><?php echo Ajax::text('?page=browse&action=set_sort&sort=last_seen',_('Last Seen'),'users_sort_lastseen'); ?></th>
-  <th class="cel_registrationdate"><?php echo Ajax::text('?page=browse&action=set_sort&sort=create_date',_('Registration Date'),'users_sort_createdate'); ?></th>
+  <th class="cel_username"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=fullname',_('Fullname'),'users_sort_fullname'); ?>( <?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=username',_('Username'),'users_sort_username');?>)</th>
+  <th class="cel_lastseen"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=last_seen',_('Last Seen'),'users_sort_lastseen'); ?></th>
+  <th class="cel_registrationdate"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=create_date',_('Registration Date'),'users_sort_createdate'); ?></th>
   <th class="cel_activity"><?php echo _('Activity'); ?></th>
 	<?php if (Config::get('track_user_ip')) { ?>
   <th class="cel_lastip"><?php echo _('Last Ip'); ?></th>
@@ -53,57 +53,14 @@ foreach ($object_ids as $user_id) {
         $last_seen 	= $client->last_seen ? date("m\/d\/Y - H:i",$client->last_seen) : _('Never');
         $create_date	= $client->create_date ? date("m\/d\/Y - H:i",$client->create_date) : _('Unknown');
 ?>
-<tr class="<?php echo flip_class(); ?>" align="center">
-	<td class="cel_username">
-		<a href="<?php echo $web_path; ?>/stats.php?action=show_user&amp;user_id=<?php echo $client->id; ?>">
-			<?php echo $client->fullname; ?> (<?php echo $client->username; ?>)
-		</a>
-	</td>
-  <td class="cel_lastseen"><?php echo $last_seen; ?></td>
-  <td class="cel_registrationdate"><?php echo $create_date; ?></td>
-  <td class="cel_activity"><?php echo $client->f_useage; ?></td>
-	<?php if (Config::get('track_user_ip')) { ?>
-		<td class="cel_lastip">
-		<a href="<?php echo $web_path; ?>/admin/users.php?action=show_ip_history&amp;user_id=<?php echo $client->id; ?>">
-			<?php echo $client->ip_history; ?>
-		</a>
-		</td>
-	<?php } ?>
-	<td class="cel_action">
-		<a href="<?php echo $web_path; ?>/admin/users.php?action=show_edit&amp;user_id=<?php echo $client->id; ?>">
-			<?php echo get_user_icon('edit'); ?>
-		</a>
-		<a href="<?php echo $web_path; ?>/admin/users.php?action=show_preferences&amp;user_id=<?php echo $client->id; ?>">
-			<?php echo get_user_icon('preferences'); ?>
-		</a>
-	<?php
-	//FIXME: Fix this for the extra permission levels
-	if ($client->disabled == '1') { 
-		echo "<a href=\"".$web_path."/admin/users.php?action=enable&amp;user_id=$client->id\">" . get_user_icon('enable') . "</a>";
-	}
-	else {
-		echo "<a href=\"".$web_path."/admin/users.php?action=disable&amp;user_id=$client->id\">" . get_user_icon('disable') ."</a>";
-	}
-	?>
-		<a href="<?php echo $web_path; ?>/admin/users.php?action=delete&amp;user_id=<?php echo $client->id; ?>">
-		<?php echo get_user_icon('delete'); ?>
-		</a>
-	</td>
-       <?php
-	if (($client->is_logged_in()) AND ($client->is_online())) {
-		echo "<td class=\"cel_online user_online\"> &nbsp; </td>";
-	} elseif ($client->disabled == 1) {
-		echo "<td class=\"cel_online user_disabled\"> &nbsp; </td>";
-	} else {
-		echo "<td class=\"cel_online user_offline\"> &nbsp; </td>";
-	}
-?>	
+<tr class="<?php echo flip_class(); ?>" align="center" id="admin_user_<?php echo $client->id; ?>">
+	<?php require Config::get('prefix') . '/templates/show_user_row.inc.php'; ?>
 </tr>
 <?php } //end foreach users ?>
 <tr class="th-bottom">
-	<th class="cel_username"><?php echo Ajax::text('?page=browse&action=set_sort&sort=fullname',_('Fullname'),'users_sort_fullname1'); ?>( <?php echo Ajax::text('?page=browse&action=set_sort&sort=username',_('Username'),'users_sort_username1');?>)</th>
-  <th class="cel_lastseen"><?php echo Ajax::text('?page=browse&action=set_sort&sort=last_seen',_('Last Seen'),'users_sort_lastseen1'); ?></th>
-  <th class="cel_registrationdate"><?php echo Ajax::text('?page=browse&action=set_sort&sort=create_date',_('Registration Date'),'users_sort_createdate1'); ?></th>
+	<th class="cel_username"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=fullname',_('Fullname'),'users_sort_fullname1'); ?>( <?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=username',_('Username'),'users_sort_username1');?>)</th>
+  <th class="cel_lastseen"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=last_seen',_('Last Seen'),'users_sort_lastseen1'); ?></th>
+  <th class="cel_registrationdate"><?php echo Ajax::text('?page=browse&action=set_sort&type=user&sort=create_date',_('Registration Date'),'users_sort_createdate1'); ?></th>
   <th class="cel_activity"><?php echo _('Activity'); ?></th>
 	<?php if (Config::get('track_user_ip')) { ?>
   <th class="cel_lastip"><?php echo _('Last Ip'); ?></th>

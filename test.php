@@ -41,13 +41,13 @@ Dba::_auto_init();
 
 switch ($_REQUEST['action']) { 
 	case 'config': 
-                $configfile = "$prefix/config/ampache.cfg.php";
+		$configfile = "$prefix/config/ampache.cfg.php";
 
-                // On every load of the config file check and see if it's working now
-                if (count(parse_ini_file($configfile))) {
-                        require_once $prefix . '/templates/show_test.inc.php';
-                        break;
-                }
+		// On every load of the config file check and see if it's working now
+		if (count(parse_ini_file($configfile))) {
+			require_once $prefix . '/templates/show_test.inc.php'; 
+			break; 
+		} 
 		require_once $prefix . '/templates/show_test_config.inc.php'; 
 	break;
 	default:

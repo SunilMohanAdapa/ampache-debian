@@ -23,7 +23,7 @@
  * Playlist Class
  * This class handles playlists in ampache. it references the playlist* tables
  */
-class Playlist { 
+class Playlist extends database_object { 
 
 	/* Variables from the Datbase */
 	public $id;
@@ -43,8 +43,7 @@ class Playlist {
 	 */
 	public function __construct($id) { 
 
-		$this->id 	= intval($id);
-		$info 		= $this->_get_info();
+		$info = $this->get_info($id);
 
 		foreach ($info as $key=>$value) { 
 			$this->$key = $value; 
@@ -52,21 +51,24 @@ class Playlist {
 	
 	} // Playlist
 
-	/** 
-	 * _get_info
-	 * This is an internal (private) function that gathers the information for this object from the 
-	 * playlist_id that was passed in. 
+	/**
+	 * build_cache
+	 * This is what builds the cache from the objects
 	 */
-	private function _get_info() { 
+	public static function build_cache($ids) { 
+		
+		if (!count($ids)) { return false; } 
 
-		$sql = "SELECT * FROM `playlist` WHERE `id`='" . Dba::escape($this->id) . "'";	
-		$db_results = Dba::query($sql);
+		$idlist = '(' . implode(',',$ids) . ')'; 
 
-		$results = Dba::fetch_assoc($db_results);
+		$sql = "SELECT * FROM `playlist` WHERE `id` IN $idlist"; 
+		$db_results = Dba::query($sql); 
 
-		return $results;
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			parent::add_to_cache('playlist',$row['id'],$row); 
+		} 
 
-	} // _get_info
+	} // build_cache
 
 	/**
 	 * format
@@ -93,11 +95,14 @@ class Playlist {
 	 */
 	public function has_access() { 
 
+		if (!Access::check('interface','25')) { 
+			return false; 
+		} 
 		if ($this->user == $GLOBALS['user']->id) { 
 			return true; 
 		} 
-		else { 
-			return $GLOBALS['user']->has_access('100'); 
+		else {
+			return Access::check('interface','100'); 
 		} 	
 
 		return false; 
@@ -132,15 +137,10 @@ class Playlist {
 
 		$results = array(); 
 
-		$sql = "SELECT `id`,`object_id`,`object_type`,`dynamic_song`,`track` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
+		$sql = "SELECT `id`,`object_id`,`object_type`,`track` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
 		$db_results = Dba::query($sql);
 
 		while ($row = Dba::fetch_assoc($db_results)) { 
-
-			if (strlen($row['dynamic_song'])) { 
-				// Do something here FIXME!
-			} 
-
 			$results[] = array('type'=>$row['object_type'],'object_id'=>$row['object_id'],'track'=>$row['track'],'track_id'=>$row['id']); 
 		} // end while
 
@@ -158,15 +158,11 @@ class Playlist {
 
 		$limit_sql = $limit ? 'LIMIT ' . intval($limit) : ''; 
 
-		$sql = "SELECT `object_id`,`object_type`,`dynamic_song` FROM `playlist_data` " . 
+		$sql = "SELECT `object_id`,`object_type` FROM `playlist_data` " . 
 			"WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY RAND() $limit_sql"; 
 		$db_results = Dba::query($sql); 
 
 		while ($row = Dba::fetch_assoc($db_results)) { 
-
-			if (strlen($row['dynamic_song'])) { 
-				// Do something here FIXME!!!
-			} 
 
                         $results[] = array('type'=>$row['object_type'],'object_id'=>$row['object_id']);
                 } // end while
@@ -201,27 +197,6 @@ class Playlist {
 		return $results;
 
 	} // get_songs
-
-	/**
- 	 * get_dyn_songs
-	 * This returns an array of song_ids for a single dynamic playlist entry
-	 */
-	function get_dyn_songs($dyn_string) { 
-
-		/* Ok honestly I know this is risky, so we have to be
-		 * 100% sure that the user never got to touch this. This
-		 * Query has to return id which must be a song.id
-		 */
-		$db_results = mysql_query($dyn_string, dbh());
-		$results = array();
-
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$results[] = $r['id'];
-		} // end while
-
-		return $results;
-
-	} // get_dyn_songs
 
 	/**
 	 * get_song_count
@@ -346,9 +321,10 @@ class Playlist {
 		 * $song->track add one to make sure it really is 'next'
 		 */
 		$sql = "SELECT `track` FROM `playlist_data` WHERE `playlist`='" . $this->id . "' ORDER BY `track` DESC LIMIT 1";
-		$db_results = Dba::query($sql);
+		$db_results = Dba::read($sql);
 		$data = Dba::fetch_assoc($db_results);
 		$base_track = $data['track'];
+		debug_event('add_songs', 'Track number: '.$base_track, '5');
 
 		foreach ($song_ids as $song_id) { 
 			/* We need the songs track */
@@ -362,39 +338,12 @@ class Playlist {
 			if ($id) { 
 				$sql = "INSERT INTO `playlist_data` (`playlist`,`object_id`,`object_type`,`track`) " . 
 					" VALUES ('$pl_id','$id','song','$track')";
-				$db_results = Dba::query($sql);
+				$db_results = Dba::write($sql);
 			} // if valid id
 
 		} // end foreach songs
 
 	} // add_songs
-
-	/**
-	 * add_dyn_song
-	 * This adds a dynamic song to a specified playlist this is just called as the
-	 * song its self is stored in the session to keep it away from evil users
-	 */
-	function add_dyn_song() { 
-	
-		$dyn_song = $_SESSION['userdata']['stored_search'];
-
-		if (strlen($dyn_song) < 1) { echo "FAILED1"; return false; }
-
-		if (substr($dyn_song,0,6) != 'SELECT') { echo "$dyn_song"; return false; }
-
-		/* Test the query before we put it in */
-		$db_results = @mysql_query($dyn_song, dbh());
-
-		if (!$db_results) { return false; }
-
-		/* Ok now let's add it */
-		$sql = "INSERT INTO playlist_data (`playlist`,`dyn_song`,`track`) " . 
-			" VALUES ('" . sql_escape($this->id) . "','" . sql_escape($dyn_song) . "','0')";
-		$db_results = mysql_query($sql, dbh());
-
-		return true;
-
-	} // add_dyn_song
 
 	/**
 	 * create
@@ -408,9 +357,9 @@ class Playlist {
 		$user = Dba::escape($GLOBALS['user']->id);
 		$date = time();
 
-		$sql = "INSERT INTO `playlist` (`name`,`user`,`type`,`genre`,`date`) " . 
-			" VALUES ('$name','$user','$type','0','$date')";
-		$db_results = Dba::query($sql);
+		$sql = "INSERT INTO `playlist` (`name`,`user`,`type`,`date`) " . 
+			" VALUES ('$name','$user','$type','$date')";
+		$db_results = Dba::write($sql);
 
 		$insert_id = Dba::insert_id();
 

@@ -44,7 +44,7 @@ switch ($_REQUEST['action']) {
 	break;
 	case 'create_playlist':
 		/* Check rights */
-		if (!$GLOBALS['user']->has_access(25)) { 
+		if (!Access::check('interface','25')) { 
 			access_denied();
 			break;
 		} 
@@ -65,27 +65,14 @@ switch ($_REQUEST['action']) {
 		$playlist->remove_songs($_REQUEST['song']);
 		show_playlist($playlist);
 	break;
-	case 'update_playlist':
-		/* Make sure they've got thems rights */
-		if (!$playlist->has_access()) { 
-			access_denied();
-			break;
-		}
-
-		$playlist->update_type($_REQUEST['type']);
-		$playlist->update_name($_REQUEST['playlist_name']);
-		$url 	= conf('web_path') . '/playlist.php?action=show_playlist&amp;playlist_id=' . $playlist->id;
-		$title	= _('Playlist Updated');
-		$body	= "$playlist->name " . _('has been updated and is now') . " $playlist->type";
-		show_confirmation($title,$body,$url);
-	break;
 	case 'show_playlist':
 		$playlist = new Playlist($_REQUEST['playlist_id']); 
 		$playlist->format(); 
+		$object_ids = $playlist->get_items(); 
 		require_once Config::get('prefix') . '/templates/show_playlist.inc.php'; 
 	break;
 	case 'show_import_playlist':
-		show_import_playlist();
+		require_once Config::get('prefix') . '/templates/show_import_playlist.inc.php';
 	break;
 	case 'import_playlist':
 		/* first we rename the file to it's original name before importing.
@@ -95,11 +82,19 @@ switch ($_REQUEST['action']) {
 		move_uploaded_file($_FILES['filename']['tmp_name'], $filename );
 
 		$catalog = new Catalog();
-		$catalog->import_m3u($filename);
+		$result = $catalog->import_m3u($filename);
 
-		$url	= conf('web_path') . '/playlist.php';
-		$title = _('Playlist Imported');
-		$body  = basename($_FILES['filename']['name']);
+		if($result == false) {
+			$url   = Config::get('web_path') . '/playlist.php?action=show_import_playlist';
+			$title = _('Playlist Not Imported');
+			$body  = $reason;
+		} else {
+			$url   = Config::get('web_path') . '/playlist.php?action=show_playlist&amp;playlist_id='.$playlist_id;
+			$title = _('Playlist Imported');
+			$body  = basename($_FILES['filename']['name']);
+			$body .= "<br />";
+			$body .= $reason;
+		}
 		show_confirmation($title,$body,$url);
 	break;
 	case 'set_track_numbers':
@@ -126,7 +121,7 @@ switch ($_REQUEST['action']) {
 		}
 
 		prune_empty_playlists(); 
-		$url = conf('web_path') . '/playlist.php';
+		$url = Config::get('web_path') . '/playlist.php';
 		$title = _('Empty Playlists Deleted'); 
 		$body  = '';
 		show_confirmation($title,$body,$url);
@@ -142,6 +137,7 @@ switch ($_REQUEST['action']) {
 		
 		/* Normalize the tracks */
 		$playlist->normalize_tracks();
+		$object_ids = $playlist->get_items(); 
 	default:
 		require_once Config::get('prefix') . '/templates/show_playlist.inc.php'; 
 	break;

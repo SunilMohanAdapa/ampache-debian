@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -28,12 +28,30 @@ class LastFMSearch {
 	protected $_grabtags = array('coverart','large','medium','small');
 	private $_subTag; // Stupid hack to make things come our right
 	private $_currentTag; // Stupid hack to make things come out right
+	private $_proxy_host; // Proxy host
+	private $_proxy_port; // Proxy port
+	private $_proxy_user; // Proxy username
+	private $_proxy_pass; // Proxy password
     
-	public function __construct() {
+	public function __construct($proxy='', $port='', $user='', $pass='') {
 
 		// Rien a faire
 	
 	} // LastFMSearch
+
+	/**
+	 * setProxy
+	 * Set the class up to search through an http proxy.  
+	 * The parameters are the proxy's hostname or IP address (a string)
+	 * port, username, and password. These are passed directly to the
+	 * Snoopy class when the search is done.
+	 */
+	public function setProxy($host='', $port='', $user='', $pass='') {
+		if($host) $this->_proxy_host = $host;
+		if($port) $this->_proxy_port = $port;
+		if($user) $this->_proxy_user = $user;
+		if($pass) $this->_proxy_pass = $pass;
+	}
     
 	/**
 	 * create_parser
@@ -63,13 +81,28 @@ class LastFMSearch {
 		$this->create_parser();
 	
 		$snoopy = new Snoopy;
+		if($this->_proxy_host)
+			$snoopy->proxy_host = $this->_proxy_host;
+		if($this->_proxy_port)
+			$snoopy->proxy_port = $this->_proxy_port;
+		if($this->_proxy_user)
+			$snoopy->proxy_user = $this->_proxy_user;
+		if($this->_proxy_pass)
+			$snoopy->proxy_pass = $this->_proxy_pass;
+
+		debug_event("lastfm", "proxy:".$snoopy->proxy_host.":".$snoopy->proxy_port, "5");
+		debug_event("lastfm", "Start get from url", "5");
 		$snoopy->fetch($url);
 		$contents = $snoopy->results;
 
 		if ($contents == 'Artist not found') { 
 			debug_event('lastfm','Error: Artist not found with ' . $url,'3'); 
 			return false; 
-		}  
+		}
+		elseif($contents == 'No such album for this artist') {
+			debug_event('lastfm','Error: No such album for this artist with '. $url, '3');
+			return false;
+		} 
 		
 		if (!xml_parse($this->_parser, $contents)) {
 			debug_event('lastfm','Error:' . sprintf('XML error: %s at line %d',xml_error_string(xml_get_error_code($this->_parser)),xml_get_current_line_number($this->_parser)),'1');

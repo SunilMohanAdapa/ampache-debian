@@ -51,9 +51,9 @@
 	<td>
 		<input type="text" id="s_album" name="s_album" value="<?php echo scrub_out($_REQUEST['s_album']); ?>" />
 	</td>
-	<td><?php echo _('Genre'); ?></td>
+	<td><?php echo _('Tag'); ?></td>
 	<td>
-		<input type="text" id="s_genre" name="s_genre" value="<?php echo scrub_out($_REQUEST['s_genre']); ?>" />
+		<input type="text" id="s_tag" name="s_tag" value="<?php echo scrub_out($_REQUEST['s_tag']); ?>" />
 	</td>
 </tr>
 <tr class="<?php echo flip_class(); ?>">
@@ -66,6 +66,19 @@
 	<td><?php echo _('Filename'); ?></td>
 	<td>
 		<input type="text" id="s_filename" name="s_filename" value="<?php echo scrub_out($_REQUEST['s_filename']); ?>" />
+	</td>
+</tr>
+<tr class="<?php echo flip_class(); ?>">
+	<td><?php echo _('Time'); ?></td>
+	<td>
+		<input type="text" id="s_time" name="s_time" size="3" value="<?php echo scrub_out($_REQUEST['s_time']); ?>" />
+		-
+		<input type="text" id="s_time2" name="s_time2" size="3" value="<?php echo scrub_out($_REQUEST['s_time2']); ?>" />
+		<?php echo _('minutes'); ?>
+	</td>
+	<td><?php echo _('Codec'); ?></td>
+	<td>
+		<input type="text" id="s_codec" name="s_codec" size="5" value="<?php echo scrub_out($_REQUEST['s_codec']); ?>" />
 	</td>
 </tr>
 <tr class="<?php echo flip_class(); ?>">

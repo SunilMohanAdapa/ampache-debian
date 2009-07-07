@@ -26,7 +26,6 @@
  */
 
 class xmlRpcClient {
-
 	/**
 	 * construtor
 	 * not used
@@ -46,30 +45,31 @@ class xmlRpcClient {
 		// Generate the client
 		$client = self::create_client($target_url); 
 
-                // 6 that's right, the secret level because if you do have debug on most likely you're 
-                // going to just crash your browser... sorry folks
-                if (Config::get('debug') AND Config::get('debug_level') == '6') { $client->setDebug(1); }  
+		// 6 that's right, the secret level because if you do have debug on most likely you're 
+		// going to just crash your browser... sorry folks
+		if (Config::get('debug') AND Config::get('debug_level') == '6') { $client->setDebug(1); }  
 
 		// Build our key
-                $timestamp      = time();
-                $handshake_key  = md5($timestamp . $key);
+		$timestamp      = time();
+	        $handshake_key  = hash('sha256',$timestamp . hash('sha256',$key)); 
 
-                $encoded_key    = new xmlrpcval($handshake_key,'string');
-                $timestamp      = new xmlrpcval($timestamp,'int');
-                $xmlrpc_message = new xmlrpcmsg('xmlrpcserver.handshake',array($encoded_key,$timestamp));
-
-                // Send it off
-                $response = $client->send($xmlrpc_message,10);
-                if ($response->faultCode()) {
-                        $error_msg = _('Error connecting to') . " " . $server . " " . _("Code") . ": " . $response->faultCode() . " " . _("Reason") . ": " . $response->faultString();
-                        debug_event('XMLCLIENT',$error_msg,'1');
+		$encoded_key    = new XML_RPC_Value($handshake_key,'string');
+		$timestamp      = new XML_RPC_Value($timestamp,'int');
+		$xmlrpc_message = new XML_RPC_Message('xmlrpcserver.handshake',array($encoded_key,$timestamp));
+				
+		// Send it off
+		$response = $client->send($xmlrpc_message,10);
+                
+		if ($response->faultCode()) {
+			$error_msg = _('Error connecting to') . " " . $client->server . " " . _("Code") . ": " . $response->faultCode() . " " . _("Reason") . ": " . $response->faultString();
+			debug_event('XMLCLIENT',$error_msg,'1');
 			Error::add('general',$error_msg); 
-                        return;
-                }
+			return;
+		}
 
-                $token = php_xmlrpc_decode($response->value());
+		$token = XML_RPC_Decode($response->value());
 
-		debug_event('XML-RPC',$token . ' returned from ' . $server,'3'); 
+		debug_event('XML-RPC',$token . ' returned from ' . $client->server,'3'); 
 
 		return $token; 
 
@@ -84,24 +84,24 @@ class xmlRpcClient {
 
 		$client = self::create_client($target_url); 
 
-                // 6 that's right, the secret level because if you do have debug on most likely you're 
-                // going to just crash your browser... sorry folks
-                if (Config::get('debug') AND Config::get('debug_level') == '6') { $client->setDebug(1); }
+		// 6 that's right, the secret level because if you do have debug on most likely you're 
+		// going to just crash your browser... sorry folks
+		if (Config::get('debug') AND Config::get('debug_level') == '6') { $client->setDebug(1); }
 	
-		$encoded_key    = new xmlrpcval($token,'string');
-		$xmlrpc_message = new xmlrpcmsg('xmlrpcserver.create_stream_session',array($encoded_key)); 
-
+		$encoded_key    = new XML_RPC_Value($token,'string');
+		$xmlrpc_message = new XML_RPC_Message('xmlrpcserver.create_stream_session',array($encoded_key)); 
+		
 		$response = $client->send($xmlrpc_message,4);
 
-                if ($response->faultCode() ) {
-                        $error_msg = _("Error connecting to") . " " . $server . " " . _("Code") . ": " . $response->faultCode() . " " .
-                        debug_event('XMLCLIENT',$error_msg,'1');
-                        return false; 
-                }
+		if ($response->faultCode() ) {
+			$error_msg = _("Error connecting to") . " " . $client->server . " " . _("Code") . ": " . $response->faultCode() . " " .
+			debug_event('XMLCLIENT',$error_msg,'1');
+			return false; 
+		}
 
-		$sid = php_xmlrpc_decode($response->value());
+		$sid = XML_RPC_Decode($response->value());
 
-		debug_event('XML-RPC',$sid . ' stream session ID returned from ' . $server,'3'); 
+		debug_event('XML-RPC', $sid . ' stream session ID returned from ' . $client->server,'3'); 
 
 		return $sid; 
 
@@ -118,10 +118,17 @@ class xmlRpcClient {
                 $server = $match['1'];
                 $port   = $match['2'] ? intval($match['2']) : '80';
                 $path   = $match['3'];
+                if(Config::get('proxy_host') AND Config::get('proxy_port')) {
+                    $proxy_host = Config::get('proxy_host');
+                    $proxy_port = Config::get('proxy_port');
+                    $proxy_user = Config::get('proxy_user');
+                    $proxy_pass = Config::get('proxy_pass');
+                }
 
-                $full_url = ltrim("/$path/server/xmlrpc.server.php",'/');
-                $client = new xmlrpc_client($full_url,$server,$port);
-
+                $full_url = "/" . ltrim($path . "/server/xmlrpc.server.php",'/');
+                
+                $client = new XML_RPC_Client($full_url,$server,$port,$proxy_host,$proxy_port,$proxy_user,$proxy_pass);
+                
 		return $client; 
 
 	} // create_client

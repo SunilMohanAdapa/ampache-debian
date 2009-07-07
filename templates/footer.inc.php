@@ -20,12 +20,16 @@
 
 */
 ?>
-<div style="clear:both;"></div> <!-- Clear things out -->
-</div><!-- end id="content"-->
+<div style="clear:both;"></div>
+<?php if ($_SESSION['userdata']['password'] == 'old') {?>
+	<span class="fatalerror"><?php echo _('Using Old Password Encryption, Please Reset your Password'); ?></span>
+<?php } ?>
+</div> <!-- end id="content"-->
 </div> <!-- end id="maincontainer"-->
 <div id="footer">
 	<a href="http://www.ampache.org/index.php">Ampache v.<?php echo Config::get('version'); ?></a><br />
-	Copyright (c) 2001 - 2008 Ampache.org 
+	Copyright (c) 2001 - 2009 Ampache.org 
+	<?php echo _('Queries:'); ?><?php echo Dba::$stats['query']; ?> <?php echo _('Cache Hits:'); ?><?php echo database_object::$cache_hit; ?>
 </div>
 </body>
 </html>

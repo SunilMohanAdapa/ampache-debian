@@ -1,6 +1,6 @@
 # translation of ampache_3.4-2_templates.po to swedish
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# Copyright (C) Ampache.org
+# This file is distributed under the same license as the Ampache package.
 #
 # Martin Bagge <martin.bagge@bthstudent.se>, 2008.
 msgid ""

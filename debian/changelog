@@ -1,3 +1,100 @@
+ampache (3.5.1-1) unstable; urgency=high
+
+   * Setting urgency to high as this fixes an RC bug.
+   * New upstream release.  Summary of new features:  (LP: #377016)
+     - Make the PHP error a little clearer for windows users by indicating
+       that their version of PHP is < 5.3 (required for windows)
+     - Fix random methods not working for Localplay
+     - Fix extra space on prefixed albums (Thx ibizaman)
+     - Add missing operator on tag and rating searches so they will
+       work with other methods (Thx kiehnet@netscape.net)
+     - Fix get_art_url() so it returns something... 
+     - Fix problem with creating new playlists where it doesn't work
+       but appending to an existing did. 
+     - Fixed issue with url_to_song, also cleaned up the code a bit
+     - Fixed issue with Random All Catalogs
+     - Fixed issues with API and Tag methods not working as advertised
+     - Fix endless loop in getid3() with malformed genre tags in mp3s
+     - Fixed show test page always returning false on web path
+     - Update Man page to adhear to newer Debian rules
+     - Fixed issue with Videos being incorrectly registered with stats
+       and now playing as songs. 
+     - Fixed missing > in HTML for song row
+   * Bumped Standards-Version to 3.8.2, no changes needed.
+   * Bumped debhelper to dh 7.
+     - increased debian/compat to 7.
+     - simplified debian/rules.
+   * Lintian complains of FreeMonoMedium.ttf being an embeded fonts package.
+     FreeMonoMedium.ttf is actually part of the ttf-freefont package.
+     - added ttf-freefont to the Depends section of debian/control.
+     - added -XFreeMono-Medium to dh_install in debian/rules.
+     - added FreeMono.ttf symbolic link to debian/links.
+   * Lintian complains of the wrong file permissions for 
+     -  /locale/base/gather-messages.sh, added -Xgather-messages.sh to 
+	   debian/rules, gather-messages.sh is not used by ampache proper and 
+	   can be safely removed.  It is only utilized by developers who are 
+	   creating or editing the translation files.
+     -  /locale/pl_PL/LC_MESSAGES/messages.po added find and chmod rule 
+	   to debian/rules.
+     -  /locale/pl_PL/LC_MESSAGES/messages.mo added find and chmod rule 
+	   to debian/rules.
+     -  /docs/CHANGELOG added find and chmod rule to debian/rules.
+   * Lintian complains of wrong-name-for-upstream-changelog
+     -  install upstream CHANGELOG to /usr/share/ampache/www/docs
+     -  added find and gzip -9 rule to debian/rules
+     -  added symlink creation to debian/links to link
+        /usr/share/ampache/www/docs/CHANGELOG.gz to 
+        /usr/share/doc/ampache/changelog.gz  
+   * Lacy Marrow has responded and has stated that he is dropping the GPL-3 
+     licensing of his work and is now releasing version 5.9.5 of the 
+     XSPF JukeBox under the same BSD license that the original version of XSPF 
+     Music Player was released under (XSPF JukeBox is based on XSPF Music 
+     Player).  So now XSPF Music Player and XSPF JukeBox are now released under
+     the same BSD type license.  This closes RC Bug #526719.  Closes: #526719
+     - Updated debian/copyright to refect this.
+   * Added dh_installman to debian/rules so the manpage now installs correctly.
+     - Added debian/ampache.manpages.
+   * debian/ampache.config downgraded db_input to medium
+   * debian/copyright removed (C) in favor of the word copyright.
+ 
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 07 Jul 2009 07:23:35 -0500
+
+ampache (3.5+svn2078-1) unstable; urgency=low
+
+   [Not Released]
+   * New upstream release.  Summary of new features
+     - Video Streaming Support
+     - Access Control List Wizard / Simplification
+     - IPv6 Support on all Access Lists and IP related operations
+     - Corrected Multi-Byte Character Support
+     - Up to date Translations in 14 different languages
+     - Optional Lyrics Support
+     - Basic Tag Support (allowing multiple genres per song)
+     - Countless Optomizations / Caching to speed up the interface
+     - Vastly Improved API with simplified configuration and setup
+     - Standardized UI should give users a more consistent experience
+     - Enable Last.FM plug-in by default
+     - Ability to Run Add/Verify catalog operations starting at a specific
+       Sub Directory rather then indexing the whole catalog.
+   * Added ${misc:Depends} to debian/control Depends section to fix lintian
+     error.
+   * Demoted mysql-server-5.0 to the Suggests field of debian/control, so
+     mysql-server-5.0 is not installed by default.  Closes: #526475
+   * Updated standards version to 3.8.1.
+   * Fixed charset of XML documents returned (Thx blueorder).  (LP: #360411)
+   * Added /modules/flash/xspf_jukebox.fla as this is the source code for the
+     XSPF JukeBox media player.  This fixes the most serious part of, and is a
+     partial fix for RC bug #526719.
+   * Added XSPF JukeBox copyright information into debian/copyright.  This is a 
+     partial fix for #526719.
+   * Added copyright header information to po/nl.po and po/sv.po
+   * Changed debian/copyright to the debian proposed machine readeable
+     format.
+   * Added /doc/man/man1/ampache.1 to debian/ampache.install.
+   * Added Vcs-Svn and Vcs-Browser section to debian/control.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Wed, 06 May 2009 00:21:35 -0500
+
 ampache (3.4.4-1) unstable; urgency=low
 
     * New upstream release.
@@ -17,18 +114,38 @@ ampache (3.4.4-1) unstable; urgency=low
 
  -- Charlie Smotherman <cjsmo@ubuntu.com>  Sat, 17 Jan 2009 18:23:43 -0500
 
-ampache (3.4.1-2) unstable; urgency=low
+ampache (3.4.3-1) unstable; urgency=low
 
-    * Made package to depend on libjs-prototype to correct a lintian error of
-      "courtousy copies of code".  Adjusted debian/control, debian/rules,
-      debian/links, postinst, postrm to reflect this dependency.
-    * Made package to depend on libphp-snoopy due to CVE-2008-4796.  Adjusted
-      debian/control, debian/rules, debian/links, postinst, postrm to reflect
-      this dependency. Closes: #504169
-    * Removed /usr/share/ampache/www/locale/base/gather-messages.sh from package
-      to close a potential security hole.  Closes: #496369
-    
- -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 01 Nov 2008 13:47:43 -0500
+    * New upstream maintenance release, please see src/docs/CHANGELOG for
+      complete details.
+    * Updated package to depend on libphp-snoopy.
+    * Added dh_install -XSnoopy.class.php to debian/rules.
+    * Added debian/dirs.
+    * Added snoopy symlink to debian/links.
+    * Added prototype symlink to debian/links.
+    * Updated debian/ampache.postrm to remove prototype/snoopy symlinks on
+      purge.
+    * Updated debian/rules by removing -Xgather-messages.sh option from 
+      dh_install.  Upstream decided to remove 
+      src/locale/base/gather-messages.sh from the .org.tar.gz.
+      Closes: #496369
+        
+ -- Charlie Smotherman <cjsmo@cableone.net>  Fri, 03 Oct 2008 05:48:35 -0500
+
+ampache (3.4.2-1) unstable; urgency=low
+
+    * Updated ampache.conf, postinst, postrm, to fix a debconf problem.
+    * Updated debian/rules by adding -Xgather-messages.sh option to dh_install.
+      Closes:  #496369
+    * Updated debian/rules by adding -Xprototype.js option to dh_install.
+      This was added to correct a lintian error.
+    * Updated debian/control so ampache now depends on libjs-prototype.
+    * Updated debian/links to create symlink to libjs-prototype.
+    * Updated Standards Version to 3.8.0.
+    * Added debian/watch.
+    * Updated debian/copyright with /src/locale/ja_JP copyright info.
+        
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 29 Aug 2008 12:05:34 -0500
 
 ampache (3.4.1-1) unstable; urgency=low
 

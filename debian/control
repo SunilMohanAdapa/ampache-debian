@@ -1,18 +1,21 @@
 Source: ampache
 Section: web
 Priority: optional
-Maintainer: Charlie Smotherman <cjsmo@ubuntu.com>
+Maintainer: Charlie Smotherman <cjsmo@cableone.net>
+Vcs-Svn: https://svn.ampache.org/trunk
+Vcs-Browser: https://svn.ampache.org
 Homepage: http://www.ampache.org
-Build-Depends: debhelper (>= 5)
-Standards-Version: 3.8.0
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.8.2
 
 Package: ampache
 Architecture: all
-Depends: debconf (>= 0.5) | debconf-2.0, po-debconf, apache2-mpm-prefork, php5,
-  php5-mysql, libjs-prototype, libphp-snoopy
+Depends: ${misc:Depends}, debconf (>= 0.5) | debconf-2.0, po-debconf, 
+  apache2-mpm-prefork, php5, php5-mysql, libjs-prototype, libphp-snoopy,
+  ttf-freefont
 Conflicts:  ampache-themes-3.3.3.5a-1
-Recommends: mysql-server-5.0, php5-cli, eyed3, ampache-themes
-Suggests: php5-gd, phpmyadmin
+Recommends: eyed3, ampache-themes, php5-cli
+Suggests: php5-gd, phpmyadmin, mysql-server-5.0
 Description: web-based audio file management system
  Ampache is a web-based audio file manager implemented with PHP and
  MySQL which allows viewing, editing, and playing audio files via the

@@ -1,7 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE 'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the  package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# The Dutch translation of Ampache.
+# Copyright (C) Ampache.org
+# This file is distributed under the same license as the Ampache package.
+# Bart Cornelis <cobaco@skolelinux.no>, 2007.
 #
 msgid ""
 msgstr ""

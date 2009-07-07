@@ -1,34 +1,13 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-clean:
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-install:
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_installdirs	
-build:
-# Build architecture-dependent files here.
-binary-arch: install
-# We have nothing to do by default.
-# Build architecture-independent files here.
-binary-indep: install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs debian/changelog
-	dh_installdocs
+
+%:
+	dh $@
+
+override_dh_install:
 	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
-	-Xreadme.windows.txt -Xprototype -XSnoopy
-	dh_installdebconf
-	dh_link -A
-	dh_compress 
-	dh_fixperms  
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol -pampache
-	dh_md5sums
-	dh_builddeb
-binary: binary-indep 
-.PHONY: clean binary-indep install
+	-Xreadme.windows.txt -Xprototype -XSnoopy -XFreeMono-Medium \
+	-Xgather-messages.sh
+	find . -type f -name 'CHANGELOG' -exec gzip -9 {} \;
+	find . -type f -name 'CHANGELOG.gz' -exec chmod 644 {} \;
+	find . -type f -name 'messages.mo' -exec chmod 644 {} \;
+	find . -type f -name 'messages.po' -exec chmod 644 {} \;

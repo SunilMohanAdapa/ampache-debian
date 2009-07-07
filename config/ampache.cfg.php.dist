@@ -7,7 +7,7 @@
 ; if this config file is up to date 
 ; this is compared against a value hard-coded
 ; into the init script
-config_version = 8
+config_version = 10
 
 ;###################
 ; Path Vars        #
@@ -46,20 +46,21 @@ database_password = password
 
 ; Length that a session will last, the default is very restrictive
 ; at 15min
-; DEFAULT: 900
-session_length = 900
+; DEFAULT: 1800
+session_length = 1800
 
 ; Length that the session for a single streaming instance will last
-; the default is one hour. With some clients, and long songs this can 
+; the default is two hours. With some clients, and long songs this can 
 ; cause playback to stop, increase this value if you experience that
-stream_length = 3600
+; DEFAULT: 7200
+stream_length = 7200
 
 ; This length defines how long a 'remember me' session and cookie will 
-; last, the default is 3600, same as length. It is up to the administrator
+; last, the default is 7200, same as length. It is up to the administrator
 ; of the box to increase this, for reference 86400 = 1 day 
 ; 604800 = 1 week and 2419200 = 1 month
-; DEAFULT: 3600
-remember_length = 3600
+; DEAFULT: 7200
+remember_length = 7200
 
 ; Name of the Session/Cookie that will sent to the browser
 ; default should be fine
@@ -93,13 +94,26 @@ auth_methods = "mysql"
 ; DEFAULT: mp3|mpc|m4p|m4a|mp4|aac|ogg|rm|wma|asf|flac|spx|ra|ape|shn|wv
 catalog_file_pattern = "mp3|mpc|m4p|m4a|mp4|aac|ogg|rm|wma|asf|flac|spx|ra|ape|shn|wv"
 
+; Video Pattern
+; This defines which video file types Ampache will attempt to catalog
+; You can specify any file extension you want in here seperating them with
+; a | but ampache may not be able to parse them
+; DEAFULT: avi|mpg|flv|m4v
+catalog_video_pattern = "avi|mpg|flv|m4v"
+
+; Prefix Pattern
+; This defines which prefix Ampache will ignore when importing tags from
+; your music. You may add any prefix you want seperating them with a |
+; DEFAULT: The|An|A|Die|Das|Ein|Eine|Les|Le|La
+catalog_prefix_pattern = "The|An|A|Die|Das|Ein|Eine|Les|Le|La"
+
 ; Use Access List 
 ; Toggle this on if you want ampache to pay attention to the access list
 ; and only allow streaming/downloading/xml-rpc from known hosts xml-rpc 
 ; will not work without this on.
 ; NOTE: Default Behavior is DENY FROM ALL 
-; DEFAULT: false
-;access_control	= "false"
+; DEFAULT: true
+access_control	= "true"
 
 ; Require Session
 ; If this is set to true ampache will make sure that the URL passed when
@@ -107,6 +121,13 @@ catalog_file_pattern = "mp3|mpc|m4p|m4a|mp4|aac|ogg|rm|wma|asf|flac|spx|ra|ape|s
 ; others from guessing URL's
 ; DEFAULT: true
 require_session = "true"
+
+; Require LocalNet Session
+; If this is set to true then ampache will require that a valid session
+; is passed even on hosts defined in the Local Network ACL. This setting
+; has no effect if access_control is not enabled
+; DEFAULT: true
+require_localnet_session = "true" 
 
 ; Multiple Logins
 ; Added by Vlet 07/25/07
@@ -185,8 +206,8 @@ require_session = "true"
 ; POSSIBLE VALUES: id3v1 id3v2 file vorbiscomment 
 ;                  quicktime ape asf 
 ; DEFAULT: id3v2,id3v1 vorbiscomment quicktime ape
-; 		asf 
-tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf"
+; 		asf file
+tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf,file"
 
 ; Un comment if don't want ampache to follow symlinks
 ; DEFAULT: false
@@ -198,7 +219,16 @@ tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf"
 ; will not ask you for a username and password. false is only
 ; recommended for internal only instances
 ; DEFAULT true
-use_auth	= "yes"
+use_auth	= "true"
+
+; Default Auth Level
+; If use_auth is set to false then this option is used
+; to determine the permission level of the 'default' users
+; default is administrator. This setting only takes affect
+; if use_auth if false
+; POSSIBLE VALUES: user, admin, manager, guest
+; DEFAULT: admin
+default_auth_level = "admin"
 
 ; 5 Star Ratings
 ; This allows ratings for almost any object in ampache
@@ -224,8 +254,8 @@ ratings = "true"
 ; This defines the "Min" memory limit for PHP if your php.ini
 ; has a lower value set Ampache will set it up to this. If you
 ; set it below 16MB getid3() will not work!
-; DEFAULT: 24
-;memory_limit = 24
+; DEFAULT: 32
+;memory_limit = 32
 
 ; Album Art Preferred Filename
 ; Specify a filename to look for if you always give the same filename
@@ -248,8 +278,8 @@ ratings = "true"
 ; ampache to search if you want to disable one of the search
 ; method simply comment it out valid values are
 ; POSSIBLE VALUES: db id3 folder amazon lastfm
-; DEFAULT: db,id3,folder,lastfm,amazon
-album_art_order = "db,id3,folder,lastfm,amazon"
+; DEFAULT: db,id3,folder,lastfm
+album_art_order = "db,id3,folder,lastfm"
 
 ; Album Art 
 ; Set this to true if you want album art displayed on pages besides the
@@ -257,12 +287,6 @@ album_art_order = "db,id3,folder,lastfm,amazon"
 ; turning this off can vastly improve performance
 ; DEFAULT: true
 show_album_art = "true"
-
-; MyStrands Developer ID
-; This is needed for any of the OpenStrands functionality to work correctly
-; this is the developer ID you obtained from http://www.mystrands.com/openstrands/overview.vm
-; DEFAULT: false
-;mystrands_developer_key = ""
 
 ; Amazon Developer Key
 ; This is needed in order to actually use the amazon album art
@@ -350,7 +374,8 @@ refresh_limit = "60"
 
 ; This setting will silently create an ampache account
 ; for anyone who can login using ldap (or any other login
-; extension) 
+; extension). The default is to create new users as guests
+; see auto_user config option if you would like to change this
 ; DEFAULT: false
 ;auto_create = "false"
 
@@ -426,13 +451,18 @@ refresh_limit = "60"
 ; You need to change this when you activate public_registration.
 ;mail_from = "info@domain.tld"
 
+; It defines whether this setup checks a mail address strictly.
+; You can select "strict" or "easy" or "none".
+; DEFAULT: strict
+;mail_check = "strict"
+
 ; This setting turns on/off admin notify off registration.
 ; DEFAULT: false
 ;admin_notify_reg = "false"
 
-; This setting will allow all registrants to be auto-approved
-; as a user. By default, they will be added as a guest and
-; must be "promoted" by the admin.
+; This setting will allow all registrants/ldap/http users 
+; to be auto-approved as a user. By default, they will be 
+; added as a guest and must be promoted by the admin.
 ; POSSIBLE VALUES: guest, user, admin
 ; DEFAULT: guest
 ;auto_user = "guest"
@@ -464,25 +494,15 @@ refresh_limit = "60"
 ; DEFAULT: 48
 ;min_bit_rate = 48
 
-
-;######################################################
-; These options control how searching works           #
-;######################################################
-
-; choices are: artist,album,song_title,song_genre,song_year,song_bitrate,song_min_bitrate,song_filename
-; DEFAULT: song_title
-search_field = song_title
-
-; choices are: exact,fuzzy
-; DEFAULT: fuzzy
-search_type  = fuzzy 
-
 ;######################################################
 ; These are commands used to transcode non-streaming
 ; formats to the target file type for streaming. 
 ; This can be useful in re-encoding file types that don't stream
 ; very well, or if your player doesn't support some file types. 
 ; This is also the string used when 'downsampling' is selected
+; as some people have complained its not bloody obvious, any programs
+; referenced in the downsample commands must be installed manually and in
+; the web server path, and executable by the web server
 ; REQUIRED variables
 ; transcode_TYPE	= true/false ## True to force transcode regardless of prefs
 ; transcode_TYPE_target	= TARGET_FILE_TYPE
@@ -499,29 +519,39 @@ transcode_m4a_target 	= mp3
 transcode_flac_target	= mp3
 ;transcode_mp3  	= false
 transcode_mp3_target	= mp3
+;transcode_ogg 		= false
+transcode_ogg_target	= ogg
 
 ; These are the commands that will be run to transcode the file
 transcode_cmd_flac 	= "flac -dc %FILE% | lame -b %SAMPLE% -S - - "
 transcode_cmd_m4a 	= "faad -f 2 -w %FILE% | lame -r -b %SAMPLE% -S - -"
 transcode_cmd_mp3	= "mp3splt -qnf %FILE% %OFFSET% %EOF% -o - | lame --mp3input -q 3 -b %SAMPLE% -S - -"
-;transcode_cmd_ogg   = "mp3splt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
-transcode_cmd_ogg   = "oggsplt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+transcode_cmd_ogg   	= "oggsplt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+
 ; Alternative command works better for some people
 ;transcode_cmd_m4a       =  "alac %FILE% | lame -h -b %SAMPLE% -S - -"
- 
+;transcode_cmd_ogg   	= "mp3splt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+;transcode_cmd_flac	= "flac -dc %FILE% | lame -rb %SAMPLE% -S - -"
 
 ; This line seems to work better for windows, switch if needed
-;transcode_cmd_mp3	= "mp3splt -qnf -o - %FILE% %OFFSET% %EOF% | lame --mp3input -q 3 -b %SAMPLE% -S - -" 
+;transcode_cmd_mp3	= "lame -q 3 -b %SAMPLE% -S %FILE% - -" 
 
 ;######################################################
 ; these options allow you to configure your rss-feed
-; layout. rss exists of two parts, main and song
-; main is the information about the feed
-; song is the information in the feed. can be multiple
-;      items.
-;
+; layout. rss exists of two parts, main and song main is the information about the feed
+; song is the information in the feed. can be multiple items.
 ; use_rss = false (values true | false)
-;
 ;DEFAULT: use_rss = true
 use_rss = true
 ;#####################################################
+
+;#############################
+;  Proxy Settings (optional) #
+;#############################
+; If Ampache is behind an http proxy, specifiy the hostname or IP address
+; port, proxyusername, and proxypassword here.
+;DEFAULT: not in use
+;proxy_host = "192.168.0.1"
+;proxy_port = "8080"
+;proxy_user = ""
+;proxy_pass = ""

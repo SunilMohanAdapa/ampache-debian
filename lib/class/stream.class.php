@@ -31,7 +31,7 @@ class Stream {
 	/* Variables from DB */
 	public $type;
 	public $web_path;
-	public $songs = array();
+	public $media = array();
 	public $urls  = array(); 
 	public $sess;
 	public $user_id; 
@@ -39,23 +39,20 @@ class Stream {
 	// Generate once an object is constructed
 	public static $session; 
 
-        // Let's us tell if the session has been activated
-        private static $session_inserted;
+	// Let's us tell if the session has been activated
+	private static $session_inserted; 
 
 	/**
 	 * Constructor for the stream class takes a type and an array
 	 * of song ids
 	 */
-	public function __construct($type='m3u', $song_ids=0) {
+	public function __construct($type='m3u', $media_ids) {
 
 		$this->type = $type;
-		$this->songs = $song_ids;
-		$this->web_path = Config::get('web_path');
+		$this->media = $media_ids;
 		$this->user_id = $GLOBALS['user']->id;
 		
-		if (Config::get('force_http_play')) { 
-			$this->web_path = preg_replace("/https/", "http",$this->web_path);
-		}
+		if (!is_array($this->media)) { settype($this->media,'array'); } 
 
 	} // Constructor
 
@@ -66,13 +63,13 @@ class Stream {
 	 */
 	public function start() {
 
-		if (!count($this->songs) AND !count($this->urls)) { 
+		if (!count($this->media) AND !count($this->urls)) { 
 			debug_event('stream','Error: No Songs Passed on ' . $this->type . ' stream','2');
 			return false; 
 		}
 
 		// We're starting insert the session into session_stream
-		if (!$this->get_session()) { 
+		if (!self::get_session()) { 
 			debug_event('stream','Session Insertion failure, aborting','3'); 
 			return false; 
 		}
@@ -92,14 +89,15 @@ class Stream {
 	} // start
 
 	/**
-	 * manual_url_add
-	 * This manually adds a URL to the stream object for passing
-	 * to whatever, this is an exception for when we don't actually
-	 * have a object_id but instead a weird or special URL
+	 * add_urls
+	 * Add an array of urls, it may be a single one who knows, this 
+	 * is used for things that aren't coming from media objects
 	 */
-	public function manual_url_add($url) { 
+	public function add_urls($urls=array()) { 
 
-		$this->urls[] = $url; 
+		if (!is_array($urls)) { return false; } 
+		
+		$this->urls = array_merge($urls,$this->urls); 
 
 	} // manual_url_add
 
@@ -109,31 +107,45 @@ class Stream {
 	 */
 	public static function get_session() { 
 
-                if (!self::$session_inserted) {
-                        self::insert_session(self::$session);
-                }
+		if (!self::$session_inserted) { 
+			self::insert_session(self::$session);
+		} 
 
-                return self::$session;
+		return self::$session; 
 
 	} // get_session
+
+	/**
+	 * set_session
+	 * This overrides the normal session value, without adding
+	 * an additional session into the database, should be called
+	 * with care
+	 */
+	public static function set_session($sid) { 
+
+		self::$session_inserted = true; 
+		self::$session=$sid; 
+
+	} // set_session
 
 	/**
 	 * insert_session
 	 * This inserts a row into the session_stream table
 	 */
-	public static function insert_session($sid='',$user_id='') { 
+	public static function insert_session($sid='',$uid='') { 
 
 		$sid = $sid ? Dba::escape($sid) : Dba::escape(self::$session); 
+		$uid = $uid ? Dba::escape($uid) : Dba::escape($GLOBALS['user']->id); 
 
 		$expire = time() + Config::get('stream_length'); 
 
-		$user_id = $user_id ? Dba::escape($user_id) : Dba::escape($GLOBALS['user']->id);
-
 		$sql = "INSERT INTO `session_stream` (`id`,`expire`,`user`) " . 
-			"VALUES('$sid','$expire','$user_id')"; 
+			"VALUES('$sid','$expire','$uid')"; 
 		$db_results = Dba::query($sql); 
 
 		if (!$db_results) { return false; } 
+
+		self::$session_inserted = true; 
 
 		return true; 
 
@@ -197,7 +209,7 @@ class Stream {
 		$expire = time() + Config::get('stream_length'); 
 		$sid 	= Dba::escape($sid); 
 		$agent	= Dba::escape($_SERVER['HTTP_USER_AGENT']); 
-		$ip	= sprintf("%u",ip2long($_SERVER['REMOTE_ADDR'])); 
+		$ip	= Dba::escape(inet_pton($_SERVER['REMOTE_ADDR'])); 
 		$uid	= Dba::escape($uid); 
 
 		$sql = "UPDATE `session_stream` SET `expire`='$expire', `agent`='$agent', `ip`='$ip' " . 
@@ -217,22 +229,16 @@ class Stream {
 	public function create_simple_m3u() {
 
 		header("Cache-control: public");
-		header("Content-Disposition: filename=playlist.m3u");
+		header("Content-Disposition: filename=ampache_playlist.m3u");
 		header("Content-Type: audio/x-mpegurl;");
 
 		// Flip for the poping!
 		asort($this->urls); 
 
 		/* Foreach songs */
-		foreach ($this->songs as $song_id) { 
-			// If it's a place-holder
-			if ($song_id == '-1') { 
-				echo array_pop($this->urls) . "\n"; 
-				continue; 
-			} 
-			$song = new Song($song_id);
-			if ($song->type == ".flac") { $song->type = ".ogg"; }
-			echo $song->get_url(); 
+		foreach ($this->media as $element) { 
+			$type = array_shift($element);
+			echo call_user_func(array($type,'play_url'),array_shift($element)) . "\n"; 
 		} // end foreach
 
 		/* Foreach the additional URLs */
@@ -255,21 +261,29 @@ class Stream {
 	        header("Content-Type: audio/x-mpegurl;");
 	        echo "#EXTM3U\n";
 
-		// Flip for the popping
-		asort($this->urls); 
-
 		// Foreach the songs in this stream object
-	        foreach ($this->songs as $song_id) {
-			if ($song_id == '-1') { 
-				echo "#EXTINF: URL-Add\n"; 
-				echo array_pop($this->urls) . "\n"; 
-				continue; 
+	        foreach ($this->media as $element) {
+			$type = array_shift($element); 
+			$media = new $type(array_shift($element)); 
+			$media->format(); 
+			switch ($type) { 
+				case 'song': 
+					echo "#EXTINF:$media->time," . $media->f_artist_full . " - " . $media->title . "\n";
+				break;
+				case 'video': 
+					echo "#EXTINF: Video - $media->title\n";
+				break;
+				case 'radio': 
+					echo "#EXTINF: Radio - $media->name [$media->frequency] ($media->site_url)\n"; 
+				break; 
+				case 'random': 
+					echo "#EXTINF:Random URL\n"; 
+				break; 
+				default: 
+					echo "#EXTINF:URL-Add\n";
+				break;
 			} 
-	        	$song = new Song($song_id);
-	                $song->format();
-
-	                echo "#EXTINF:$song->time," . $song->f_artist_full . " - " . $song->title . "\n";
-			echo $song->get_url(self::$session) . "\n";
+			echo call_user_func(array($type,'play_url'),$media->id) . "\n";  
                 } // end foreach
 
 		/* Foreach URLS */
@@ -280,30 +294,42 @@ class Stream {
 
 	} // create_m3u
 
-	/*!
-		@function create_pls
-		@discussion creates a pls file
-	*/
+	/**
+ 	 * create_pls
+	 * This creates a new pls file from an array of songs and
+	 * urls, exciting I know
+	 */
 	public function create_pls() { 
 
 		/* Count entries */
-		$total_entries = count($this->songs) + count($this->urls); 
+		$total_entries = count($this->media) + count($this->urls); 
 
 		// Send the client a pls playlist
 		header("Cache-control: public");
-		header("Content-Disposition: filename=ampache-playlist.pls");
+		header("Content-Disposition: filename=ampache_playlist.pls");
 		header("Content-Type: audio/x-scpls;");
 		echo "[Playlist]\n";
 		echo "NumberOfEntries=$total_entries\n";
-		foreach ($this->songs as $song_id) { 
+		foreach ($this->media as $element) { 
 			$i++;
-			$song = new Song($song_id);
-			$song->format();
-			$song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
-			$song_url = $song->get_url(self::$session);
-			echo "File" . $i . "=$song_url\n";
-			echo "Title" . $i . "=$song_name\n";
-			echo "Length" . $i . "=$song->time\n";
+			$type = array_shift($element); 
+			$media = new $type(array_shift($element)); 
+			$media->format(); 
+			switch ($type) { 
+				case 'song': 
+					$name = $media->f_artist_full . " - " . $media->title . "." . $media->type;
+					$length = $media->time; 
+				break; 
+				default: 
+					$name = 'URL-Add'; 
+					$length='-1'; 
+				break; 
+			}  
+
+			$url = call_user_func(array($type,'play_url'),$media->id);
+			echo "File" . $i . "=$url\n";
+			echo "Title" . $i . "=$name\n";
+			echo "Length" . $i . "=$length\n";
 		} // end foreach songs	
 
 		/* Foreach Additional URLs */
@@ -326,21 +352,37 @@ class Stream {
 	public function create_asx() { 
 
 	        header("Cache-control: public");
-        	header("Content-Disposition: filename=playlist.asx");
-		header("Content-Type: audio/x-ms-wmv;");
+        	header("Content-Disposition: filename=ampache_playlist.asx");
+		header("Content-Type: video/x-ms-wmv;");
  
 		echo "<ASX version = \"3.0\" BANNERBAR=\"AUTO\">\n";
                 echo "<TITLE>Ampache ASX Playlist</TITLE>";
                 
-		foreach ($this->songs as $song_id) {
-                	$song = new Song($song_id);
-                        $song->format();   
-			$url = $song->get_url(self::$session);
-                        $song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
-			
+		foreach ($this->media as $element) {
+			$type = array_shift($element); 
+			$media = new $type(array_shift($element)); 
+			$media->format(); 
+			switch ($type) { 
+				case 'song': 
+					$name = $media->f_album_full . " - " . $media->title . "." . $media->type;
+					$author = $media->f_artist_full; 
+				break; 
+				default:
+					$author = 'Ampache'; 
+					$name = 'URL-Add';
+				break; 
+			} // end switch 
+			$url = call_user_func(array($type,'play_url'),$media->id); 
+
                         echo "<ENTRY>\n";
-                        echo "<TITLE>".$song->f_album_full ." - ". $song->f_artist_full ." - ". $song->title ."</TITLE>\n";
-                        echo "<AUTHOR>".$song->f_artist_full."</AUTHOR>\n";
+                        echo "<TITLE>$name</TITLE>\n";
+			echo "<AUTHOR>$author</AUTHOR>\n";
+			echo "\t\t<COPYRIGHT>".$media->year."</COPYRIGHT>\n";
+			echo "\t\t<DURATION VALUE=\"00:00:".$media->time."\" />\n";
+			echo "\t\t<PARAM NAME=\"Album\" Value=\"".$media->f_album_full."\" />\n";
+			echo "\t\t<PARAM NAME=\"Genre\" Value=\"".$media->get_genre_name()."\" />\n";
+			echo "\t\t<PARAM NAME=\"Composer\" Value=\"".$media->f_artist_full."\" />\n";
+			echo "\t\t<PARAM NAME=\"Prebuffer\" Value=\"false\" />\n";
         	        echo "<REF HREF = \"". $url . "\" />\n";
                         echo "</ENTRY>\n";
 			
@@ -372,30 +414,41 @@ class Stream {
 		} 
 
 		// Itterate through the songs
-		foreach ($this->songs as $song_id) {
-				
-	        	$song = new Song($song_id);
-	                $song->format();
+		foreach ($this->media as $element) {
+			$type = array_shift($element); 
+			$media = new $type(array_shift($element)); 
+			$media->format(); 
 
-	                $xml = array();
-			$xml['track']['location'] = $song->get_url(self::$session) . $flash_hack;
+			$xml = array();
+
+			switch ($type) { 
+				default:
+				case 'song': 
+					$xml['track']['title'] = $media->title;
+					$xml['track']['creator'] = $media->f_artist_full;
+					$xml['track']['info'] = Config::get('web_path') . "/albums.php?action=show&album=" . $media->album;
+					$xml['track']['image'] = Config::get('web_path') . "/image.php?id=" . $media->album . "&thumb=3&sid=" . session_id();
+					$xml['track']['album'] = $media->f_album_full;
+					$length = $media->time; 
+				break; 
+			} // type
+
+			$xml['track']['location'] = call_user_func(array($type,'play_url'),$media->id) . $flash_hack;
 			$xml['track']['identifier'] = $xml['track']['location'];
-			$xml['track']['title'] = $song->title;
-			$xml['track']['creator'] = $song->f_artist_full;
-			$xml['track']['info'] = Config::get('web_path') . "/albums.php?action=show&album=" . $song->album;
-			$xml['track']['image'] = Config::get('web_path') . "/image.php?id=" . $song->album . "&thumb=3&sid=" . session_id();
-			$xml['track']['album'] = $song->f_album_full;
-			$xml['track']['duration'] = $song->time * 1000;
-			$result .= xml_from_array($xml,1,'xspf');
+			$xml['track']['duration'] = $length * 1000;
+
+			$result .= xmlData::keyed_array($xml,1);
 
                 } // end foreach
+		
+		xmlData::set_type('xspf'); 
 
 	        header("Cache-control: public");
-        	header("Content-Disposition: filename=ampache-playlist.xspf");
+        	header("Content-Disposition: filename=ampache_playlist.xspf");
 		header("Content-Type: application/xspf+xml; charset=utf-8");
-		echo xml_get_header('xspf');
+		echo xmlData::header(); 
 		echo $result;
-		echo xml_get_footer('xspf');
+		echo xmlData::footer(); 
 
 	} // create_xspf
 
@@ -454,17 +507,28 @@ class Stream {
 		// First figure out what their current one is and create the object
 		$localplay = new Localplay(Config::get('localplay_controller')); 
 		$localplay->connect(); 
-		//HACK!!!
-		// Yea.. you know the baby jesus... he's crying right meow
-		foreach ($this->songs as $song_id) { 
-			if ($song_id > 0) { 
-				$song = new Song($song_id); 
-				$localplay->add($song); 
-			} 
-			else { 
-				$url = array_shift($this->urls); 
-				$localplay->add($url); 
-			} 
+		foreach ($this->media as $element) { 
+			$type = array_shift($element);
+			switch ($type) { 
+				case 'video': 
+					// Add check for video support
+				case 'song': 
+				case 'radio': 
+				case 'random': 
+					$media = new $type(array_shift($element)); 
+				break; 
+				default: 
+					$media = array_shift($element); 
+				break; 
+			} // switch on types 
+			$localplay->add($media); 
+		} // foreach object
+
+		/**
+ 		 * Add urls after the fact
+	 	 */
+		foreach ($this->urls as $url) { 
+			$localplay->add($url); 
 		} 
 		
 		$localplay->play();
@@ -480,7 +544,7 @@ class Stream {
 
 		$democratic	= Democratic::get_current_playlist();
 		$democratic->set_parent(); 
-		$democratic->vote($this->songs);
+		$democratic->vote($this->media);
 
 	} // create_democratic
 
@@ -492,9 +556,8 @@ class Stream {
 	private function create_download() { 
 
 		// Build up our object
-		$song_id = $this->songs['0']; 
-		$song = new Song($song_id); 
-		$url = $song->get_url(); 
+		$song_id = $this->media['0']; 
+		$url = Song::play_url($song_id); 
 
 		// Append the fact we are downloading
 		$url .= '&action=download'; 
@@ -512,11 +575,11 @@ class Stream {
 	public function create_ram() { 
 
                 header("Cache-control: public");
-                header("Content-Disposition: filename=playlist.ram");
+                header("Content-Disposition: filename=ampache_playlist.ram");
                 header("Content-Type: audio/x-pn-realaudio ram;");
-                foreach ($this->songs as $song_id) {
-                        $song = new Song($song_id);
-			echo $song->get_url(); 
+                foreach ($this->media as $element) {
+			$type = array_shift($element);
+			echo $url = call_user_func(array($type,'play_url'),array_shift($element)) . "\n"; 
 		} // foreach songs
 
 	} // create_ram
@@ -540,7 +603,7 @@ class Stream {
 	                $song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
 	        }
 
-	        if ($max_bitrate > 1 AND $min_bitrate < $max_bitrate AND $min_bitrate) {
+	        if ($max_bitrate > 1 AND $min_bitrate < $max_bitrate AND $min_bitrate > 0) {
 	                $last_seen_time = $time - 1200; //20 min.
 
 	                $sql = "SELECT COUNT(*) FROM now_playing, user_preference, preference " .
@@ -549,8 +612,8 @@ class Stream {
 	                $db_results = Dba::query($sql);
 	                $results = Dba::fetch_row($db_results);
 
-	                // Current number of active streams (current is already in now playing)
-	                $active_streams = $results[0];
+	                // Current number of active streams (current is already in now playing, worst case make it 1)
+	                $active_streams = intval($results[0]); 
 			if (!$active_streams) { $active_streams = '1'; } 
 
 	                /* If only one user, they'll get all available.  Otherwise split up equally. */
@@ -558,10 +621,12 @@ class Stream {
 
 	                /* If min_bitrate is set, then we'll exit if the bandwidth would need to be split up smaller than the min. */
 	                if ($min_bitrate > 1 AND ($max_bitrate/$active_streams) < $min_bitrate) {
+
 	                        /* Log the failure */
 	                        debug_event('downsample',"Error: Max bandwidith already allocated. $active_streams Active Streams",'2');
 	                        echo "Maximum bandwidth already allocated.  Try again later.";
 	                        exit();
+
 	                }
         	        else {
 	                        $sample_rate = floor($max_bitrate/$active_streams);
@@ -609,10 +674,14 @@ class Stream {
 
 	        /* Replace Variables */
 	        $downsample_command = Config::get($song->stream_cmd());
-	        $downsample_command = str_replace("%FILE%",$song_file,$downsample_command);
-	        $downsample_command = str_replace("%OFFSET%",$offset,$downsample_command);
-	        $downsample_command = str_replace("%EOF%",$eof,$downsample_command);
-	        $downsample_command = str_replace("%SAMPLE%",$sample_rate,$downsample_command);
+	        $downsample_command = str_replace("%FILE%",$song_file,$downsample_command,$file_exists);
+	        $downsample_command = str_replace("%OFFSET%",$offset,$downsample_command,$offset_exists);
+	        $downsample_command = str_replace("%EOF%",$eof,$downsample_command,$eof_exists);
+	        $downsample_command = str_replace("%SAMPLE%",$sample_rate,$downsample_command,$sample_exists);
+
+		if (!$file_exists || !$offset_exists || !$eof_exists || !$sample_exists) { 
+			debug_event('downsample','Error: Downsample command missing a varaible values are File:' . $file_exists . ' Offset:' . $offset_exists . ' Eof:' . $eof_exists . ' Sample:' . $sample_exists,'1'); 
+		} 
 
 	        // If we are debugging log this event
 	        $message = "Start Downsample: $downsample_command";
@@ -660,15 +729,16 @@ class Stream {
 	 * This fucntion is used by the /play/index.php song
 	 * primarily, but could be used by other people
 	 */
-	public static function insert_now_playing($song_id,$uid,$song_length,$sid) {
+	public static function insert_now_playing($oid,$uid,$length,$sid,$type) {
 
-	        $time = time()+$song_length;
+	        $time = time()+$length;
 	        $session_id = Dba::escape($sid);
+		$object_type = 'song'; 
 
 	        // Do a replace into ensuring that this client always only has a single row
-	        $sql = "REPLACE INTO `now_playing` (`id`,`song_id`, `user`, `expire`)" .
-	                " VALUES ('$session_id','$song_id', '$uid', '$time')";
-	        $db_result = Dba::query($sql);
+	        $sql = "REPLACE INTO `now_playing` (`id`,`object_id`,`object_type`, `user`, `expire`)" .
+	                " VALUES ('$session_id','$oid','$object_type', '$uid', '$time')";
+	        $db_result = Dba::write($sql);
 
 	} // insert_now_playing
 
@@ -686,6 +756,53 @@ class Stream {
 
 	} // clear_now_playing
 
+	/**
+	 * get_now_playing
+	 * This returns the now playing information
+	 */
+	public static function get_now_playing($filter=NULL) { 
+
+		$sql = "SELECT `session_stream`.`agent`,`now_playing`.* " .
+			"FROM `now_playing` " .
+			"LEFT JOIN `session_stream` ON `session_stream`.`id`=`now_playing`.`id` " .
+			"ORDER BY `now_playing`.`expire` DESC";
+	        $db_results = Dba::read($sql);
+
+		$results = array(); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$type = $row['object_type']; 
+			$media = new $type($row['object_id']); 
+			$media->format(); 
+			$client = new User($row['user']); 
+			$results[] = array('media'=>$media,'client'=>$client,'agent'=>$row['agent'],'expire'=>$row['expire']); 
+		} // end while
+
+		return $results; 
+
+	} // get_now_playing
+
+	/**
+ 	 * check_lock_media
+	 * This checks to see if the media is already being played, if it is then it returns false
+	 * else return true
+	 */
+	public static function check_lock_media($media_id,$type) { 
+
+		$media_id = Dba::escape($media_id); 
+		$type = Dba::escape($type); 
+
+		$sql = "SELECT `object_id` FROM `now_playing` WHERE `object_id`='$media_id' AND `object_type`='$type'"; 
+		$db_results = Dba::read($sql); 
+
+		if (Dba::num_rows($db_results)) { 
+			debug_event('Stream','Unable to play media currently locked by another user','3'); 
+			return false;
+		} 
+
+		return true; 
+
+	} // check_lock_media
 
 	/**
 	 * auto_init
@@ -734,6 +851,35 @@ class Stream {
 
 	} // run_playlist_method
 
+	/**
+	 * get_base_url
+	 * This returns the base requirements for a stream URL this does not include anything after the index.php?sid=????
+	 */
+	public static function get_base_url() { 
+
+                if (Config::get('require_session')) {
+                        $session_string = 'sid=' . Stream::get_session() . '&';
+                }
+
+                $web_path = Config::get('web_path');
+
+                if (Config::get('force_http_play') OR !empty(self::$force_http)) {
+                        $web_path = str_replace("https://", "http://",$web_path);
+                }
+		if (Config::get('http_port') != '80') { 
+			if (preg_match("/:(\d+)/",$web_path,$matches)) { 
+				$web_path = str_replace(':' . $matches['1'],':' . Config::get('http_port'),$web_path); 
+			} 
+			else { 
+				$web_path = str_replace($_SERVER['HTTP_HOST'],$_SERVER['HTTP_HOST'] . ':' . Config::get('http_port'),$web_path); 
+			} 	
+		} 
+
+		$url = $web_path . "/play/index.php?$session_string"; 
+
+		return $url; 
+
+	} // get_base_url
 
 } //end of stream class
 

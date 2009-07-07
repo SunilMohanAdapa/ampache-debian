@@ -29,7 +29,7 @@ if [ "$1" = "purge" ]; then
    if [ -d /etc/ampache ]; then
       rm -rf /etc/ampache
    fi
-   #This is need to manually remove hanging symlinks.
+   #This is need to manually remove symlinks.
    if [ -d /usr/share/ampache ]; then
       rm -rf /usr/share/ampache
    fi

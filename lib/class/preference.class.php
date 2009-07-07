@@ -66,6 +66,7 @@ class Preference {
 			$sql = "UPDATE `user_preference` SET `value`='$value' " . 
 				"WHERE `preference`='$id'$user_check"; 
 			$db_results = Dba::query($sql); 
+			Preference::clear_from_session();
 			return true; 
 		} 
 		else { 
@@ -146,7 +147,7 @@ class Preference {
 		$db_results = Dba::query($sql); 
 		$data = Dba::fetch_assoc($db_results);
 
-		if ($GLOBALS['user']->has_access($data['level'])) { 
+		if (Access::check('interface',$data['level'])) { 
 			return true; 
 		} 
 
@@ -311,16 +312,75 @@ class Preference {
 	        $results['auth_methods']        = trim($results['auth_methods'])	? explode(",",$results['auth_methods']) : array(); 
 	        $results['tag_order']           = trim($results['tag_order'])		? explode(",",$results['tag_order']) : array(); 
 	        $results['album_art_order']     = trim($results['album_art_order'])	? explode(",",$results['album_art_order']) : array(); 
-	        $results['amazon_base_urls']    = trim($results['amazin_base_urls'])	? explode(",",$results['amazon_base_urls']) : array(); 
-
+	        if (isset($results['amazin_base_urls']))
+	        	$results['amazon_base_urls']    = trim($results['amazin_base_urls'])	? explode(",",$results['amazon_base_urls']) : array();
+	        else 
+				$results['amazon_base_urls']= array();
+				
 	        foreach ($results as $key=>$data) {
-	                if (strcasecmp($data,"true") == "0") { $results[$key] = 1; }
-	                if (strcasecmp($data,"false") == "0") { $results[$key] = 0; }
+        		if (!is_array($data)) {
+                	if (strcasecmp($data,"true") == "0") { $results[$key] = 1; }
+                	if (strcasecmp($data,"false") == "0") { $results[$key] = 0; }
+        		}
 	        }
 
         	return $results;
 
 	} // fix_preferences
+
+	/**
+	 * load_from_session
+	 * This loads the preferences from the session rather then creating a connection to the database
+	 */ 
+	public static function load_from_session() { 
+
+		if (is_array($_SESSION['userdata']['preferences'])) { 
+			Config::set_by_array($_SESSION['userdata']['preferences'],1); 
+			return true; 
+		} 
+
+		return false; 
+
+	} // load_from_session
+
+	/**
+	 * clear_from_session
+	 * This clears the users preferences, this is done whenever modifications are made to the preferences
+	 * or the admin resets something
+	 */
+	public static function clear_from_session() { 
+
+		unset($_SESSION['userdata']['preferences']); 
+
+	} // clear_from_session
+
+	/**
+	 * is_boolean
+	 * This returns true / false if the preference in question is a boolean preference
+	 * This is currently only used by the debug view, could be used other places.. wouldn't be a half
+	 * bad idea
+	 */
+	public static function is_boolean($key) { 
+
+		$boolean_array = array('session_cookiesecure','require_session',
+					'access_control','require_localnet_session',
+					'downsample_remote','track_user_ip',
+					'xml_rpc','allow_zip_download',
+					'file_zip_download','ratings',
+					'shoutbox','resize_images',
+					'show_album_art','allow_public_registration',
+					'captcha_public_reg','admin_notify_reg',
+					'use_rss','download','force_http_play',
+					'allow_stream_playback','allow_democratic_playback',
+					'use_auth','allow_localplay_playback','debug','lock_songs'); 
+
+		if (in_array($key,$boolean_array)) { 
+			return true; 
+		} 
+
+		return false; 
+
+	} // is_boolean
 
 	/**
  	 * init
@@ -329,28 +389,24 @@ class Preference {
 	 */
 	public static function init() { 
 
-	        /* Get Global Preferences */
-	        $sql = "SELECT `preference`.`name`,`user_preference`.`value` FROM `preference`,`user_preference` " . 
-			"WHERE `user_preference`.`user`='-1' " .
-	                "AND `user_preference`.`preference` = `preference`.`id` AND `preference`.`catagory` = 'system'";
-	        $db_results = Dba::query($sql);
+		// First go ahead and try to load it from the preferences
+		if (self::load_from_session()) { 
+			return true; 	
+		} 
 
-	        while ($r = Dba::fetch_assoc($db_results)) {
-	                $name = $r['name'];
-	                $results[$name] = $r['value'];
-	        } // end while sys prefs
-
-	        /* Now we need to allow the user to override some stuff that's been set by the above */
 		$user_id = $GLOBALS['user']->id ? Dba::escape($GLOBALS['user']->id) : '-1'; 
 
-	        $sql = "SELECT preference.name,user_preference.value FROM preference,user_preference WHERE user_preference.user='$user_id' " .
-	                "AND user_preference.preference = preference.id AND preference.catagory != 'system'";
-	        $db_results = Dba::query($sql);
+	        /* Get Global Preferences */
+		$sql = "SELECT `preference`.`name`,`user_preference`.`value`,`syspref`.`value` AS `system_value` FROM `preference` " . 
+			"LEFT JOIN `user_preference` `syspref` ON `syspref`.`preference`=`preference`.`id` AND `syspref`.`user`='-1' AND `preference`.`catagory`='system' " . 
+			"LEFT JOIN `user_preference` ON `user_preference`.`preference`=`preference`.`id` AND `user_preference`.`user`='$user_id' AND `preference`.`catagory`!='system'"; 
+	        $db_results = Dba::read($sql);
 
-	        while ($r = Dba::fetch_assoc($db_results)) {
-	                $name = $r['name'];
-	                $results[$name] = $r['value'];
-	        } // end while
+	        while ($row = Dba::fetch_assoc($db_results)) {
+			$value = $row['system_value'] ? $row['system_value'] : $row['value']; 
+	                $name = $row['name'];
+	                $results[$name] = $value; 
+	        } // end while sys prefs
 
 	        /* Set the Theme mojo */
 	        if (strlen($results['theme_name']) > 0) {
@@ -364,6 +420,7 @@ class Preference {
 	        }
 
 	        Config::set_by_array($results,1);
+		$_SESSION['userdata']['preferences'] = $results; 
 
 	} // init
 

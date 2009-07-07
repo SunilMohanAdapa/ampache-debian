@@ -313,7 +313,7 @@ class AmpacheMpd extends localplay_controller {
 	 * clear_playlist
 	 * This deletes the entire MPD playlist... nuff said
 	 */
-	function clear_playlist() { 
+	public function clear_playlist() { 
 
 		if (is_null($this->_mpd->PLClear())) { return false; }
 
@@ -326,7 +326,7 @@ class AmpacheMpd extends localplay_controller {
 	 * This just tells MPD to start playing, it does not
 	 * take any arguments
 	 */
-	function play() { 
+	public function play() { 
 
 		if (is_null($this->_mpd->Play())) { return false; } 
 		return true;
@@ -338,7 +338,7 @@ class AmpacheMpd extends localplay_controller {
 	 * This just tells MPD to stop playing, it does not take
 	 * any arguments
 	 */
-	function stop() { 
+	public function stop() { 
 
 		if (is_null($this->_mpd->Stop())) { return false; } 
 		return true;
@@ -349,7 +349,7 @@ class AmpacheMpd extends localplay_controller {
 	 * skip
 	 * This tells MPD to skip to the specified song
 	 */
-	function skip($song) { 
+	public function skip($song) { 
 
 		if (is_null($this->_mpd->SkipTo($song))) { return false; }
 		return true; 
@@ -359,7 +359,7 @@ class AmpacheMpd extends localplay_controller {
 	/**
 	 * This tells MPD to increase the volume by 5
 	 */
-	function volume_up() { 
+	public function volume_up() { 
 
 		if (is_null($this->_mpd->AdjustVolume('5'))) { return false; } 
 		return true;
@@ -369,7 +369,7 @@ class AmpacheMpd extends localplay_controller {
 	/**
 	 * This tells MPD to decrese the volume by 5
 	 */
-	function volume_down() { 
+	public function volume_down() { 
 
 		if (is_null($this->_mpd->AdjustVolume('-5'))) { return false; }
 		return true;
@@ -380,7 +380,7 @@ class AmpacheMpd extends localplay_controller {
 	 * next
 	 * This just tells MPD to skip to the next song 
 	 */
-	function next() { 
+	public function next() { 
 
 		if (is_null($this->_mpd->Next())) { return false; } 
 		return true;
@@ -391,7 +391,7 @@ class AmpacheMpd extends localplay_controller {
 	 * prev
 	 * This just tells MPD to skip to the prev song
 	 */
-	function prev() { 
+	public function prev() { 
 
 		if (is_null($this->_mpd->Previous())) { return false; } 
 		return true;
@@ -402,7 +402,7 @@ class AmpacheMpd extends localplay_controller {
 	 * pause
 	 * This tells MPD to pause the current song 
 	 */
-	function pause() { 
+	public function pause() { 
 		
 		if (is_null($this->_mpd->Pause())) { return false; } 
 		return true;
@@ -414,7 +414,7 @@ class AmpacheMpd extends localplay_controller {
         * volume
         * This tells MPD to set the volume to the parameter
         */
-       function volume($volume) {
+	public function volume($volume) {
 
                if (is_null($this->_mpd->SetVolume($volume))) { return false; }
                return true;
@@ -425,19 +425,18 @@ class AmpacheMpd extends localplay_controller {
         * repeat
         * This tells MPD to set the repeating the playlist (i.e. loop) to either on or off
         */
-       function repeat($state) {
+	public function repeat($state) {
 	
 		if (is_null($this->_mpd->SetRepeat($state))) { return false; }
        		return true;
 
        } // repeat
 
-
        /**
         * random
         * This tells MPD to turn on or off the playing of songs from the playlist in random order
         */
-       function random($onoff) {
+       public function random($onoff) {
 
                if (is_null($this->_mpd->SetRandom($onoff))) { return false; }
                return true;
@@ -448,7 +447,7 @@ class AmpacheMpd extends localplay_controller {
         * move
         * This tells MPD to move song from SrcPos to DestPos
         */
-       function move($SrcPos, $DestPos) {
+       public function move($SrcPos, $DestPos) {
 
 		if (is_null($this->_mpd->PLMoveTrack($SrcPos, $DestPos))) { return false; }
 
@@ -481,8 +480,8 @@ class AmpacheMpd extends localplay_controller {
 			$url_data = $this->parse_url($entry['file']); 
 		
 			switch ($url_data['primary_key']) { 
-				case 'song': 	
-					$song = new Song($url_data['song']); 
+				case 'oid': 	
+					$song = new Song($url_data['oid']); 
 					$song->format(); 
 					$data['name'] = $song->f_title . ' - ' . $song->f_album . ' - ' . $song->f_artist;					
 					$data['link']   = $song->f_link; 
@@ -492,18 +491,36 @@ class AmpacheMpd extends localplay_controller {
 					$data['name'] = _('Democratic') . ' - ' . $democratic->name; 	
 					$data['link']   = '';
 				break; 
+				case 'random':
+					$data['name'] = _('Random') . ' - ' . scrub_out(ucfirst($url_data['type'])); 
+					$data['link'] = ''; 
+				break;
 				default: 
 
 					/* If we don't know it, look up by filename */
 					$filename = Dba::escape($entry['file']);
-					$sql = "SELECT `id` FROM `song` WHERE `file` LIKE '%$filename'";
-					$db_results = Dba::query($sql);
-					if ($r = Dba::fetch_assoc($db_results)) { 
-						$song = new Song($r['id']);
-						$song->format(); 
-						$data['name'] = $song->f_title . ' - ' . $song->f_album . ' - ' . $song->f_artist;
-						$data['link'] = $song->f_link; 
-					}	
+					$sql = "SELECT `id`,'song' AS `type` FROM `song` WHERE `file` LIKE '%$filename' " . 
+						"UNION ALL " . 
+						"SELECT `id`,'radio' AS `type` FROM `live_stream` WHERE `url`='$filename' "; 
+					
+					$db_results = Dba::read($sql);
+					if ($row = Dba::fetch_assoc($db_results)) { 
+						$media = new $row['type']($row['id']);
+						$media->format(); 
+						switch ($row['type']) { 
+							case 'song': 
+								$data['name'] = $media->f_title . ' - ' . $media->f_album . ' - ' . $media->f_artist;
+								$data['link'] = $media->f_link; 
+							break; 
+							case 'radio': 
+								$frequency = $media->frequency ? '[' . $media->frequency . ']' : ''; 
+								$site_url = $media->site_url ? '(' . $media->site_url . ')' : ''; 
+								$data['name'] = "$media->name $frequency $site_url";
+								$data['link'] = $media->site_url; 
+							break; 
+						} // end switch on type 
+					} // end if results
+
 					else { 
 						$data['name'] = _('Unknown');
 						$data['link']   = '';
@@ -538,10 +555,9 @@ class AmpacheMpd extends localplay_controller {
 		$array['repeat']	= $this->_mpd->repeat;
 		$array['random']	= $this->_mpd->random;
 		$array['track']		= $track+1;
-
-		preg_match("/song=(\d+)\&/",$this->_mpd->playlist[$track]['file'],$matches);
-		$song_id = $matches['1'];
-		$song = new Song($song_id);
+		
+		$url_data = $this->parse_url($this->_mpd->playlist[$track]['file']);
+		$song = new Song($url_data['oid']);
 		$array['track_title'] 	= $song->title;
 		$array['track_artist'] 	= $song->get_artist_name();
 		$array['track_album']	= $song->get_album_name();

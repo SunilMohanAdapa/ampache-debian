@@ -34,9 +34,6 @@ $path = dirname(__FILE__);
 $prefix = realpath($path . '/../'); 
 require_once $prefix . '/lib/init.php';
 
-echo "- Delete Disabled -\n"; 
-ob_end_flush(); 
-
 if ($debug) { echo "DEBUG ENABLED WILL NOT DELETE FILES!\n"; } 
 
 /* Get a list of filenames */

@@ -148,6 +148,16 @@ function validateEmail ( $email, $verbose=0 ) {
     // Leave blank to use $SERVER_NAME.
     // Note that most modern MTAs will ignore (but require) whatever you say here ...
     // the server will determine your domain via other means.
+	if (Config::get('mail_check')) {
+		$mail_check = Config::get('mail_check');
+	} else {
+		$mail_check = "strict";
+	}
+
+	if ($mail_check == 'strict' && strncmp(PHP_OS,'WIN',3) === TRUE) {
+		$mail_check = "easy";
+	}
+
     if (Config::get('mail_domain')) {
 	    $serverName = Config::get('mail_domain');
     } 
@@ -274,6 +284,8 @@ function validateEmail ( $email, $verbose=0 ) {
             }
             if ( $verbose ) eval("echo \"Internal: checking DNS for $domain ... \"; $vNL");
             
+		// Strict Mail Check
+		if($mail_check == "strict") {
             // check that an MX record exists for Top-Level domain
             // If it exists, start our email address checking
 	    if (function_exists('checkdnsrr')) { 
@@ -621,7 +633,20 @@ function validateEmail ( $email, $verbose=0 ) {
             } // end checkdnsrr test
 
 	} // if function doesn't exist
-            
+    } elseif ($mail_check == "easy") { // easy email address check
+		$pattern = "^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$";
+		if(eregi($pattern, $email)) {
+			$return[0] = true;
+			$return[1] = "OK";
+		} else {
+			$return[0] = false;
+			$return[1] = "NG";
+		}
+	} else { // Nothing to do
+		$return[0] = true;
+		$return[1] = "No Check";
+	}
+
         } // end walking through each domain possibility
     
     } // end isValid
@@ -639,4 +664,5 @@ function validateEmail ( $email, $verbose=0 ) {
     return $return;
 
 } // END validateEmail-2.0
+
 ?>

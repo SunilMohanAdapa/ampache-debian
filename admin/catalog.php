@@ -103,12 +103,23 @@ switch ($_REQUEST['action']) {
 	case 'delete_catalog':
 		/* Make sure they aren't in demo mode */
 	        if (Config::get('demo_mode')) { break; }
+
+		if (!Core::form_verify('delete_catalog')) { 
+			access_denied(); 
+			exit; 
+		} 
 	
 		/* Delete the sucker, we don't need to check perms as thats done above */
-		Catalog::delete($_REQUEST['catalog_id']); 
+		Catalog::delete($_GET['catalog_id']); 
 		$next_url = Config::get('web_path') . '/admin/index.php';
 		show_confirmation(_('Catalog Deleted'),_('The Catalog and all associated records have been deleted'),$nexturl);
 	break;
+	case 'show_delete_catalog': 
+		$catalog_id = scrub_in($_GET['catalog_id']); 
+
+		$next_url = Config::get('web_path') . '/admin/catalog.php?action=delete_catalog&catalog_id=' . scrub_out($catalog_id); 
+		show_confirmation(_('Catalog Delete'),_('Confirm Deletion Request'),$next_url,1,'delete_catalog'); 
+	break; 
 	case 'remove_disabled':
 	        if (conf('demo_mode')) { break; }
 
@@ -160,6 +171,26 @@ switch ($_REQUEST['action']) {
 		$body	= '';
 		show_confirmation($title,$body,$url);
 	break;
+	case 'update_from': 
+		if (Config::get('demo_mode')) { break; } 
+
+		// First see if we need to do an add
+		if ($_POST['add_path'] != '/' AND strlen($_POST['add_path'])) { 
+			if ($catalog_id = Catalog::get_from_path($_POST['add_path'])) { 
+				$catalog = new Catalog($catalog_id); 
+				$catalog->run_add(array('subdirectory'=>$_POST['add_path'])); 
+			} 
+		} // end if add
+		
+		// Now check for an update
+		if ($_POST['update_path'] != '/' AND strlen($_POST['update_path'])) { 
+			if ($catalog_id = Catalog::get_from_path($_POST['update_path'])) { 
+				$songs = Song::get_from_path($_POST['update_path']); 
+				foreach ($songs as $song_id) { Catalog::update_single_item('song',$song_id); } 
+			} 
+		} // end if update
+
+	break; 
 	case 'add_catalog':
 		/* Wah Demo! */
 		if (Config::get('demo_mode')) { break; }
@@ -178,8 +209,13 @@ switch ($_REQUEST['action']) {
 			Error::add('general','Error Remote Catalog specified, but no key provided'); 
 		} 
 
+		// Make sure that there isn't a catalog with a directory above this one
+		if (Catalog::get_from_path($_REQUEST['path'])) { 
+			Error::add('general',_('Error: Defined Path is inside an existing catalog')); 
+		} 
+
 		// If an error hasn't occured
-		if (!Error::$state) { 
+		if (!Error::occurred()) { 
 
 			$catalog_id = Catalog::Create($_REQUEST); 
 
@@ -216,11 +252,7 @@ switch ($_REQUEST['action']) {
 		show_confirmation($title,$body,$url);
 	break;
 	case 'show_catalogs': 
-		$catalog_ids = Catalog::get_catalogs(); 
-		Browse::set_type('catalog'); 
-		Browse::set_static_content(1); 
-		Browse::save_objects($catalog_ids); 
-		Browse::show_objects($catalog_ids); 
+		require_once Config::get('prefix') . '/templates/show_manage_catalogs.inc.php'; 
 	break;
 	case 'show_add_catalog':
 		require Config::get('prefix') . '/templates/show_add_catalog.inc.php';

@@ -44,12 +44,12 @@ function session_exists($sid,$xml_rpc=0) {
 		$path = str_replace("//","/",$path);
 		
 		/* Create the XMLRPC client */
-		$client = new xmlrpc_client($path,$server,$port);
+		$client = new XML_RPC_Client($path,$server,$port);
 
 		/* Encode the SID of the incomming client */
-		$encoded_sid 		= new xmlrpcval($sid,"string");
+		$encoded_sid 		= new XML_RPC_Value($sid,"string");
 
-		$query = new xmlrpcmsg('remote_session_verify',array($encoded_sid) );
+		$query = new XML_RPC_Message('remote_session_verify',array($encoded_sid) );
 
 		/* Log this event */	
 		debug_event('xmlrpc-client',"Checking for Valid Remote Session:$sid",'3'); 
@@ -59,7 +59,7 @@ function session_exists($sid,$xml_rpc=0) {
 		$value = $response->value();
 
 		if (!$response->faultCode()) { 
-			$data = php_xmlrpc_decode($value);
+			$data = XML_RPC_Decode($value);
 			$found = $data;
 		}
 		
@@ -84,93 +84,6 @@ function extend_session($sid) {
 	$db_results = Dba::query($sql);
 
 } // extend_session
-
-/**
- * get_tag_type
- * This takes the result set, and the the tag_order
- * As defined by your config file and trys to figure out
- * which tag type it should use, if your tag_order
- * doesn't match anything then it just takes the first one
- * it finds in the results. 
- */
-function get_tag_type($results) {
-
-	/* Pull In the config option */
-	$order = Config::get('tag_order');
-
-        if (!is_array($order)) {
-		$order = array($order);
-        }
-
-	/* Foreach through the defined key order
-	 * the first one we find is the first one we use 
-	 */
-        foreach($order as $key) {
-                if ($results[$key]) {
-			$returned_key = $key;
-                	break;
-        	}
-	}
-
-	/* If we didn't find anything then default it to the
-	 * first in the results set
-	 */
-	if (!isset($returned_key)) { 
-		$keys = array_keys($results);
-		$returned_key = $keys['0'];
-	}
-
-	return $returned_key;
-
-} // get_tag_type
-
-
-/**
- * clean_tag_info
- * This function takes the array from vainfo along with the 
- * key we've decided on and the filename and returns it in a 
- * sanatized format that ampache can actually use
- */
-function clean_tag_info($results,$key,$filename) { 
-
-	$info = array();
-
-	$clean_array = array("\n","\t","\r","\0");
-	$wipe_array  = array("","","","");
-
-	$info['file']		= $filename;
-	$info['title']        	= stripslashes(trim($results[$key]['title']));
-	$info['year']         	= intval($results[$key]['year']);
-	$info['track']		= intval($results[$key]['track']);
-	$info['disk']		= intval($results[$key]['disk']);
-	$info['comment']      	= Dba::escape(str_replace($clean_array,$wipe_array,$results[$key]['comment']));
-	$info['language']	= Dba::escape($results[$key]['language']); 
-	$info['lyrics']		= Dba::escape($results[$key]['lyricist']); 
-
-	/* This are pulled from the info array */
-	$info['bitrate']      	= intval($results['info']['bitrate']);
-	$info['rate']         	= intval($results['info']['sample_rate']);
-	$info['mode']         	= $results['info']['bitrate_mode'];
-
-	// Convert special version of constant bitrate mode to cbr
-	if($info['mode'] == 'con') {
-		$info['mode'] = 'cbr';
-	}
-
-	$info['size']         	= $results['info']['filesize']; 
-	$info['mime']		= $results['info']['mime'];
-	$into['encoding']	= $results['info']['encoding'];
-	$info['time']         	= intval($results['info']['playing_time']);
-	$info['channels']	= intval($results['info']['channels']);
-
-        /* These are used to generate the correct ID's later */
-        $info['artist'] 	= trim($results[$key]['artist']);
-	$info['album']  	= trim($results[$key]['album']);
-        $info['genre']  	= trim($results[$key]['genre']);
-
-	return $info;
-
-} // clean_tag_info
 
 /*!
 	@function scrub_in()
@@ -266,21 +179,6 @@ function get_global_popular($type) {
         return $items;
 
 } // get_global_popular
-
-/*!
-	@function get_file_extension
-	@discussion returns all characters after the last "." in $filename
-	Should I be using pathinfo() instead?
-*/
-function get_file_extension( $filename ) {
-	$file_name_parts = explode( ".", $filename );
-	$num_parts = count( $file_name_parts );
-	if( $num_parts <= 1 ) {
-		return;
-	} else {
-		return $file_name_parts[$num_parts - 1];
-	}
-} // get_file_extension
 
 /**
  * generate_password
@@ -382,7 +280,7 @@ function get_languages() {
 	$results = array(); 
 
 	/* Prepend English */
-	$results['en_US'] = 'English';
+	$results['en_US'] = 'English (US)';
 
 	while ($file = readdir($handle)) { 
 
@@ -391,21 +289,52 @@ function get_languages() {
 		/* Check to see if it's a directory */
 		if (is_dir($full_file) AND substr($file,0,1) != '.' AND $file != 'base') { 
 				
-			switch($file) { 
-				case 'de_DE'; $name = 'Deutsch'; break;
-				case 'en_US'; $name = 'English'; break;
-				case 'ca_CA'; $name = 'Catal&#224;'; break;
-				case 'en_GB'; $name = 'British English'; break;
-				case 'es_ES'; $name = 'Espa&ntilde;ol'; break;
-				case 'el_GR'; $name = 'Greek (&#x0395;&#x03bb;&#x03bb;&#x03b7;&#x03bd;&#x03b9;&#x03ba;&#x03ac;)'; break; 
-				case 'fr_FR'; $name = 'Fran&ccedil;ais'; break;
-				case 'it_IT'; $name = 'Italiano'; break;
-				case 'is_IS'; $name = '&Iacute;slenska'; break;
-				case 'nl_NL'; $name = 'Nederlands'; break;
-				case 'tr_TR'; $name = 'Turkish'; break;
-				case 'zh_CN'; $name = _('Simplified Chinese') . " (&#x7b80;&#x4f53;&#x4e2d;&#x6587;)"; break;
-				case 'ru_RU'; $name = 'Russian (&#x0420;&#x0443;&#x0441;&#x0441;&#x043a;&#x0438;&#x0439;)'; break;
-				case 'ja_JP'; $name = 'Japanese (&#x65e5;&#x672c;&#x8a9e;)'; break;
+			switch($file) {
+				case 'af_ZA'; $name = 'Afrikaans'; break; /* Afrikaans */
+				case 'ca_ES'; $name = 'Catal&#224;'; break; /* Catalan */
+				case 'cs_CZ'; $name = '&#x010c;esky'; break; /* Czech */
+				case 'da_DK'; $name = 'Dansk'; break; /* Danish */
+				case 'de_DE'; $name = 'Deutsch'; break; /* German */
+				case 'en_US'; $name = 'English (US)'; break; /* English */
+				case 'en_GB'; $name = 'English (UK)'; break; /* English */
+				case 'es_ES'; $name = 'Espa&#241;ol'; break; /* Spanish */
+				case 'es_MX'; $name = 'Espa&#241;ol (MX)'; break; /* Spanish */
+				case 'es_AR'; $name = 'Espa&#241;ol (AR)'; break; /* Spanish */
+				case 'et_EE'; $name = 'Eesti'; break; /* Estonian */
+				case 'eu_ES'; $name = 'Euskara'; break; /* Basque */
+				case 'fr_FR'; $name = 'Fran&#231;ais'; break; /* French */
+				case 'ga_IE'; $name = 'Gaeilge'; break; /* Irish */
+				case 'el_GR'; $name = 'Greek'; break; /* Greek */
+				case 'is_IS'; $name = 'Icelandic'; break; /* Icelandic */
+				case 'it_IT'; $name = 'Italiano'; break; /* Italian */
+				case 'lv_LV'; $name = 'Latvie&#353;u'; break; /* Latvian */
+				case 'lt_LT'; $name = 'Lietuvi&#371;'; break; /* Lithuanian */
+				case 'hu_HU'; $name = 'Magyar'; break; /* Hungarian */
+				case 'nl_NL'; $name = 'Nederlands'; break; /* Dutch */
+				case 'no_NO'; $name = 'Norsk bokm&#229;l'; break; /* Norwegian */
+				case 'pl_PL'; $name = 'Polski'; break; /* Polish */
+				case 'pt_BR'; $name = 'Portugu&#234;s Brasileiro'; break; /* Portuguese */
+				case 'pt_PT'; $name = 'Portugu&#234;s'; break; /* Portuguese */
+				case 'ro_RO'; $name = 'Rom&#226;n&#259;'; break; /* Romanian */
+				case 'sk_SK'; $name = 'Sloven&#269;ina'; break; /* Slovak */
+				case 'sl_SI'; $name = 'Sloven&#353;&#269;ina'; break; /* Slovenian */
+				case 'sr_CS'; $name = 'Srpski'; break; /* Serbian */
+				case 'fi_FI'; $name = 'Suomi'; break; /* Finnish */
+				case 'sv_SE'; $name = 'Svenska'; break; /* Swedish */
+				case 'uk_UA'; $name = 'Українська'; break; /* Ukrainian */
+				case 'vi_VN'; $name = 'Ti&#7871;ng Vi&#7879;t'; break; /* Vietnamese */
+				case 'tr_TR'; $name = 'T&#252;rk&#231;e'; break; /* Turkish */
+				case 'bg_BG'; $name = '&#x0411;&#x044a;&#x043b;&#x0433;&#x0430;&#x0440;&#x0441;&#x043a;&#x0438;'; break; /* Bulgarian */
+				case 'ru_RU'; $name = '&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;'; break; /* Russian */
+				case 'zh_CN'; $name = '&#31616;&#20307;&#20013;&#25991;'; break; /* Chinese */
+				case 'zn_TW'; $name = '&#32321;&#39636;&#20013;&#25991;'; break; /* Chinese */
+				case 'ko_KR'; $name = '&#xd55c;&#xad6d;&#xb9d0;'; break; /* Korean */
+				case 'ja_JP'; $name = '&#x65e5;&#x672c;&#x8a9e;'; break; /* Japanese */
+				case 'nb_NO'; $name = 'Norsk'; break; /* Norwegian */
+				/* These languages are right to left. */
+				case 'ar_SA'; $name = '&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;'; break; /* Arabic */
+				case 'he_IL'; $name = '&#1506;&#1489;&#1512;&#1497;&#1514;'; break; /* Hebrew */
+				case 'fa_IR'; $name = '&#1601;&#1575;&#1585;&#1587;&#1610;'; break; /* Farsi */
 				default: $name = _('Unknown'); break;
 			} // end switch
 
@@ -422,8 +351,8 @@ function get_languages() {
 /**
  * format_time
  * This formats seconds into minutes:seconds
+ * //FIXME This should be removed, no reason for it!
  */
-
 function format_time($seconds) {
 
 return sprintf ("%d:%02d", $seconds/60, $seconds % 60);
@@ -528,5 +457,76 @@ function __autoload($class) {
         }
 
 } // __autoload
+
+/**
+ * win_checkdnsrr
+ * This is a windows emulation of the normal PHP functions
+ * not sure how I feel about the exec in here, but it's escaped
+ * this most likely won't work on a lot of systems
+ */
+function win_checkdnsrr($host, $type='MX') {
+    if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') { return; }
+    if (empty($host)) { return; }
+    $types=array('A', 'MX', 'NS', 'SOA', 'PTR', 'CNAME', 'AAAA', 'A6', 'SRV', 'NAPTR', 'TXT', 'ANY');
+    if (!in_array($type,$types)) {
+        user_error("checkdnsrr() Type '$type' not supported", E_USER_WARNING);
+        return;
+    }
+    @exec('nslookup -type='.$type.' '.escapeshellcmd($host), $output);
+    foreach($output as $line){
+        if (preg_match('/^'.$host.'/',$line)) { return true; }
+    }
+} // win_checkdnsrr
+
+// See if the function exists, and return as needed
+if (!function_exists('checkdnsrr')) {
+    function checkdnsrr($host, $type='MX') {
+        return win_checkdnsrr($host, $type);
+    }
+}
+
+/**
+ * win_getmxrr
+ * This emulates the normal PHP function for getting MX records
+ * most likely won't work on systems due to use of exec
+ */
+function win_getmxrr($hostname, &$mxhosts, &$mxweight=false) {
+    if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') return;
+    if (!is_array ($mxhosts) ) $mxhosts = array();
+    if (empty($hostname)) return;
+    $exec='nslookup -type=MX '.escapeshellarg($hostname);
+    @exec($exec, $output);
+    if (empty($output)) return;
+    $i=-1;
+    foreach ($output as $line) {
+        $i++;
+        if (preg_match("/^$hostname\tMX preference = ([0-9]+), mail exchanger = (.+)$/i", $line, $parts)) {
+          $mxweight[$i] = trim($parts[1]);
+          $mxhosts[$i] = trim($parts[2]);
+        }
+        if (preg_match('/responsible mail addr = (.+)$/i', $line, $parts)) {
+          $mxweight[$i] = $i;
+          $mxhosts[$i] = trim($parts[1]);
+        }
+    }
+    return ($i!=-1);
+} // win_getmxrr
+
+// If no getmxrr return
+if (!function_exists('getmxrr')) {
+    function getmxrr($hostname, &$mxhosts, &$mxweight=false) {
+        return win_getmxrr($hostname, $mxhosts, $mxweight);
+    }
+}
+
+/**
+ * debug_print
+ * print_r with <pre> tag
+ */
+function debug_print($var) {
+    echo "<pre>";
+    print_r($var);
+    echo "</pre>";
+}
 
 ?>

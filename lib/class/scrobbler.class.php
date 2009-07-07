@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -108,6 +108,10 @@ class scrobbler {
                         $this->error_msg = 'Invalid Username';
                         return false;
                 }
+		if(substr($response[0],0,7) == 'BADTIME') { 
+			$this->error_msg = 'Your time is too far off from the server, or your PHP timezone is incorrect'; 
+			return false; 
+		} 
                 if(substr($response[0], 0, 6) == 'UPDATE') {
                         $this->error_msg = 'You need to update your client: '.substr($response[0], 7);
                         return false;
@@ -118,7 +122,7 @@ class scrobbler {
                         $data['submit_port'] = $matches[2];
                         $data['submit_url'] = $matches[3];
                 } else {
-                        $this->error_msg = 'Invalid POST URL returned, unable to continue';
+                        $this->error_msg = "Invalid POST URL returned, unable to continue. Sent:\n$get_string\n----\nReceived:\n" . $buffer; 
                         return false;
                 }
 
@@ -198,7 +202,7 @@ class scrobbler {
                 fwrite($as_socket, $action);
                 fwrite($as_socket, "Host: ".$this->submit_host."\r\n");
                 fwrite($as_socket, "Accept: */*\r\n");
-		fwrite($as_socket, "User-Agent: Ampache/3.4\r\n");
+		fwrite($as_socket, "User-Agent: Ampache/3.5\r\n");
                 fwrite($as_socket, "Content-type: application/x-www-form-urlencoded\r\n");
                 fwrite($as_socket, "Content-length: ".strlen($query_str)."\r\n\r\n");
 

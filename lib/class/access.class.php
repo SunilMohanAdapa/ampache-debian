@@ -34,6 +34,7 @@ class Access {
 	public $user;
 	public $type;
 	public $key;
+	public $enabled;
 
 	/**
 	 * constructor
@@ -73,22 +74,57 @@ class Access {
 	} // _get_info
 
 	/**
+	 * format
+	 * This makes the Access object a nice fuzzy human readable object, spiffy ain't it. 
+	 */
+	public function format() { 
+
+		$this->f_start = inet_ntop($this->start); 
+		$this->f_end = inet_ntop($this->end); 
+
+		$this->f_user = $this->get_user_name(); 
+		$this->f_level = $this->get_level_name(); 
+		$this->f_type = $this->get_type_name(); 
+
+	} // format
+
+	/**
 	 * update
 	 * This function takes a named array as a datasource and updates the current access list entry
 	 */
 	public function update($data) { 
 
+                /* We need to verify the incomming data a littlebit */
+                $start = @inet_pton($data['start']);
+                $end = @inet_pton($data['end']);
+
+                if (!$start AND $data['start'] != '0.0.0.0' AND $data['start'] != '::') {
+                        Error::add('start',_('Invalid IPv4 / IPv6 Address Entered'));
+                        return false;
+                }
+                if (!$end) {
+                        Error::add('end',_('Invalid IPv4 / IPv6 Address Entered'));
+                        return false;
+                }
+
+                if (strlen(bin2hex($start)) != strlen(bin2hex($end))) {
+                        Error::add('start',_('IP Address Version Mismatch'));
+                        Error::add('end',_('IP Address Version Mismatch'));
+                        return false;
+                }
+
 		$name	= Dba::escape($data['name']); 
 		$type	= self::validate_type($data['type']); 
-		$start 	= sprintf("%u",ip2long($data['start']));
-		$end	= sprintf("%u",ip2long($data['end'])); 
+		$start 	= Dba::escape(inet_pton($data['start']));
+		$end	= Dba::escape(inet_pton($data['end'])); 
 		$level	= Dba::escape($data['level']);
 		$user	= $data['user'] ? Dba::escape($data['user']) : '-1'; 
 		$key	= Dba::escape($data['key']);
+		$enabled = make_bool($data['enabled']); 
 		
 		$sql = "UPDATE `access_list` " . 
 			"SET `start`='$start', `end`='$end', `level`='$level', `user`='$user', `key`='$key', " . 
-			"`name`='$name', `type`='$type' WHERE `id`='" . Dba::escape($this->id) . "'";
+			"`name`='$name', `type`='$type',`enabled`='$enabled' WHERE `id`='" . Dba::escape($this->id) . "'";
 		$db_results = Dba::query($sql);
 
 		return true;
@@ -103,23 +139,69 @@ class Access {
 	public static function create($data) { 
 
 		/* We need to verify the incomming data a littlebit */
+		$start = @inet_pton($data['start']); 
+		$end = @inet_pton($data['end']); 
 
-		$start 	= sprintf("%u",ip2long($data['start'])); 
-		$end 	= sprintf("%u",ip2long($data['end'])); 
+		if (!$start AND $data['start'] != '0.0.0.0' AND $data['start'] != '::') { 
+			Error::add('start',_('Invalid IPv4 / IPv6 Address Entered')); 
+			return false; 
+		} 
+		if (!$end) { 
+			Error::add('end',_('Invalid IPv4 / IPv6 Address Entered')); 
+			return false; 
+		} 
+
+		if (strlen(bin2hex($start)) != strlen(bin2hex($end))) { 
+			Error::add('start',_('IP Address Version Mismatch')); 
+			Error::add('end',_('IP Address Version Mismatch')); 
+			return false; 
+		} 
+
+		// Check existing ACL's to make sure we're not duplicating values here
+		if (self::exists($data)) { 
+			debug_event('ACL Create','Error did not create duplicate ACL entrie for ' . $data['start'] . ' - ' . $data['end'],'1'); 
+			return false; 
+		} 
+
+		$start 	= Dba::escape($start); 
+		$end 	= Dba::escape($end);
 		$name	= Dba::escape($data['name']);
 		$key	= Dba::escape($data['key']);
 		$user	= $data['user'] ? Dba::escape($data['user']) : '-1'; 
 		$level	= intval($data['level']);
 		$type	= self::validate_type($data['type']);
-		$dns	= ' '; 
+		$enabled = make_bool($data['enabled']); 
 
-		$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`dns`) " . 
-			"VALUES ('$name','$level','$start','$end','$key','$user','$type','$dns')";
+		$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+			"VALUES ('$name','$level','$start','$end','$key','$user','$type','$enabled')";
 		$db_results = Dba::query($sql);
 
 		return true;
 
 	} // create
+
+	/**
+	 * exists
+	 * this sees if the ACL that we've specified already exists, prevent duplicates. This ignores the name
+	 */
+	public static function exists($data) { 
+
+		$start = Dba::escape(inet_pton($data['start'])); 
+		$end = Dba::escape(inet_pton($data['end'])); 
+		$type = self::validate_type($data['type']); 
+		$user = $data['user'] ? Dba::escape($data['user']) : '-1'; 
+
+		$sql = "SELECT * FROM `access_list` WHERE `start`='$start' AND `end` = '$end' " . 
+			"AND `type`='$type' AND `user`='$user'"; 
+		$db_results = Dba::read($sql); 
+
+		if (Dba::fetch_assoc($db_results)) { 
+			return true; 
+		} 
+
+		return false; 
+
+	} // exists
 
 	/**
 	 * delete
@@ -140,12 +222,15 @@ class Access {
 	public static function check_function($type) { 
 
 		switch ($type) { 
+			case 'download': 
+				return Config::get('download'); 
+			break ;
 			case 'batch_download':
                                 if (!function_exists('gzcompress')) {
                                         debug_event('gzcompress','ZLIB Extensions not loaded, batch download disabled','3');
                                         return false;
                                 }
-                                if (Config::get('allow_zip_download') AND $GLOBALS['user']->has_access(25)) {
+                                if (Config::get('allow_zip_download') AND $GLOBALS['user']->has_access('25')) {
                                         return Config::get('download');
                                 }
                         break;
@@ -162,16 +247,21 @@ class Access {
 	 * and then returns true or false if they have access to this
 	 * the IP is passed as a dotted quad
 	 */
-	public static function check_network($type,$ip,$user,$level,$key='') { 
+	public static function check_network($type,$user,$level,$ip='',$key='') { 
 
-		// They aren't using access control 
-		// lets just keep on trucking
 		if (!Config::get('access_control')) { 
-			return true;
-		} 
+			switch ($type) { 
+				case 'interface': 
+				case 'stream': 
+					return true; 
+				break; 
+				default: 
+					return false; 
+			} // end switch
+		} // end if access control is turned off
 
 		// Clean incomming variables
-		$ip 	= sprintf("%u",ip2long($ip)); 
+		$ip 	= $ip ? Dba::escape(inet_pton($ip)) : Dba::escape(inet_pton($_SERVER['REMOTE_ADDR'])); 
 		$user 	= Dba::escape($user);
 		$key 	= Dba::escape($key);
 		$level	= Dba::escape($level);
@@ -209,7 +299,7 @@ class Access {
 			break;
 		} // end switch on type
 		
-		$db_results = Dba::query($sql);
+		$db_results = Dba::read($sql);
 
 		// Yah they have access they can use the mojo
 		if (Dba::fetch_row($db_results)) { 
@@ -230,7 +320,8 @@ class Access {
 	 */
 	public static function check($type,$level) { 
 
-		if (!Config::get('use_auth') || Config::get('demo_mode')) { return true; } 
+		if (Config::get('demo_mode')) { return true; } 
+		if (INSTALL == '1') { return true; } 
 
 		$level = intval($level); 
 
@@ -293,7 +384,7 @@ class Access {
 	public static function get_access_lists() { 
 
 		$sql = "SELECT `id` FROM `access_list`";
-		$db_results = Dba::query($sql);
+		$db_results = Dba::read($sql);
 	
 		$results = array(); 
 	
@@ -313,7 +404,7 @@ class Access {
 	 */
 	public function get_level_name() { 
 
-		if ($this->level == '75') { 
+		if ($this->level >= '75') { 
 			return _('All');
 		}
 		if ($this->level == '5') { 
@@ -333,14 +424,12 @@ class Access {
 	 * Take a user and return their full name
 	 */
 	public function get_user_name() { 
+
+		if ($this->user == '-1') { return _('All'); } 
 		
 		$user = new User($this->user);
-		if ($user->username) { 
-			return $user->fullname . " (" . $user->username . ")";
-		}
+		return $user->fullname . " (" . $user->username . ")";
 		
-		return _('All');
-
 	} // get_user_name
 
 	/**
@@ -352,17 +441,17 @@ class Access {
 		switch ($this->type) { 
 			case 'xml-rpc': 
 			case 'rpc':
-				return 'RPC';
+				return _('API/RPC');
 			break;
 			case 'network':
-				return 'Local Network Definition';
+				return _('Local Network Definition');
 			break;
 			case 'interface':
-				return 'Web Interface';
+				return _('Web Interface');
 			break;
 			case 'stream':
 			default: 
-				return 'Stream Access';
+				return _('Stream Access');
 			break;
 		} // end switch
 

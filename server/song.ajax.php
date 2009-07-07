@@ -34,8 +34,13 @@ switch ($_REQUEST['action']) {
 		$song = new Song($_REQUEST['song_id']); 
 		$new_enabled = $song->enabled ? '0' : '1'; 
 		$song->update_enabled($new_enabled,$song->id); 
-
-		//FIXME: Re-display this	
+		$song->enabled = $new_enabled; 
+		$song->format(); 
+		
+		//Return the new Ajax::button
+		$id = 'button_flip_state_' . $song->id;
+		$button = $song->enabled ? 'disable' : 'enable';
+		$results[$id] = Ajax::button('?page=song&action=flip_state&song_id=' . $song->id,$button,_(ucfirst($button)),'flip_state_' . $song->id);  
 
 	break;
 	default: 

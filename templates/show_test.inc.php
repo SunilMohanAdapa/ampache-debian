@@ -25,13 +25,14 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Ampache -- Debug Page</title>
+<link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
 </head>
 <body bgcolor="#f0f0f0">
-<link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
 <div id="header">
 <h1><?php echo _('Ampache Debug'); ?></h1>
 <p><?php echo _('You\'ve reached this page because a configuration error has occured. Debug Information below'); ?></p>
 </div>
+<div>
 <table align="center" cellpadding="3" cellspacing="0">
 <tr>
 	<td><font size="+1"><?php echo _('CHECK'); ?></font></td>
@@ -45,18 +46,19 @@
 	<td valign="top">[
 	<?php
 		if (!check_php_ver()) { 
-			$status['php_ver'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false);
+			if (function_exists('hash_algos')) { $algos = hash_algos(); } 
+			$string = "<strong>" .  phpversion() . " " . _('Hash Function Exists') . " " . print_boolean(function_exists('hash_algos')) . " " . _('SHA256 Support') . " " . print_boolean(in_array('sha256',$algos)) . "</strong>"; 
 		}
 		else {
-			$status['php_ver'] = 'true';
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>
 	]
 	</td>
 	<td>
 	<?php echo _('This tests to make sure that you are running a version of PHP that is known to work with Ampache.'); ?>
+	<?php echo $string; ?>
 	</td>
 </tr>
 <tr>
@@ -64,12 +66,10 @@
         <td valign="top">[
         <?php
                 if (!check_php_mysql()) {
-                        $status['mysql_php'] = 'false';
-                        echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
                 }
                 else {
-                        $status['mysql_php'] = 'true';
-                        echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
                 }
         ?>
         ]
@@ -83,12 +83,10 @@
 	<td valign="top">[
 	<?php
 		if (!check_php_session()) { 
-			$status['session_php'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else {
-			$status['session_php'] = 'true';
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>
 	]
@@ -102,12 +100,10 @@
 	<td valign="top">[
 	<?php
 		if (!check_php_iconv()) { 
-			$status['iconv_php'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else {
-			$status['iconv_php'] = 'true';
-			echo "<font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>]
 	</td>
@@ -120,11 +116,10 @@
 	<td valign="top">[
 	<?php
 		if (!check_php_pcre()) { 
-			$status['pcre_php'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else { 
-			echo "<font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>]
 	</td>
@@ -137,11 +132,10 @@
 	<td valign="top">[
 	<?php
 		if (!check_putenv()) { 
-			$status['putevn_php'] = false;
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else { 
-			echo "<font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		} 
 	?>]
 	</td>
@@ -154,10 +148,10 @@
 	<td valign="top">[ 
 	<?php
 		if (!is_readable($configfile)) { 
-			echo " <font color=\"red\">ERROR</font> "; 
+			echo debug_result('',false); 
 		}
 		else {
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>
 	]
@@ -176,11 +170,10 @@
 		$results = @parse_ini_file($configfile);
 		Config::set_by_array($results);
 		if (!check_config_values($results)) { 
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else {
-			$status['parse_config'] = true; 
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>
 	]
@@ -195,12 +188,10 @@
 	<?php
 		$db = check_database($results['database_hostname'], $results['database_username'], $results['database_password'],$results['database_name']);
 		if (!$db) { 
-			$status['check_db'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else {
-			$status['check_db'] = 'true';
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}		
 	?>
 	]
@@ -215,19 +206,16 @@
 	<?php
 		$db_inserted = check_database_inserted($db,$results['local_db']);
 		if (!$db_inserted) { 
-			$status['check_db_insert'] = 'false';
-			echo " <font color=\"red\">ERROR</font> ";
+			echo debug_result('',false); 
 		}
 		else {
-			$status['check_db_insert'] = 'true';
-			echo " <font color=\"green\">&nbsp;&nbsp;&nbsp;OK&nbsp;&nbsp;&nbsp;&nbsp;</font> ";
+			echo debug_result('',true); 
 		}
 	?>
 	]
 	</td>
 	<td>
-	This checks a few key tables to make sure that you have successfully inserted the ampache database and 
-	that the user has access to the database
+	<?php echo _('This checks a few key tables to make sure that you have successfully inserted the ampache database and that the user has access to the database'); ?>
 	</td>
 </tr>
 <tr>
@@ -245,27 +233,25 @@
 	        	$http_type = "http://";
 		}
 		$results['web_path'] = $http_type . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . Config::get('web_path');
-		if ($status['parse_config']) { 
-			echo "<img src=\"" . $results['web_path'] ."/images/ampache.png\" width=\"80\" height=\"15\"/>";
+		if (check_config_values($results)) { 
+			echo "&nbsp;&nbsp;&nbsp;<img src=\"" . $results['web_path'] ."/images/icon_enable.png\" />&nbsp;&nbsp;&nbsp;";
 		}
 		else {
-			$status['check_webpath'] = false;
-			echo "<font color=\"red\">ERROR</font>";
+			echo debug_result('',false); 
 		}
 
 	?>
 	]
 	</td>
 	<td>
-	This test makes sure that your web_path variable is set correctly and that we are able to get to the index page. If you do not see the ampache
-	logo here then your web_path is not set correctly. 
+	<?php echo _('This test makes sure that your web_path variable is set correctly and that we are able to get to the index page. If you do not see a check mark here then your web_path is not set correctly.'); ?>
 	</td>
 </tr>
 </table>
 </div>
 <div id="bottom">
-<p><b>Ampache Debug.</b><br />
-For the love of Music.</p>
+<p><strong>Ampache Debug.</strong><br />
+Pour l'Amour de la Musique.</p>
 </div>
 </body>
 </html>

@@ -2,7 +2,7 @@
 /bin					/usr/share/ampache/www
 /config 				/usr/share/ampache/www
 /debian/ampache.conf 			/etc/ampache
-/docs/CHANGELOG 			/usr/share/doc/ampache
+/docs/CHANGELOG				/usr/share/ampache/www/docs
 /docs/MIGRATION 			/usr/share/doc/ampache
 /docs/README 				/usr/share/doc/ampache
 /images 				/usr/share/ampache/www

@@ -31,9 +31,14 @@ switch ($_REQUEST['action']) {
 		$democratic->remove_vote($_REQUEST['row_id']); 
 		
 		ob_start(); 
-		$objects = $democratic->get_items(); 
+		$object_ids = $democratic->get_items(); 
+		Browse::set_type('democratic');
+		Browse::reset(); 
+		Browse::set_static_content(1); 
+		Browse::show_objects($object_ids); 
+
 		require_once Config::get('prefix') . '/templates/show_democratic_playlist.inc.php'; 
-		$results['democratic_playlist'] = ob_get_contents();
+		$results['browse_content'] = ob_get_contents();
 		ob_end_clean(); 
 
 	break;
@@ -44,9 +49,14 @@ switch ($_REQUEST['action']) {
 		$democratic->add_vote($_REQUEST['object_id'],$_REQUEST['type']); 
 
 		ob_start(); 
-		$objects = $democratic->get_items(); 
+		$object_ids = $democratic->get_items(); 
+		Browse::set_type('democratic');
+		Browse::reset(); 
+		Browse::set_static_content(1); 
+		Browse::show_objects($object_ids); 
+
 		require_once Config::get('prefix') . '/templates/show_democratic_playlist.inc.php'; 
-		$results['democratic_playlist'] = ob_get_contents(); 
+		$results['browse_content'] = ob_get_contents(); 
 		ob_end_clean(); 
 
 	break; 
@@ -60,9 +70,12 @@ switch ($_REQUEST['action']) {
 		$democratic->delete_votes($_REQUEST['row_id']); 
 
 		ob_start(); 
-		$objects = $democratic->get_items(); 
-		require_once Config::get('prefix') . '/templates/show_democratic_playlist.inc.php'; 
-		$results['democratic_playlist'] = ob_get_contents(); 
+		$object_ids = $democratic->get_items(); 
+		Browse::set_type('democratic');
+		Browse::reset(); 
+		Browse::set_static_content(1); 
+		Browse::show_objects($object_ids); 
+		$results['browse_content'] = ob_get_contents(); 
 		ob_end_clean(); 
 	
 	break; 
@@ -73,6 +86,26 @@ switch ($_REQUEST['action']) {
 
 		$_SESSION['iframe']['target'] = Config::get('web_path') . '/stream.php?action=democratic&democratic_id=' . scrub_out($_REQUEST['democratic_id']); 
 		$results['rfc3514'] = '<script type="text/javascript">reload_util("'.$_SESSION['iframe']['target'].'")</script>';
+	break; 
+	case 'clear_playlist': 
+
+		if (!Access::check('interface','100')) { 
+			exit; 
+		} 
+
+		$democratic = new Democratic($_REQUEST['democratic_id']);  
+		$democratic->set_parent(); 
+		$democratic->clear(); 
+
+		ob_start(); 
+		$object_ids = array();  
+		Browse::set_type('democratic'); 
+		Browse::reset(); 
+		Browse::set_static_content(1); 
+		Browse::show_objects($object_ids); 
+		$results['browse_content'] = ob_get_contents(); 
+		ob_end_clean(); 
+
 	break; 
 	default: 
 		$results['rfc3514'] = '0x1'; 

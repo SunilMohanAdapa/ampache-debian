@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  this program is free software; you can redistribute it and/or
@@ -25,8 +25,6 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Ampache -- Config Debug Page</title>
-</head>
-<body bgcolor="#f0f0f0">
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
 <style type="text/css">
 body { 
@@ -36,6 +34,8 @@ body {
 	padding-left: 10px; 
 } 
 </style>
+</head>
+<body bgcolor="#f0f0f0">
 <div id="header">
 <h1><?php echo _('Ampache Debug'); ?></h1>
 <p>Ampache.cfg.php error detected</p>
@@ -47,7 +47,7 @@ If you are upgrading from 3.3.x please see the directions below.</p>
 
 <h3>Migrating from 3.3.x to 3.4.x</h3>
 <p>Ampache 3.4 uses a different config parser that is over 10x faster then the previous version. Unfortunately the new parser is
-unable to read the old config files. You must run <strong>php /bin/migrate_config.inc</strong> from the command line to create your
+unable to read the old config files. From inside the Ampache root directory you must run <strong>php bin/migrate_config.inc</strong> from the command line to create your
 new config file.</p>
 
 <p>The following settings will not be migrated by the <strong>migrate_config.inc</strong> script due to major changes between versions. The default
@@ -74,8 +74,8 @@ This variable no longer exists, all downsampling/transcoding is handled by the t
 <br />
 </div>
 <div id="bottom">
-<p><b>Ampache Debug.</b><br />
-For the love of Music.</p>
+<p><strong>Ampache Debug.</strong><br />
+Pour l'Amour de la Musique.</p>
 </div>
 </body>
 </html>

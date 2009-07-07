@@ -88,6 +88,7 @@ class vauth {
 	 */
 	public static function write($key,$value) { 
 
+		if (NO_SESSION_UPDATE == '1') { return true; } 
 
 		$length		= Config::get('session_length'); 
 		$value		= Dba::escape($value); 
@@ -98,7 +99,7 @@ class vauth {
 		$sql = "UPDATE `session` SET `value`='$value', `expire`='$expire' WHERE `id`='$key'"; 
 		$db_results = Dba::query($sql); 
 
-		debug_event('SESSION','Writing to ' . $key . ' with expire ' . $expire . ' DBError:' . Dba::error(),'6'); 
+		debug_event('SESSION','Writing to ' . $key . ' with expire ' . $expire . ' ' . Dba::error(),'6'); 
 
 		return $db_results; 
 
@@ -106,11 +107,13 @@ class vauth {
 
 	/**
 	 * destroy
-	 * This removes the specified sessoin from the database
+	 * This removes the specified session from the database
 	 */
 	public static function destroy($key) { 
 
 		$key = Dba::escape($key); 
+
+		if (!strlen($key)) { return false; } 
 
 		// Remove anything and EVERYTHING
 		$sql = "DELETE FROM `session` WHERE `id`='$key'"; 
@@ -132,7 +135,11 @@ class vauth {
 	public static function gc($maxlifetime) { 
 
 		$sql = "DELETE FROM `session` WHERE `expire` < '" . time() . "'"; 
-		$db_results = Dba::query($sql); 
+		$db_results = Dba::write($sql); 
+
+		$sql = "DELETE FROM `tmp_browse` USING `tmp_browse` LEFT JOIN `session` ON `session`.`id`=`tmp_browse`.`sid` " . 
+			"WHERE `session`.`id` IS NULL"; 
+		$db_results = Dba::write($sql); 
 
 		return true; 
 
@@ -148,6 +155,9 @@ class vauth {
 
 		// If no key is passed try to find the session id
 		$key = $key ? $key : session_id(); 
+		
+		// Nuke the cookie before all else
+		self::destroy($key); 
 
 	        // Do a quick check to see if this is an AJAX'd logout request
 	        // if so use the iframe to redirect
@@ -168,7 +178,6 @@ class vauth {
 	                echo xml_from_array($results);
 	        }
 
-		self::destroy($key); 
 
 	        /* Redirect them to the login page */
 	        if (AJAX_INCLUDE != '1') {
@@ -264,7 +273,7 @@ class vauth {
 		} // end switch on data type 
 		
 	        $username       = Dba::escape($data['username']);
-	        $ip             = $_SERVER['REMOTE_ADDR'] ? Dba::escape(sprintf("%u",ip2long($_SERVER['REMOTE_ADDR']))) : '0'; 
+	        $ip             = $_SERVER['REMOTE_ADDR'] ? Dba::escape(inet_pton($_SERVER['REMOTE_ADDR'])) : '0'; 
 	        $type           = Dba::escape($data['type']);
 	        $value          = Dba::escape($data['value']);
 		$agent		= Dba::escape(substr($_SERVER['HTTP_USER_AGENT'],0,254)); 
@@ -339,7 +348,7 @@ class vauth {
 				$key = Dba::escape($key); 
 				$time = time(); 
 				$sql = "SELECT * FROM `session` WHERE `id`='$key' AND `expire` > '$time' AND `type`='$type'"; 
-				$db_results = Dba::query($sql); 
+				$db_results = Dba::read($sql); 
 
 				if (Dba::num_rows($db_results)) { 
 					return true; 
@@ -350,7 +359,7 @@ class vauth {
 				$key = Dba::escape($key); 
 				$time = time(); 
 				$sql = "SELECT * FROM `session` WHERE `id`='$key' AND `expire` > '$time' AND `type`!='api' AND `type`!='xml-rpc'"; 
-				$db_results = Dba::query($sql); 
+				$db_results = Dba::read($sql); 
 
 				if (Dba::num_rows($db_results)) { 
 					return true; 
@@ -358,7 +367,7 @@ class vauth {
 			break; 
 			case 'stream': 
 				$key	= Dba::escape($key); 
-				$ip	= sprintf("%u",ip2long($data['ip'])); 
+				$ip	= Dba::escape(inet_pton($data['ip'])); 
 				$agent	= Dba::escape($data['agent']); 
 				$sql = "SELECT * FROM `session_stream` WHERE `id`='$key' AND `expire` > '$time' AND `ip`='$ip' AND `agent`='$agent'"; 
 				$db_results = Dba::query($sql); 
@@ -461,21 +470,59 @@ class vauth {
 	} // authenticate
 
 	/**
- 	 * mysql_auth
-	 * This is a private function, it should only be called by authenticate
+	 * mysql_auth
+	 * This is the core function of authentication by ampache. It checks their current password
+	 * and then tries to figure out if it can use the new SHA password hash or if it needs to fall
+	 * back on the mysql method
 	 */
 	private static function mysql_auth($username,$password) { 
 
-	        $username = Dba::escape($username);
-	        $password = Dba::escape($password);
+		$username = Dba::escape($username); 
+		$password = Dba::escape($password); 
 
-	        $password_check_sql = "PASSWORD('$password')";
+		if (!strlen($password) OR !strlen($username)) { 
+			Error::add('general',_('Error Username or Password incorrect, please try again')); 
+			return false; 
+		} 
 
-	        // If they don't have a password kick em ou
-	        if (!strlen($password)) {
-	                Error::add('general','Error Username or Password incorrect, please try again');
-	                return false;
-	        }
+		// We have to pull the password in order to figure out how to handle it *cry*
+		$sql = "SELECT `password` FROM `user` WHERE `username`='$username'"; 
+		$db_results = Dba::read($sql); 
+		$row = Dba::fetch_assoc($db_results); 
+
+		// If it's using the old method then roll with that
+		if (substr($row['password'],0,1) == '*' OR strlen($row['password']) < 32) { 
+			$response = self::vieux_mysql_auth($username,$password); 
+			return $response; 
+		} 
+
+		// Use SHA2 now... cooking with fire, SHA3 in 2012 *excitement*
+		$password = hash('sha256',$password); 
+	
+		$sql = "SELECT `username`,`id` FROM `user` WHERE `password`='$password' AND `username`='$username'"; 	
+		$db_results = Dba::read($sql); 
+
+		$row = Dba::fetch_assoc($db_results); 
+
+		if (!count($row)) { 
+			Error::add('general',_('Error Username or Password incorrect, please try again')); 
+			return false; 
+		} 
+
+                $row['type']        = 'mysql';
+                $row['success']     = true;
+
+		return $row;
+
+	} // mysql_auth
+
+	/**
+ 	 * vieux_mysql_auth
+	 * This is a private function, it should only be called by authenticate
+	 */
+	private static function vieux_mysql_auth($username,$password) { 
+
+		$password_check_sql = "PASSWORD('$password')";
 
 		// This has to still be here because lots of people use old_password in their config file
 		$sql = "SELECT `password` FROM `user` WHERE `username`='$username'"; 
@@ -497,26 +544,27 @@ class vauth {
 	        $results = Dba::fetch_assoc($db_results);
 
 	        if (!$results) {
-	                Error::add('general','Error Username or Password incorrect, please try again');
+	                Error::add('general',_('Error Username or Password incorrect, please try again'));
 	                return false;
 	        }
 
 	        if (Config::get('prevent_multiple_logins')) {
 	                $client = new User($results['id']);
 	                $current_ip = $client->is_logged_in();
-	                if ($current_ip AND $current_ip != sprintf("%u",ip2long($_SERVER['REMOTE_ADDR']))) {
-				debug_event('Login','Concurrent Login Failure, attempted to login from ' . $_SERVER['REMOTE_ADDR'] . ' and already logged in','1');
+	                if ($current_ip AND $current_ip != inet_pton($_SERVER['REMOTE_ADDR'])) {
+				debug_event('Login','Concurrent Login Failure, attempted to login from ' . $_SERVER['REMOTE_ADDR'] . ' and already logged in','1'); 
 	                        Error::add('general','User Already Logged in');
 	                        return false;
 	                }
 	        } // if prevent_multiple_logins
 
 	        $results['type']        = 'mysql';
+		$results['password']	= 'old'; 
 	        $results['success']     = true;
 
 	        return $results;
 
-	} // mysql_auth
+	} // vieux_mysql_auth
 
 	/**
 	 * ldap_auth
@@ -608,7 +656,7 @@ class vauth {
 	public static function http_auth($username) { 
 
 	        /* Check if the user exists */
-	        if ($user = new User($username)) {
+	        if ($user = User::get_from_username($username)) {
 	                $results['success']     = true;
 	                $results['type']        = 'mysql';
 	                $results['username']    = $username;
@@ -618,8 +666,8 @@ class vauth {
 	        }
 
 	        /* If not then we auto-create the entry as a user.. :S */
-	        $user->create($username,$username,'',md5(rand()),'25');
-	        $user = new User($username);
+	        $user_id = $user->create($username,$username,'',md5(rand()),'25');
+	        $user = new User($user_id);
 
 	        $results['success']     = true;
 	        $results['type']        = 'mysql';

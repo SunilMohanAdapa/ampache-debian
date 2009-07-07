@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,49 +19,34 @@
 
 */
 ?>
-<?php show_box_top(_('Add Access for a Host')); ?>
-<form name="update_catalog" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/admin/access.php?action=add_host">
+<?php show_box_top(_('Advanced Add')); ?>
+<form name="update_catalog" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/admin/access.php?action=add_host&method=advanced">
 <table class="tabledata" cellpadding="5" cellspacing="0">
 <tr>
 	<td><?php echo _('Name'); ?>:</td>
-	<td>
+	<td colspan="3">
 		<input type="text" name="name" value="<?php echo scrub_out($_REQUEST['name']); ?>" size="20" />
 	</td>
 </tr>
 <tr>
-	<td><?php echo _('Start IP Address'); ?>:</td>
-	<td>
-		<input type="text" name="start" value="<?php echo scrub_out($_REQUEST['start']); ?>" size="20" maxlength="15" />
-		<span class="information">(255.255.255.255)</span>
-	</td>
-</tr>
-<tr>
-	<td><?php echo _('End IP Address'); ?>:</td>
-	<td>
-		<input type="text" name="end" value="<?php echo scrub_out($_REQUEST['end']); ?>" size="20" maxlength="15" />
-		<span class="information">(255.255.255.255)</span>
+	<td><?php echo _('Level'); ?>:</td>
+	<td colspan="3">
+		<input name="level" type="radio" checked="checked" value="5" /> <?php echo _('View'); ?>
+		<input name="level" type="radio" value="25" /> <?php echo _('Read'); ?>
+		<input name="level" type="radio" value="50" /> <?php echo _('Read/Write'); ?>
+		<input name="level" type="radio" value="75" /> <?php echo _('All'); ?>
 	</td>
 </tr>
 <tr>
 	<td><?php echo _('User'); ?>:</td>
-	<td>
+	<td colspan="3">
 		<?php show_user_select('user'); ?>
 	</td>
 </tr>
-<tr>
-	<td><?php echo _('Level'); ?>:</td>
-	<td>
-		<select name="level">
-			<option selected="selected" value="5" ><?php echo _('View'); ?></option>
-			<option value="25"><?php echo _('Read'); ?></option>
-			<option value="50"><?php echo _('Read/Write'); ?></option>
-			<option value="75"><?php echo _('All'); ?></option>
-		</select>
-	</td>
-</tr>
+
 <tr>
 	<td><?php echo _('ACL Type'); ?>:</td>
-	<td>
+	<td colspan="3">
 		<select name="type">
 			<option selected="selected" value="stream"><?php echo _('Stream Access'); ?></option>
 			<option value="interface"><?php echo _('Web Interface'); ?></option>
@@ -71,16 +56,35 @@
 	</td>
 </tr>
 <tr>
-	<td colspan="2"><h4><?php echo _('RPC Options'); ?></h4></td>
+	<td colspan="4"><h4><?php echo _('RPC Options'); ?></h4></td>
 </tr>
 <tr>
 	<td><?php echo _('Remote Key'); ?>:</td>
+	<td colspan="3">
+		<input type="text" name="key" value="<?php echo scrub_out($_REQUEST['key']); ?>" maxlength="32" />
+	</td>
+</tr>
+
+<tr>
+	<td colspan="4"><h3><?php echo _('IPv4 or IPv6 Addresses'); ?></h3>
+		<span class="information">(255.255.255.255) / (ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff)</span>
+	</td>
+</tr>
+<tr>
+	<td><?php echo _('Start'); ?>:</td>
 	<td>
-		<input type="text" name="key" value="<?php echo scrub_out($_REQUEST['end']); ?>" maxlength="32" />
+		<?php Error::display('start'); ?>
+		<input type="text" name="start" value="<?php echo scrub_out($_REQUEST['start']); ?>" size="20" maxlength="15" />
+	</td>
+	<td><?php echo _('End'); ?>:</td>
+	<td>
+		<?php Error::display('end'); ?>
+		<input type="text" name="end" value="<?php echo scrub_out($_REQUEST['end']); ?>" size="20" maxlength="15" />
 	</td>
 </tr>
 </table>
 <div class="formValidation">
+		<?php echo Core::form_register('add_acl'); ?>
 		<input class="button" type="submit" value="<?php echo _('Create ACL'); ?>" />
 </div>
 </form>

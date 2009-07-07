@@ -20,11 +20,13 @@
 */
 ?>
 <?php if (INSTALL != '1') { exit; } ?>
+<?php $results = 0; ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$htmllang" lang="$htmllang">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $htmllang; ?>" lang="<?php echo $htmllang; ?>">
 <head>
 <title>Ampache :: Pour l'Amour de la Musique - Install</title>
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
+<meta http-equiv="Content-Type" content="text/html; Charset=<?php echo $charset; ?>" />
 </head>
 <body>
 <script src="lib/javascript-base.js" language="javascript" type="text/javascript"></script>
@@ -34,7 +36,7 @@
 </div>
 <div id="text-box">
 	<div class="notify">
-		<b><?php echo _('Requirements'); ?></b>
+		<h3><?php echo _('Requirements'); ?></h3>
 		<p>
 		<?php echo _('This Page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following pre-requisites'); ?>
 		</p>
@@ -45,13 +47,19 @@
 		<p>
 <?php echo _("Once you have ensured that you have the above requirements please fill out the information below. You will only be asked for the required config values. If you would like to make changes to your ampache install at a later date simply edit /config/ampache.cfg.php"); ?>
 		</p>
-	</div>
-	
+<?php require_once 'templates/show_install_check.inc.php'; ?>
+</div>
+<?php if (Error::occurred()) { ?>
 	<div class="content">
-		<b>Choose installation language.</b>
-		<p>
-		<?php Error::display('general'); ?>
-		</p>
+	<span class="fatalerror"><?php echo _('Minimum Requirements not met. Unable to Install Ampache.'); ?></span>
+	</div>
+<?php } ?>
+
+<div class="content">
+	<strong><?php echo _('Choose installation language.'); ?></strong>
+	<p>
+	<?php Error::display('general'); ?>
+	</p>
 <form method="post" action="<?php echo WEB_PATH . "?action=init"; ?>" enctype="multipart/form-data" >
 
 <?php
@@ -74,7 +82,7 @@ echo "</select>\n";
 	</form>
  	</div>
 	<div id="bottom">
-    	<p><b>Ampache Installation.</b><br />
+    	<p><strong>Ampache Installation.</strong><br />
     	For the love of Music.</p>
    </div>
 </div>

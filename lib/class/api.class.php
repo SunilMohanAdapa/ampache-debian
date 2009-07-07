@@ -26,7 +26,7 @@
  */
 class Api { 
 
-	public static $version = '340001'; 
+	public static $version = '350001'; 
 	
 	/**
  	 * constructor
@@ -39,17 +39,72 @@ class Api {
 	} // constructor
 
 	/**
+	 * set_filter
+	 * This is a play on the browse function, it's different as we expose the filters in a slightly different
+	 * and vastly simplier way to the end users so we have to do a little handy work to make them
+	 * work internally
+	 */
+	public static function set_filter($filter,$value) { 
+
+		if (!strlen($value)) { return false; } 
+
+		switch ($filter) { 
+			case 'add': 
+	                        // Check for a range, if no range default to gt
+	                        if (strpos('/',$value)) {
+	                                $elements = explode('/',$value);
+	                                Browse::set_filter('add_lt',strtotime($elements['1']));
+	                                Browse::set_filter('add_gt',strtotime($elements['0']));
+	                        }
+	                        else {
+	                                Browse::set_filter('add_gt',strtotime($value));
+	                        }
+			break; 
+			case 'update': 
+				// Check for a range, if no range default to gt
+				if (strpos('/',$value)) { 
+					$elements = explode('/',$value); 
+					Browse::set_filter('update_lt',strtotime($elements['1'])); 
+					Browse::set_filter('update_gt',strtotime($elements['0'])); 		
+				}
+				else { 
+					Browse::set_filter('update_gt',strtotime($value)); 
+				}
+			break; 
+			case 'alpha_match':
+				Browse::set_filter('alpha_match',$value); 
+			break; 
+			case 'exact_match': 
+				Browse::set_filter('exact_match',$value);
+			break; 
+			default: 
+				// Rien a faire
+			break; 
+		} // end filter
+
+		return true; 
+
+	} // set_filter
+
+	/**
 	 * handshake
 	 * This is the function that handles the verifying a new handshake
 	 * this takes a timestamp, auth key, and client IP. Optionally it
 	 * can take a username, if non is passed the ACL must be non-use 
 	 * specific
 	 */
-	public static function handshake($timestamp,$passphrase,$ip,$username='') { 
+	public static function handshake($timestamp,$passphrase,$ip,$username='',$version) { 
+
+		if (intval($version) < self::$version) { 
+			debug_event('API','Login Failed version too old','1'); 
+			Error::add('api','Login Failed version too old'); 
+			return false; 
+		} 			
 
 		// If the timestamp is over 2hr old sucks to be them
 		if ($timestamp < (time() - 14400)) { 
 			debug_event('API','Login Failed, timestamp too old','1'); 
+			Error::add('api','Login Failed, timestamp too old'); 
 			return false; 
 		} 
 
@@ -65,22 +120,38 @@ class Api {
 		// Clean incomming variables
 		$user_id 	= Dba::escape($user_id); 
 		$timestamp 	= intval($timestamp); 
-		$ip 		= sprintf("%u",ip2long($ip)); 
+		$ip 		= inet_pton($ip);
 
 		// Log this attempt
-		debug_event('API','Login Attempt, IP:' . long2ip($ip) . ' Time:' . $timestamp . ' User:' . $user_id . ' Auth:' . $passphrase,'1'); 
+		debug_event('API','Login Attempt, IP:' . inet_ntop($ip) . ' Time:' . $timestamp . ' User:' . $username . '(' . $user_id . ') Auth:' . $passphrase,'1'); 
+
+		$ip = Dba::escape($ip); 
 		
 		// Run the query and return the passphrases as we'll have to mangle them
 		// to figure out if they match what we've got
-		$sql = "SELECT * FROM `access_list` WHERE `type`='rpc' AND `user`='$user_id' AND `start` <= '$ip' AND `end` >= '$ip'"; 
-		$db_results = Dba::query($sql); 
+		$sql = "SELECT * FROM `access_list` " . 
+			"WHERE `type`='rpc' AND (`user`='$user_id' OR `access_list`.`user`='-1') " . 
+			"AND `start` <= '$ip' AND `end` >= '$ip'"; 
+		$db_results = Dba::read($sql); 
 
 		while ($row = Dba::fetch_assoc($db_results)) { 
 
-			// Combine and MD5 this mofo
-			$md5pass = md5($timestamp . $row['key']); 
+			// Now we're sure that there is an ACL line that matches this user or ALL USERS, 
+			// pull the users password and then see what we come out with 
+			$sql = "SELECT * FROM `user` WHERE `id`='$user_id'"; 
+			$user_results = Dba::read($sql); 
 
-			if ($md5pass === $passphrase) { 
+			$row = Dba::fetch_assoc($user_results); 
+
+			if (!$row['password']) { 
+				debug_event('API','Unable to find user with username of ' . $user_id,'1'); 
+				Error::add('api','Invalid Username/Password'); 
+				return false; 
+			} 
+
+			$sha1pass = hash('sha256',$timestamp . $row['password']); 
+
+			if ($sha1pass === $passphrase) { 
 				// Create the Session, in this class for now needs to be moved
 				$data['username']	= $client->username; 
 				$data['type']		= 'api'; 
@@ -92,34 +163,42 @@ class Api {
 				debug_event('API','Login Success, passphrase matched','1'); 
 
 				// We need to also get the 'last update' of the catalog information in an RFC 2822 Format
-				$sql = "SELECT MAX(`last_update`) AS `update`,MAX(`last_add`) AS `add` FROM `catalog`"; 
-				$db_results = Dba::query($sql); 
+				$sql = "SELECT MAX(`last_update`) AS `update`,MAX(`last_add`) AS `add`, MAX(`last_clean`) AS `clean` FROM `catalog`"; 
+				$db_results = Dba::read($sql); 
 				$row = Dba::fetch_assoc($db_results); 	 
 
 				// Now we need to quickly get the totals of songs
 				$sql = "SELECT COUNT(`id`) AS `song`,COUNT(DISTINCT(`album`)) AS `album`," . 
-					"COUNT(DISTINCT(`artist`)) AS `artist`,COUNT(DISTINCT(`genre`)) as `genre` FROM `song`";
-				$db_results = Dba::query($sql); 
+					"COUNT(DISTINCT(`artist`)) AS `artist` FROM `song`";
+				$db_results = Dba::read($sql); 
 				$counts = Dba::fetch_assoc($db_results); 
 
+				// Next the video counts
+				$sql = "SELECT COUNT(`id`) AS `video` FROM `video`"; 
+				$db_results = Dba::read($sql); 
+				$vcounts = Dba::fetch_assoc($db_results); 
+
 				$sql = "SELECT COUNT(`id`) AS `playlist` FROM `playlist`"; 
-				$db_results = Dba::query($sql);
+				$db_results = Dba::read($sql);
 				$playlist = Dba::fetch_assoc($db_results); 
 
 				return array('auth'=>$token,
 					'api'=>self::$version,
-					'update'=>date("r",$row['update']),
-					'add'=>date("r",$row['add']),
+					'update'=>date("c",$row['update']),
+					'add'=>date("c",$row['add']),
+					'clean'=>date("c",$row['clean']),
 					'songs'=>$counts['song'],
 					'albums'=>$counts['album'],
 					'artists'=>$counts['artist'],
-					'genres'=>$counts['genre'],
-					'playlists'=>$playlist['playlist']); 
+					'playlists'=>$playlist['playlist'],
+					'videos'=>$vcounts['video']); 
 			} // match 
 
 		} // end while
 
 		debug_event('API','Login Failed, unable to match passphrase','1'); 
+		Error::add('api','Invalid Username/Password'); 
+		return false; 
 
 	} // handhsake
 

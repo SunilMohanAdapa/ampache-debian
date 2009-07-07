@@ -59,7 +59,6 @@ function update_preferences($pref_id=0) {
 			break;
 			/* MD5 the LastFM & MyStrands so it's not plainTXT */
 			case 'lastfm_pass':
-			case 'mystrands_pass':
 				/* If it's our default blanking thing then don't use it */
 				if ($value == '******') { unset($_REQUEST[$name]); break; } 
 				$value = md5($value); 
@@ -76,6 +75,9 @@ function update_preferences($pref_id=0) {
 		}
 
 	} // end foreach preferences
+
+	// Now that we've done that we need to invalidate the cached preverences
+	Preference::clear_from_session(); 
 
 } // update_preferences
 
@@ -241,7 +243,6 @@ function create_preference_input($name,$value) {
 			} // foreach themes
 			echo "</select>\n";
 		break;
-		case 'mystrands_pass':
 		case 'lastfm_pass':
 			echo "<input type=\"password\" size=\"16\" name=\"$name\" value=\"******\" />";
 		break;
@@ -260,6 +261,14 @@ function create_preference_input($name,$value) {
 			echo "\t<option value=\"never\"$never>" . _('Never') . "</option>\n"; 
 			echo "\t<option value=\"default\"$default>" . _('Default') . "</option>\n"; 
 			echo "\t<option value=\"always\"$always>" . _('Always') . "</option>\n"; 
+			echo "</select>\n";
+		break;
+		case 'show_lyrics':
+			if ($value == '1') { $is_true = "selected=\"selected\""; } 
+			else { $is_false = "selected=\"selected\""; }
+			echo "<select name=\"$name\">\n";
+			echo "\t<option value=\"1\" $is_true>" . _("Enable") . "</option>\n";
+			echo "\t<option value=\"0\" $is_false>" . _("Disable") . "</option>\n";
 			echo "</select>\n";
 		break;
 		default:

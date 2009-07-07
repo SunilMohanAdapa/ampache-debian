@@ -30,30 +30,23 @@ switch($_REQUEST['action']) {
 	case 'show':
 		$artist = new Artist($_REQUEST['artist']);
 		$artist->format(); 
-		$albums = $artist->get_albums(); 
+		$object_ids = $artist->get_albums(); 
+		$object_type = 'album'; 
 		require_once Config::get('prefix') . '/templates/show_artist.inc.php';
-	break;
+		break;
 	case 'show_all_songs':
 	    	$artist = new Artist($_REQUEST['artist']);
 		$artist->format();
-		require_once Config::get('prefix') . '/templates/show_artist_box.inc.php';
-		$song_ids = $artist->get_songs();
-		Browse::set_type('song'); 
-		Browse::set_static_content(1); 
-		Browse::save_objects($song_ids);
-		Browse::show_objects($song_ids); 
+		$object_type = 'song'; 
+		$object_ids = $artist->get_songs(); 
+		require_once Config::get('prefix') . '/templates/show_artist.inc.php';
         break;
 	case 'update_from_tags':
 
-	        $artist = new Artist($_REQUEST['artist']);
-
-        	show_box_top(_('Starting Update from Tags')); 
-
-		Catalog::update_single_item('artist',$_REQUEST['artist']);
-
-        	echo "<br /><strong>" . _('Update From Tags Complete') . "</strong> &nbsp;&nbsp;";
-	        echo "<a href=\"" . Config::get('web_path') . "/artists.php?action=show&amp;artist=" . $_REQUEST['artist'] . "\">[" . _('Return') . "]</a>";
-		show_box_bottom(); 
+		$type		= 'artist'; 
+		$object_id	= intval($_REQUEST['artist']); 
+		$target_url	= Config::get('web_path') . "/artists.php?action=show&amp;artist=" . $object_id; 
+		require_once Config::get('prefix') . '/templates/show_update_items.inc.php'; 
 	break;
 	case 'rename_similar':
 		if (!$user->has_access('100')) { access_denied(); }
@@ -177,6 +170,33 @@ switch($_REQUEST['action']) {
 		$artist = new Artist($_REQUEST['artist']);
 		require (conf('prefix') . '/templates/show_rename_artist.inc.php'); 
 	break;
+	case 'match':
+	case 'Match':
+		$match = scrub_in($_REQUEST['match']);
+		if ($match == "Browse" || $match == "Show_all") { $chr = ""; }
+		else { $chr = $match; } 
+		/* Enclose this in the purty box! */
+		require (conf('prefix') . '/templates/show_box_top.inc.php'); 
+		show_alphabet_list('artists','artists.php',$match);
+		show_alphabet_form($chr,_('Show Artists starting with'),"artists.php?action=match");
+		require (conf('prefix') . '/templates/show_box_bottom.inc.php');
+
+		if ($match === "Browse") {
+			show_artists();
+		}
+		elseif ($match === "Show_all") {
+			$offset_limit = 999999;
+			show_artists();
+		}		
+	        else {
+			if ($chr == '') {
+				show_artists('A');
+			}
+			else {
+				show_artists($chr);
+			}
+		}
+	break;	
 } // end switch
 
 show_footer();

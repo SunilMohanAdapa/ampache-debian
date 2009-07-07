@@ -43,7 +43,7 @@ class xmlRpcServer {
 		// Check it and make sure we're super green
 		if (!vauth::session_exists('xml-rpc',$key)) { 
 			debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1'); 
-			return new xmlrpcresp(0,'503','Key/IP Mis-match Access Denied'); 
+			return new XML_RPC_Response(0,'503','Key/IP Mis-match Access Denied'); 
 		} 
 
 		// Go ahead and gather up the information they are legit
@@ -62,13 +62,14 @@ class xmlRpcServer {
 		// to return to the client
 		set_time_limit(0); 
 
-		$encoded_array = php_xmlrpc_encode($results); 
+		$encoded_array = XML_RPC_encode($results); 
 		debug_event('XMLSERVER','Returning data about ' . count($results) . ' catalogs to ' . $_SERVER['REMOTE_ADDR'],'5'); 
 
-		return new xmlrpcresp($encoded_array); 
-
+		return new XML_RPC_Response($encoded_array);
 	} // get_catalogs
 
+	
+	
 	/**
 	 * get_songs
 	 * This is a basic function to return all of the song data in a serialized format. It takes a start and end point
@@ -79,16 +80,16 @@ class xmlRpcServer {
 
 		// We're going to be here a while
 		set_time_limit(0); 
+	
+		// Pull out the key
+		$variable = $xmlrpc_object->getParam(0);
+		$key = $variable->scalarval();
 
-                // Pull out the key
-                $variable = $xmlrpc_object->getParam(0);
-                $key = $variable->scalarval();
-
-                // Check it and make sure we're super green
-                if (!vauth::session_exists('xml-rpc',$key)) {
-                        debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
-                        return new xmlrpcresp(0,'503','Key/IP Mis-match Access Denied');
-                }
+		// Check it and make sure we're super green
+		if (!vauth::session_exists('xml-rpc',$key)) {
+			debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
+			return new XML_RPC_Response(0,'503','Key/IP Mis-match Access Denied');
+		}
 		
 		// Now pull out the start and end
 		$start	= intval($xmlrpc_object->params['1']->me['int']); 
@@ -111,19 +112,59 @@ class xmlRpcServer {
 			$song = new Song($row['id']); 
 			$song->fill_ext_info(); 
 			$song->album	= $song->get_album_name(); 
-			$song->artist	= $song->get_artist_name(); 
-			$song->genre	= $song->get_genre_name(); 
+			$song->artist	= $song->get_artist_name();
+			//$song->genre	= $song->get_genre_name();  // TODO: Needs to be implemented 
 
 			$output = serialize($song); 
-			$results[] = $output; 
+			$results[] = $output ; 
 		} // end while
 
-		$encoded_array = php_xmlrpc_encode($results); 
+		$encoded_array = XML_RPC_encode($results); 
 		debug_event('XMLSERVER','Encoded ' . count($results) . ' songs (' . $start . ',' . $end . ')','5'); 
 
-		return new xmlrpcresp($encoded_array);
+		return new XML_RPC_Response($encoded_array);
 
 	} // get_songs
+	
+	/**
+	 * get_album_images
+	 * Returns the images information of the albums
+	 */
+	public static function get_album_images($xmlrpc_object) {
+		// We're going to be here a while
+		set_time_limit(0); 
+	
+		// Pull out the key
+		$variable = $xmlrpc_object->getParam(0);
+		$key = $variable->scalarval();
+
+		// Check it and make sure we're super green
+		if (!vauth::session_exists('xml-rpc',$key)) {
+			debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
+			return new XML_RPC_Response(0,'503','Key/IP Mis-match Access Denied');
+		}
+		
+		// Get Albums first
+		$sql = "SELECT `album`.`id` FROM `album` "; 
+		$db_results = Dba::query($sql);
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			// Load the current album
+			$album = new Album($row['id']);
+			$art = $album->get_db_art();
+
+			// Only return album ids with art
+			if (count($art) != 0) {
+				$output = serialize($album);
+				$results[] = $output;
+			}
+		}
+		
+		$encoded_array = XML_RPC_encode($results); 
+		debug_event('XMLSERVER','Encoded ' . count($results) . 'albums with art','5'); 
+
+		return new XML_RPC_Response($encoded_array);
+	}
 	
 	/**
 	 * create_stream_session
@@ -131,29 +172,52 @@ class xmlRpcServer {
 	 */
 	public static function create_stream_session($xmlrpc_object) { 
 
-                // Pull out the key
-                $variable = $xmlrpc_object->getParam(0);
-                $key = $variable->scalarval();
+		// Pull out the key
+		$variable = $xmlrpc_object->getParam(0);
+		$key = $variable->scalarval();
 
-                // Check it and make sure we're super green
-                if (!vauth::session_exists('xml-rpc',$key)) {
-                        debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
-                        return new xmlrpcresp(0,'503','Key/IP Mis-match Access Denied');
-                }
+		// Check it and make sure we're super green
+		if (!vauth::session_exists('xml-rpc',$key)) {
+			debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
+			return new XML_RPC_Response(0,'503','Key/IP Mis-match Access Denied');
+		}
 
-		$stream = new Stream(); 
-		$stream->user_id = '-1'; 
-
-		if (!Stream::insert_session($key)) { 
+		if (!Stream::insert_session($key,'-1')) { 
 			debug_event('XMLSERVER','Failed to create stream session','1'); 
-			return new xmlrpcresp(0,'503','Failed to Create Stream Session','1'); 
+			return new XML_RPC_Response(0,'503','Failed to Create Stream Session','1'); 
 		} 
 		
-		$encoded_array = php_xmlrpc_encode($key); 
-		
-		return new xmlrpcresp($encoded_array); 
-		
+		return new XML_RPC_Response(XML_RPC_encode($key));
 	} // create_stream_session
+
+	/**
+	 * check_song
+	 * This checks remote catalog
+	 */
+	public static function check_song($xmlrpc_object) {
+
+		// Pull out the key
+		$variable = $xmlrpc_object->getParam(1);
+		$key = $variable->scalarval();
+
+		// Check it and make sure we're super green
+		if (!vauth::session_exists('xml-rpc',$key)) {
+			debug_event('XMLSERVER','Error ' . $_SERVER['REMOTE_ADDR'] . ' with key ' . $key . ' does not match any ACLs','1');
+			return new XML_RPC_Response(0,'503','Key/IP Mis-match Access Denied');
+		}
+
+		$var = $xmlrpc_object->params['0']->me['int'];
+		$sql = "SELECT `song`.`id` FROM `song` WHERE `id`='" . Dba::escape($var) ."'";
+		$db_results = Dba::read($sql);
+		if(Dba::num_rows($db_results) == '0') {
+			$return = 0;
+		} else {
+			$return = 1;
+		}
+
+		return new XML_RPC_Response(XML_RPC_encode($return));
+
+	}
 
 	/**
 	 * handshake
@@ -161,7 +225,8 @@ class xmlRpcServer {
 	 * used in all further communication 
 	 */
 	public static function handshake($xmlrpc_object) { 
-
+		debug_event('XMLSERVER','handshake: ' . print_r ($xmlrpc_object, true),'5');
+		
 		// Pull out the params
 		$encoded_key 	= $xmlrpc_object->params['0']->me['string']; 
 		$timestamp	= $xmlrpc_object->params['1']->me['int'];
@@ -169,14 +234,14 @@ class xmlRpcServer {
 		// Check the timestamp make sure it's recent
 		if ($timestamp < (time() - 14400)) { 
 			debug_event('XMLSERVER','Handshake failure, timestamp too old','1'); 
-			return new xmlrpcresp(0,'503','Handshaek failure, timestamp too old');
+			return new XML_RPC_Response(0,'503','Handshake failure, timestamp too old');
 		} 
-
+		
 		// Log the attempt
-		debug_event('XMLSERVER','Login Attempt, IP: ' . $_SERVER['REMOTE_ADDR'] . ' Time: ' . $timestamp . ' Hash:' . $encoded_key,'5'); 
+		debug_event('XMLSERVER','Login Attempt, IP: ' . $_SERVER['REMOTE_ADDR'] . ' Time: ' . $timestamp . ' Hash:' . $encoded_key,'1'); 
 
 		// Convert the IP Address to an int
-		$ip = sprintf("%u",ip2long($_SERVER['REMOTE_ADDR']));
+		$ip = Dba::escape(inet_pton($_SERVER['REMOTE_ADDR']));
 
 		// Run the query and return the key's for ACLs of type RPC that would match this IP 
 		$sql = "SELECT * FROM `access_list` WHERE `type`='rpc' AND `start` <= '$ip' AND `end` >= '$ip'"; 
@@ -185,18 +250,19 @@ class xmlRpcServer {
 		while ($row = Dba::fetch_assoc($db_results)) { 
 			
 			// Build our encoded passphrase
-			$md5pass = md5($timestamp . $row['key']); 
-			if ($md5pass == $encoded_key) { 
+			$sha256pass = hash('sha256',$timestamp . hash('sha256',$row['key']));
+			if ($sha256pass == $encoded_key) { 
 				$data['type'] = 'xml-rpc';
 				$data['username'] = 'System'; 
 				$data['value'] = 'Handshake'; 
-				$token = vauth::session_create($data); 
-				return new xmlrpcresp(php_xmlrpc_encode($token));
+				$token = vauth::session_create($data);
+				
+				return new XML_RPC_Response(XML_RPC_encode($token)); 
 			} 
 
 		} // end while rows
 
-		return new xmlrpcresp(0,'503','Handshake failure, Key/IP Incorrect');
+		return new XML_RPC_Response(0,'503', 'Handshake failure, Key/IP Incorrect');
 
 	} // handshake
 

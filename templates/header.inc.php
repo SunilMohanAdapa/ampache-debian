@@ -32,32 +32,22 @@ $location = get_location();
 <link rel="shortcut icon" href="<?php echo $web_path; ?>/favicon.ico" />
 <?php
 if (Config::get('use_rss')) { ?>
-<link rel="alternate" type="application/rss+xml" title="<?php echo Config::get('rss_main_title'); ?>" href="<?php echo $web_path; ?>/rss.php" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Latest Artists Additions" href="<?php echo $web_path; ?>/rss.php?type=latestartist" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Latest Albums Additions" href="<?php echo $web_path; ?>/rss.php?type=latestalbum" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Most Popular Albums" href="<?php echo $web_path; ?>/rss.php?type=popularalbum" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Most Popular Artists" href="<?php echo $web_path; ?>/rss.php?type=popularalbum" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Most Popular Songs" href="<?php echo $web_path; ?>/rss.php?type=popularsong" />
-<link rel="alternate" type="application/rss+xml" title="Ampache Recently Played" href="<?php echo $web_path; ?>/rss.php?type=recentlyplayed" />
+<link rel="alternate" type="application/rss+xml" title="<?php echo _('Now Playing'); ?>" href="<?php echo $web_path; ?>/rss.php" />
+<link rel="alternate" type="application/rss+xml" title="<?php echo _('Recently Played'); ?>" href="<?php echo $web_path; ?>/rss.php?type=recently_played" />
 <?php } ?>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=<?php echo Config::get('site_charset'); ?>" />
 <title><?php echo scrub_out(Config::get('site_title')); ?> - <?php echo $location['title']; ?></title>
+<link rel="stylesheet" href="<?php echo $web_path; ?>/templates/base.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="<?php echo $web_path; ?><?php echo Config::get('theme_path'); ?>/templates/default.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="<?php echo $web_path; ?>/templates/print.css" type="text/css" media="print" />
-<link rel="stylesheet" href="<?php echo $web_path; ?>/templates/handheld.css" type="text/css" media="handheld" />
 </head>
 <body>
 <script src="<?php echo $web_path; ?>/lib/javascript-base.js" language="javascript" type="text/javascript"></script>
 <script src="<?php echo $web_path; ?>/modules/kajax/ajax.js" language="javascript" type="text/javascript"></script>
 <script src="<?php echo $web_path; ?>/modules/prototype/prototype.js" language="javascript" type="text/javascript"></script>
+<!-- rfc3514 implementation --> 
 <div id="rfc3514" style="display:none;">0x0</div>
-<div id="maincontainer" <?php 
-	if ($GLOBALS['theme']['orientation'] == 'horizontal') { 
-		echo " class=\"horizontal_menu\" ";
-	}else{
-		echo " class=\"vertical_menu\" ";
-	}?>>
-		
+<div id="maincontainer">
 	<div id="header"><!-- This is the header -->
 		<h1 id="headerlogo">
 		  <a href="<?php echo Config::get('web_path'); ?>">
@@ -68,7 +58,7 @@ if (Config::get('use_rss')) { ?>
 			<?php show_box_top('','box box_headerbox'); ?>
 			<?php require_once Config::get('prefix') . '/templates/show_search_bar.inc.php'; ?>
 			<?php require_once Config::get('prefix') . '/templates/show_playtype_switch.inc.php'; ?>
-			<span id="loginInfo"><?php echo $GLOBALS['user']->fullname; ?> [<a href="<?php echo Config::get('web_path'); ?>/logout.php"><?php echo _('Log out'); ?></a>]</span>
+			<span id="loginInfo"><a href="<?php echo Config::get('web_path'); ?>/preferences.php?tab=account"><?php echo $GLOBALS['user']->fullname; ?></a> [<a href="<?php echo Config::get('web_path'); ?>/logout.php"><?php echo _('Log out'); ?></a>]</span>
 			<?php show_box_bottom(); ?>
 		</div> <!-- End headerbox -->
 	</div><!-- End header -->
@@ -78,8 +68,6 @@ if (Config::get('use_rss')) { ?>
 	<div id="rightbar"><!-- This is the rightbar -->
 		<?php require_once Config::get('prefix') . '/templates/rightbar.inc.php'; ?>
 	</div><!-- End rightbar -->
-<!-- I hate IE... 
-<table class="smeg-ie" width="100%"><tr><td> -->
 <!-- Tiny little iframe, used to cheat the system --> 
 <div id="ajax-loading">Loading . . .</div>
 <iframe name="util_iframe" id="util_iframe" style="display:none;" src="<?php echo Config::get('web_path'); ?>/util.php"></iframe>

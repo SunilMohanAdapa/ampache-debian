@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -28,27 +28,23 @@
 	<th><?php echo _('Homepage'); ?></th>
 	<th><?php echo _('Callsign'); ?></th>
 	<th><?php echo _('Frequency'); ?></th>
-	<th><?php echo _('Genre'); ?></th>
 	<th>&nbsp;</th>
 </tr>
 <tr>
 <td>
-	<input type="textbox" name="name" value="<?php echo scrub_out($radio->name); ?>" size="9" />
+	<input type="text" name="name" value="<?php echo scrub_out($radio->name); ?>" size="9" />
 </td>
 <td>
-	<input type="textbox" name="url" value="<?php echo scrub_out($radio->url); ?>" size ="12" />
+	<input type="text" name="url" value="<?php echo scrub_out($radio->url); ?>" size ="12" />
 </td>
 <td>
-	<input type="textbox" name="site_url" value="<?php echo scrub_out($radio->site_url); ?>" size="9" />
+	<input type="text" name="site_url" value="<?php echo scrub_out($radio->site_url); ?>" size="9" />
 </td>
 <td>
-	<input type="textbox" name="call_sign" value="<?php echo scrub_out($radio->call_sign); ?>" size="6" />
+	<input type="text" name="call_sign" value="<?php echo scrub_out($radio->call_sign); ?>" size="6" />
 </td>
 <td>
-	<input type="textbox" name="frequency" value="<?php echo scrub_out($radio->frequency); ?>" size="6" />
-</td>
-<td>
-	<?php show_genre_select('genre',$radio->genre); ?>
+	<input type="text" name="frequency" value="<?php echo scrub_out($radio->frequency); ?>" size="6" />
 </td>
 <td>
 	<input type="hidden" name="id" value="<?php echo $radio->id; ?>" />

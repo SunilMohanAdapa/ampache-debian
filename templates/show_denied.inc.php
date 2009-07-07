@@ -25,24 +25,29 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Ampache -- Debug Page</title>
+<link rel="stylesheet" href="<?php echo Config::get('web_path'); ?>/templates/install.css" type="text/css" media="screen" />
 </head>
 <body bgcolor="#f0f0f0">
-<link rel="stylesheet" href="<?php echo Config::get('web_path'); ?>/templates/install.css" type="text/css" media="screen" />
 <div id="header">
 <h1>Ampache :: <?php echo _('Access Denied'); ?></h1>
 <p>This Event has been logged</p>
 </div>
 <p class="error">
 <?php if (!Config::get('demo_mode')) { ?>
-You've been redirected to this page because you do not have access to this function. If you believe this is an error please 
-contact an Ampache administrator. This event has been logged
+<?php
+echo _("You've been redirected to this page because you do not have access to this function.");
+echo _("If you believe this is an error please contact an Ampache administrator.");
+echo _("This event has been logged");
+?>
 <?php } else { ?>
-You've been redirected to this page because you've attempted to access a function that is disabled in the demo. 
-Functions are disabled in the demo because previous users of the demo have used the functionality to post inappropriate materials 
+<?php
+echo _("You've been redirected to this page because you've attempted to access a function that is disabled in the demo.");
+echo _("Functions are disabled in the demo because previous users of the demo have used the functionality to post inappropriate materials");
+?>
 <?php } ?>
 </p>
 <div id="bottom">
-<p><b>Ampache</b><br />
+<p><strong>Ampache</strong><br />
 Pour l'Amour de la Musique.</p>
 </div>
 </body>

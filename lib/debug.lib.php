@@ -76,9 +76,22 @@ function check_database_inserted($dbh,$db_name) {
  */
 function check_php_ver($level=0) {
 
-	if (strcmp('5.1.0',phpversion()) > 0) {
+	if (floatval(phpversion()) < 5.1) {
 		return false;
 	}
+	
+	// Poor windows users if only their OS wasn't behind the times
+	if (strtoupper(substr(PHP_OS,0,3)) == 'WIN' AND floatval(phpversion()) < 5.3) {
+		return false; 
+	} 
+
+	// Make sure that they have the sha256() algo installed
+	if (!function_exists('hash_algos')) { return false; } 
+	$algos = hash_algos(); 
+
+	if (!in_array('sha256',$algos)) { 
+		return false; 
+	} 
 
 	return true;
 
@@ -193,21 +206,59 @@ function check_putenv() {
 	/* Check memory */
 	$current = ini_get('memory_limit');
 	$current = substr($current_memory,0,strlen($current_memory)-1);
-	$new_limit = ($current+1) . "M";
+	$new_limit = ($current+16) . "M";
 	
-	/* Bump it by one meg */
+	/* Bump it by 16 megs (for getid3)*/
 	if (!ini_set(memory_limit,$new_limit)) { 
 		return false; 
 	}
+
+	// Make sure it actually worked
+	$current = ini_get('memory_limit'); 
+
+	if ($new_limit != $current) { 
+		return false; 
+	} 
 	
 	/* Check if safe mode is on */
 	if (ini_get('safe_mode')) { 
 		return false; 
 	}
 
+	// See if we can override the set_time_limit(); 
+
+
 	return true;
 
 } // check_putenv
+
+/**
+ * check_gettext
+ * This checks to see if you've got gettext installed
+ */
+function check_gettext() { 
+
+	if (!function_exists('gettext')) { 
+		return false; 
+	} 
+
+	return true; 
+
+} // check_gettext
+
+/**
+ * check_mbstring
+ * This checks for mbstring support
+ */
+function check_mbstring() { 
+
+	if (!function_exists('mb_check_encoding')) { 
+		return false; 
+	} 
+
+	return true; 
+
+} // check_mbstring 
 
 /**
  * generate_config
@@ -254,4 +305,20 @@ function generate_config($current) {
 
 } // generate_config
 
+/**
+ * debug_ok
+ * Return an "OK" with the specified string
+ */
+function debug_result($comment,$status=false,$value=false) { 
+
+	$class = $status ? 'ok' : 'notok'; 
+	if (!$value) { 
+		$value = $status ? 'OK' : 'ERROR'; 
+	} 
+
+	$final = '<span class="' . $class . '">' . scrub_out($value) . '</span> <em>' . $comment . '</em>'; 
+
+	return $final;
+
+} // debug_ok
 ?>

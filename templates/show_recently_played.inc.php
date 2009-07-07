@@ -21,7 +21,7 @@
 
 /* Define the time places starting at 0 */
 $time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago')); 
-$link = Config::get('use_rss') ? ' ' . RSS::get_display('recentlyplayed') :  '';
+$link = Config::get('use_rss') ? ' ' . AmpacheRSS::get_display('recently_played') :  '';
 show_box_top(_('Recently Played') . $link);
 ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
@@ -88,6 +88,11 @@ show_box_top(_('Recently Played') . $link);
 		</a>
 	</td>
 	<td class="cel_lastplayed"><?php echo $time_string; ?></td>
+</tr>
+<?php } ?>
+<?php if (!count($data)) { ?>
+<tr>
+	<td colspan="6"><span class="fatalerror"><?php echo _('Not Enough Data'); ?></span></td>
 </tr>
 <?php } ?>
 <tr class="th-bottom">

@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved
 
  This program is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
  */
 
 ?>
-<?php show_box_top(_('Editing') . ' ' . $client->fullname . ' ' . _('preferences'),'box box_preferences'); ?>
+<?php show_box_top(sprintf(_('Editing %s preferences'), $client->fullname),'box box_preferences'); ?>
 <form method="post" name="preferences" action="<?php echo Config::get('web_path'); ?>/preferences.php?action=admin_update_preferences" enctype="multipart/form-data">
 <table class="tabledata" cellspacing="0">
 <colgroup>
@@ -48,6 +48,7 @@
 	<td>
 	<div class="formValidation">
 	<input class="button" type="submit" value="<?php echo _('Update Preferences'); ?>" />
+	<?php echo Core::form_register('update_preference'); ?> 
 	<input type="hidden" name="user_id" value="<?php echo scrub_out($_REQUEST['user_id']); ?>" />
 	</div>
 	</td>

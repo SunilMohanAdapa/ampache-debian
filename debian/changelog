@@ -1,3 +1,15 @@
+ampache (3.5.1-2) unstable; urgency=low
+
+   * Added quilt to debian/control Build Depends section.
+   * Added debian/patches
+   * Added debian/patches/01_mysql_real_escape_string.  mysql_escape_string() is
+     depreciated and mysql_real_escape_string() should be used instead.  This is
+     needed to correct for a possible sql_injection vulnerability.
+   * Changed debhelper to (>=7.0.50), this is needed for dh overrides.
+   * Bumped Standards Version to 3.8.3 no changes needed.
+ 
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 18 Oct 2009 23:55:24 -0500
+
 ampache (3.5.1-1) unstable; urgency=high
 
    * Setting urgency to high as this fixes an RC bug.

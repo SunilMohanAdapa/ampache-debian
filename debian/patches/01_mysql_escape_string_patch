@@ -1,0 +1,33 @@
+This is needed to prevent a possible sql injection due to the use of depreciated mysql_escape_string function.  This will be corrected in 3.5.2.
+Author: Charlie Smotherman
+Debian: Squeeze
+
+Index: ampache-3.5.1/modules/getid3/extension.cache.mysql.php
+===================================================================
+--- ampache-3.5.1.orig/modules/getid3/extension.cache.mysql.php	2009-10-19 08:10:36.000000000 -0500
++++ ampache-3.5.1/modules/getid3/extension.cache.mysql.php	2009-10-19 08:11:43.000000000 -0500
+@@ -134,7 +134,7 @@
+             // Short-hands
+             $filetime = filemtime($filename);
+             $filesize = filesize($filename);
+-            $filenam2 = mysql_escape_string($filename);
++            $filenam2 = mysql_real_escape_string($filename);
+ 
+             // Loopup file
+             $this->cursor = mysql_query("SELECT `value` FROM `getid3_cache` WHERE (`filename`='".$filenam2."') AND (`filesize`='".$filesize."') AND (`filetime`='".$filetime."')", $this->connection);
+@@ -151,7 +151,7 @@
+ 
+         // Save result
+         if (file_exists($filename)) {
+-            $res2 = mysql_escape_string(serialize($result));
++            $res2 = mysql_real_escape_string(serialize($result));
+             $this->cursor = mysql_query("INSERT INTO `getid3_cache` (`filename`, `filesize`, `filetime`, `analyzetime`, `value`) VALUES ('".$filenam2."', '".$filesize."', '".$filetime."', '".time()."', '".$res2."')", $this->connection);
+         }
+         return $result;
+@@ -174,4 +174,4 @@
+ }
+ 
+ 
+-?>
+\ No newline at end of file
++?>

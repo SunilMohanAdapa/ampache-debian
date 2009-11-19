@@ -1,0 +1,40 @@
+# Japanese translation of ampache debconf templates.
+# Copyright (C) 2009 Hideki Yamane <henrich@debian.or.jp>
+# This file is distributed under the same license as ampache package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ampache 3.5.1-2\n"
+"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
+"POT-Creation-Date: 2007-12-20 08:00-0600\n"
+"PO-Revision-Date: 2009-09-07 06:52+0900\n"
+"Last-Translator: Hideki Yamane (Debian-JP) <henrich@debian.or.jp>\n"
+"Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:2001
+msgid "Configure Apache 2 web server for use with Ampache?"
+msgstr "Ampache を使うように Apache 2 ウェブサーバを設定しますか?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid "Restart Apache 2 web server?"
+msgstr "Apache 2 ウェブサーバを再起動しますか?"
+
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"The Apache 2 web server needs to be restarted to enable Ampache. Please "
+"choose whether you want to restart it automatically now or do it yourself "
+"later."
+msgstr ""
+"Ampache を有効にするために Apache 2 ウェブサーバを再起動する必要があります。"
+"今すぐ自動的に再起動するか、あるいは後で自分の手でを行うかを選んでください。"
+
+

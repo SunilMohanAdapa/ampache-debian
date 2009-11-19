@@ -3,148 +3,157 @@ Upstream-Name: ampache
 Upstream-Maintainer: Karl Vollmer <vollmer@ampache.org>
 Upstream-Source: http://ampache.org
 
-File: src/debian/po/sv.po
-Copyright: Copyright 2007, Martin Bagge
+Files: /*
+Copyright: 2001, Karl Vollmer
 License: GPL-2+
 
-File: src/debian/po/cs.po
-Copyright: Copyright 2007, Miroslav Kure
+File: /debian/po/sv.po
+Copyright: 2007, Martin Bagge
 License: GPL-2+
 
-File: src/debian/po/de.po
-Copyright: Copyright 2007, Helge Kreutzmann
+File: /debian/po/cs.po
+Copyright: 2007, Miroslav Kure
 License: GPL-2+
 
-File: src/debian/po/eu.po
-Copyright: Copyright 2007, Piarres Beobide
+File: /debian/po/de.po
+Copyright: 2007, Helge Kreutzmann
 License: GPL-2+
 
-File: src/debian/po/fi.po
-Copyright: Copyright 2007, Esko Arajärvi
+File: /debian/po/eu.po
+Copyright: 2007, Piarres Beobide
 License: GPL-2+
 
-File: src/debian/po/fr.po
-Copyright: Copyright 2007, Geoffroy Your Berret
+File: /debian/po/es.po
+Copyright: 2009, Gary Ariel Sandi Vigabriel
+Copyright: 2009, Francisco Javier Cuadrado 
 License: GPL-2+
 
-Files: src/debian/po/gl.po
-Copyright: Copyright 2007, Jacobo Tarrio
+File: /debian/po/fi.po
+Copyright: 2007, Esko Arajärvi
 License: GPL-2+
 
-File: src/debian/po/it.po
-Copyright: Copyright 2007 Luca Monducci
+File: /debian/po/fr.po
+Copyright: 2007, Geoffroy Your Berret
 License: GPL-2+
 
-File: src/debian/po/nl.po
-Copyright: Copyright 2007, Bart Cornelis
+Files: /debian/po/gl.po
+Copyright: 2007, Jacobo Tarrio
 License: GPL-2+
 
-File: src/debian/po/pt.po
-Copyright: Copyright 2007, Américo Monteiro
+File: /debian/po/it.po
+Copyright: 2007 Luca Monducci
 License: GPL-2+
 
-File: src/debian/po/ru.po
-Copyright: Copyright 2007, Yuri Kozlov
+File: /debian/po/ja.po
+Copyright: 2009 Hideki Yamane
 License: GPL-2+
 
-File: src/debian/po/ta.po
-Copyright: Copyright 2007, Dr.T.Vasudevan
+File: /debian/po/nl.po
+Copyright: 2007, Bart Cornelis
 License: GPL-2+
 
-File: src/debian/po/vi.po
-Copyright: Copyright 2007, Clytie Siddall
+File: /debian/po/pt.po
+Copyright: 2007, Américo Monteiro
 License: GPL-2+
 
-File: src/debian/po/pt_BR.po
-Copyright: Copyright 2007, Felipe Augusto van de Wiel
+File: /debian/po/ru.po
+Copyright: 2007, Yuri Kozlov
+License: GPL-2+
+
+File: /debian/po/ta.po
+Copyright: 2007, Dr.T.Vasudevan
+License: GPL-2+
+
+File: /debian/po/vi.po
+Copyright: 2007, Clytie Siddall
+License: GPL-2+
+
+File: /debian/po/pt_BR.po
+Copyright: 2007, Felipe Augusto van de Wiel
 Licnese: GPL-2+
 
-File: src/locale/ca_CA/LC_MESSAGES/messages.po
-Copyright: Copyright 2008, Guillem Lluch Moll
+File: /locale/ca_CA/LC_MESSAGES/messages.po
+Copyright: 2008, Guillem Lluch Moll
 License: GPL-2+
 
-File: src/locale/de_DE/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, Nikolai Faursterling
+File: /locale/de_DE/LC_MESSAGES/messages.po
+Copyright: 2007, Nikolai Faursterling
 License: GPL-2+
 
-File: src/locale/en_GB/LC_MESSAGES/messages.po
-Copyright: Copyright 2005, David Lodge
+File: /locale/en_GB/LC_MESSAGES/messages.po
+Copyright: 2005, David Lodge
 License: GPL-2+
 
-File: src/locale/es_ES/LC_MESSAGES/messages.po
-Copyright: Copyright 2007 LL
+File: /locale/es_ES/LC_MESSAGES/messages.po
+Copyright: 2007 LL
 License: GPL-2+
 
-File: src/locale/fr_FR/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, François Jan
+File: /locale/fr_FR/LC_MESSAGES/messages.po
+Copyright: 2007, François Jan
 License: GPL-2+
 
-Files: src/locale/it_IT/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, Mr-miky
+Files: /locale/it_IT/LC_MESSAGES/messages.po
+Copyright: 2007, Mr-miky
 License: GPL-2+
 
-File: src/locale/ja_JP/LC_MESSAGES/messages.po
-Copyright: Copyright 2008, Momo-i
+File: /locale/ja_JP/LC_MESSAGES/messages.po
+Copyright: 2008, Momo-i
 License: GPL-2+
 
-File: src/locale/nl_NL/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, Terence Theijn
+File: /locale/nl_NL/LC_MESSAGES/messages.po
+Copyright: 2007, Terence Theijn
 License: GPL-2+
 
-File: src/locale/ru_RU/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, Alexey Illarionov
+File: /locale/ru_RU/LC_MESSAGES/messages.po
+Copyright: 2007, Alexey Illarionov
 License: GPL-2+
 
-File: src/locale/tr_TR/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, LL
+File: /locale/tr_TR/LC_MESSAGES/messages.po
+Copyright: 2007, LL
 License: GPL-2+
 
-File: src/locale/zh_CN/LC_MESSAGES/messages.po
-Copyright: Copyright 2007, LL
+File: /locale/zh_CN/LC_MESSAGES/messages.po
+Copyright: 2007, LL
 License: GPL-2+
 
-File: src/modules/infotools/Snoopy.class.php
-Copyright: Copyright 1999, Monte Ohrt
+File: /modules/infotools/Snoopy.class.php
+Copyright: 1999, Monte Ohrt
 License: GPL-2+
 
-File: src/modules/archive/archive.lib.php
-Copyright: Copyright 2005, Devin Doucette
+File: /modules/archive/archive.lib.php
+Copyright: 2005, Devin Doucette
 License: GPL-2+
 
-File:  src/modules/mpd/mpd.class.php
-Copyright: Copyright 2003, Benjamin Carlisle
+File: /modules/mpd/mpd.class.php
+Copyright: 2003, Benjamin Carlisle
 License: GPL-2+
 
-File: src/modules/mpd/mpd.class-example.php
-Copyright: Copyright 2003, Benjamin Carlisle
+File: /modules/mpd/mpd.class-example.php
+Copyright: 2003, Benjamin Carlisle
 License: GPL-2+
 
-File: src/modules/validatemail/validateEmail.php
-Copyright: Copyright 1998, Clay Loveless
+File: /modules/validatemail/validateEmail.php
+Copyright: 1998, Clay Loveless
 License: GPL-2+
 
-File: src/modules/validateEmailFormat.php
-Copyright: Copyright 1977, Jeffery E.F Friedl
+File: /modules/validateEmailFormat.php
+Copyright: 1977, Jeffery E.F Friedl
 License: GPL-2+
 
-Files: src/modules/nusoap/*
-Copyright: Copyright 2002, NuSphere Corperation
-Copyright: Copyright 2002, Dietrich Ayala
-Copyright: Copyright 2002, Scott Nichol
-Copyright: Copyright 2002, Ingo Fischer
+Files: /modules/nusoap/*
+Copyright: 2002, NuSphere Corperation
+Copyright: 2002, Dietrich Ayala
+Copyright: 2002, Scott Nichol
+Copyright: 2002, Ingo Fischer
 License: GPL-2+
 
-Files: src/modules/getid3/*
-Copyright: Copyright 2002-2005, James Heinrick
-Copyright: Copyright 2002-2005, Allan Hansen
-License: GPL-2+
-
-Files: src/*
-Copyright: Copyright 2001, Karl Vollmer
+Files: /modules/getid3/*
+Copyright: 2002-2005, James Heinrick
+Copyright: 2002-2005, Allan Hansen
 License: GPL-2+
 
 Files: debian/*
-Copyright: Copyright 2007, Charlie Smotherman
+Copyright: 2007, Charlie Smotherman
 License: GPL-2+
 
 License: GPL-2+
@@ -163,9 +172,9 @@ License: GPL-2+
 
 For full wording of above license, see '/usr/share/common-licenses/GPL-2
 
-File: src/modules/horde/Browser.php
-Copyright: Copyright 1999, Chuck Hagenbuch
-Copyright: Copyright 1999, Jon Parise
+File: /modules/horde/Browser.php
+Copyright: 1999, Chuck Hagenbuch
+           1999, Jon Parise
 License: LGPL-2+
 
 License: LGPL-2+
@@ -184,12 +193,8 @@ License: LGPL-2+
 
 For full wording of above license, see '/usr/share/common-licenses/LGPL-2
 
-File: src/modules/xmlrpc/*
-Copyright: Copyright 1999, Edd Dumbill
-License: BSD
-
-File: src/modules/flash/*
-Copyright: Copyright 2007, Lacy Morrow 
+File: /modules/flash/*
+Copyright: 2007, Lacy Morrow 
 License: BSD
 
 License: BSD
@@ -220,8 +225,8 @@ License: BSD
 	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-File: src/modules/prototype/prototype.js
-Copyright: Copyright 2005-2007, Sam Stephenson
+File: /modules/prototype/prototype.js
+Copyright: 2005-2007, Sam Stephenson
 License: MIT.
 
 License: MIT
@@ -240,8 +245,8 @@ License: MIT
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-File: src/modules/captcha/captcha.php
-Copyright: Copyright 2005, Milki
+File: /modules/captcha/captcha.php
+Copyright: 2005, Milki
 License: Public Domain
 
 License: Public Domain
@@ -271,5 +276,83 @@ License: Public Domain
   otherwise exploited by anyone for any purpose, commercial or non-commercial,
   and in any way, including by methods that have not yet been invented or
   conceived.
+
+File: /modules/pearxmlrpc/*
+Copyright: 1999, Edd Dumbill
+		 Stig Bakken <stig@php.net>
+		 Martin Jansen <mj@php.net>
+		 Daniel Convissor <danielc@php.net>
+		 Christian Weiske <cweiske@php.net>
+	   1999-2001 Edd Dumbill
+	   2001-2006 The PHP Group
+License: PHP
+
+License: PHP
+
+                  The PHP License, version 3.01
+Copyright 1999 - 2009 The PHP Group. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, is permitted provided that the following conditions
+are met:
+
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+ 
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+ 
+  3. The name "PHP" must not be used to endorse or promote products
+     derived from this software without prior written permission. For
+     written permission, please contact group@php.net.
+  
+  4. Products derived from this software may not be called "PHP", nor
+     may "PHP" appear in their name, without prior written permission
+     from group@php.net.  You may indicate that your software works in
+     conjunction with PHP by saying "Foo for PHP" instead of calling
+     it "PHP Foo" or "phpfoo"
+ 
+  5. The PHP Group may publish revised and/or new versions of the
+     license from time to time. Each version will be given a
+     distinguishing version number.
+     Once covered code has been published under a particular version
+     of the license, you may always continue to use it under the terms
+     of that version. You may also choose to use such covered code
+     under the terms of any subsequent version of the license
+     published by the PHP Group. No one other than the PHP Group has
+     the right to modify the terms applicable to covered code created
+     under this License.
+
+  6. Redistributions of any form whatsoever must retain the following
+     acknowledgment:
+     "This product includes PHP software, freely available from
+     <http://www.php.net/software/>".
+
+THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND 
+ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PHP
+DEVELOPMENT TEAM OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGE.
+
+This software consists of voluntary contributions made by many
+individuals on behalf of the PHP Group.
+
+The PHP Group can be contacted via Email at group@php.net.
+
+For more information on the PHP Group and the PHP project, 
+please see <http://www.php.net>.
+
+PHP includes the Zend Engine, freely available at
+<http://www.zend.com>.
+
 
 

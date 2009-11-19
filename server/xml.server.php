@@ -87,7 +87,7 @@ switch ($_REQUEST['action']) {
 	break; 
 	case 'ping': 
 		
-		$xmldata = array('version'=>Api::$version); 
+		$xmldata = array('server'=>Config::get('version'),'version'=>Api::$version,'compatible'=>Api::$version); 
 
 		// Check and see if we should extend the api sessions (done if valid sess is passed)
 		if (vauth::session_exists('api', $_REQUEST['auth'])) { 
@@ -298,11 +298,16 @@ switch ($_REQUEST['action']) {
 	break; 
 	case 'search_songs': 
 		$array['s_all'] = $_REQUEST['filter']; 
-		$results = run_search($array);
 		ob_end_clean(); 
 
 		xmlData::set_offset($_REQUEST['offset']); 
 		xmlData::set_limit($_REQUEST['limit']); 
+	
+		//WARNING!!! This is a horrible hack that has to be here because
+		//Run search references these variables, ooh the huge manatee	
+		unset($_REQUEST['limit'],$_REQUEST['offset']); 
+
+		$results = run_search($array);
 
 		echo xmlData::songs($results); 
 	break; 
@@ -336,9 +341,9 @@ switch ($_REQUEST['action']) {
 			case 'prev':
 			case 'play': 
 			case 'stop': 
-				$result_status = $localplay->$command(); 
-				$xml_array = array('localplay'=>array('command'=>array($command=>make_bool($result_status))));
-				echo xmlData::build_from_array($xml_array); 
+				$result_status = $localplay->$_REQUEST['command'](); 
+				$xml_array = array('localplay'=>array('command'=>array($_REQUEST['command']=>make_bool($result_status))));
+				echo xmlData::keyed_array($xml_array); 
 			break; 
 			default:
 				// They are doing it wrong
@@ -360,11 +365,11 @@ switch ($_REQUEST['action']) {
 					echo xmlData::error('400',_('Media Object Invalid or Not Specified')); 
 					break; 
 				} 
-				Democratic::vote(array($media->id)); 
+				$democratic->vote(array(array('song',$media->id))); 
 
 				// If everything was ok
 				$xml_array = array('action'=>$_REQUEST['action'],'method'=>$_REQUEST['method'],'result'=>true); 	
-				echo xmlData::build_from_array($xml_array); 
+				echo xmlData::keyed_array($xml_array); 
 			break; 
 			case 'devote': 
 				$type = 'song'; 
@@ -372,12 +377,13 @@ switch ($_REQUEST['action']) {
 				if (!$media->id) { 
 					echo xmlData::error('400',_('Media Object Invalid or Not Specified')); 
 				} 
-				
-				Democratic::remove_vote(array($media->id)); 
+
+				$uid = $democratic->get_uid_from_object_id($media->id,$type);
+				$democratic->remove_vote($uid); 
 				
 				// Everything was ok
 				$xml_array = array('action'=>$_REQUEST['action'],'method'=>$_REQUEST['method'],'result'=>true); 
-				echo xmlData::build_from_array($xml_array); 
+				echo xmlData::keyed_array($xml_array); 
 			break; 
 			case 'playlist': 
 				$objects = $democratic->get_items(); 
@@ -388,7 +394,7 @@ switch ($_REQUEST['action']) {
 			case 'play': 
 				$url = $democratic->play_url(); 
 				$xml_array = array('url'=>$url); 
-				echo xmlData::build_from_array($xml_array); 
+				echo xmlData::keyed_array($xml_array); 
 			break; 
 			default: 
 				echo xmlData::error('405',_('Invalid Request')); 

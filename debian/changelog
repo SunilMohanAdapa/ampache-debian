@@ -1,18 +1,47 @@
-ampache (3.5.1-2) unstable; urgency=low
+ampache (3.5.2-1) unstable; urgency=low
 
-   * Added quilt to debian/control Build Depends section.
-   * Added debian/patches
-   * Added debian/patches/01_mysql_real_escape_string.  mysql_escape_string() is
-     depreciated and mysql_real_escape_string() should be used instead.  This is
-     needed to correct for a possible sql_injection vulnerability.
-   * Changed debhelper to (>=7.0.50), this is needed for dh overrides.
-   * Bumped Standards Version to 3.8.3 no changes needed.
+   * New upstream maintenance release:
+      - Fix typo that caused song count to not be set on tag xml response.
+      - Fix tag methods so that alpha_match and exact_match works.
+      - Fix limit and offset not working on search_songs API method.
+      - Fix import m3u on catalog build so it does something.
+      - Fix inconsistent view during catalog operations.
+      - Sort malformed files into "Unknown (Broken)" rather then leaving them
+        in "Unknown (Orphaned)".
+      - Fix API democratic voting methods (Thx kindachris).
+      - Add server version information to API ping command.
+      - Fix Localplay API methods (Thx thomasa).
+      - Improve bin/catalog_update.inc to allow only verify, clean or add
+        (Thx ascheel).
+      - Fix issue with batch download and UNC paths (Thx greengeek).
+      - Added config option to turn caching on/off, Default is off.
+      - Fix issue where file tag pattern was ignored if files have no tag
+        structure.
+      - Add TDRC to list of parsed id3v2 tags.
+      - Fix issue where rating could get cached and not update the display
+        correctly until a page reload.
+      - Fix User Stats having a formating issue and not listing the active
+        playlist correctly.
+      - Fix incorrect default ogg transcode target format in the default
+        config file.
+      - Fix issue where the user preferences were not respected by the
+        streaming code due to caching.
+      - Fix issue where prevent multiple logins would prevent all logins.
+   * Increased debhelper to >=7.0.50, for the use of dh overrides in 
+      debian/rules.
+   * Increased Standards Version to 3.8.3.  No changes needed.
+   * Added Spanish debconf template translation es.po.  Thx Fran 
+      Closes: #552701.
+   * Added Japanese debconf template translation ja.po.  Thx Hideki 
+      Closes: #554089.
+   * Added php5-cli to debian/control Depends field.  Closes: #553313.
+   * Removed the find rule for messages.po as it has been corrected upstream.
  
- -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 18 Oct 2009 23:55:24 -0500
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 19 Nov 2009 16:23:35 -0500
 
 ampache (3.5.1-1) unstable; urgency=high
 
-   * Setting urgency to high as this fixes an RC bug.
+   * Setting urgency to  high as this fixes a RC bug.
    * New upstream release.  Summary of new features:  (LP: #377016)
      - Make the PHP error a little clearer for windows users by indicating
        that their version of PHP is < 5.3 (required for windows)
@@ -35,7 +64,7 @@ ampache (3.5.1-1) unstable; urgency=high
    * Bumped Standards-Version to 3.8.2, no changes needed.
    * Bumped debhelper to dh 7.
      - increased debian/compat to 7.
-     - simplified debian/rules.
+	 - debian/rules removed dh_clean -k in favor of dh_prep
    * Lintian complains of FreeMonoMedium.ttf being an embeded fonts package.
      FreeMonoMedium.ttf is actually part of the ttf-freefont package.
      - added ttf-freefont to the Depends section of debian/control.
@@ -46,28 +75,29 @@ ampache (3.5.1-1) unstable; urgency=high
 	   debian/rules, gather-messages.sh is not used by ampache proper and 
 	   can be safely removed.  It is only utilized by developers who are 
 	   creating or editing the translation files.
-     -  /locale/pl_PL/LC_MESSAGES/messages.po added find and chmod rule 
+	 -  /locale/pl_PL/LC_MESSAGES/messages.po added find and chmod rule 
 	   to debian/rules.
-     -  /locale/pl_PL/LC_MESSAGES/messages.mo added find and chmod rule 
+	 -  /locale/pl_PL/LC_MESSAGES/messages.mo added find and chmod rule 
 	   to debian/rules.
-     -  /docs/CHANGELOG added find and chmod rule to debian/rules.
+	 -  /docs/CHANGELOG added find and chmod rule to debian/rules.
    * Lintian complains of wrong-name-for-upstream-changelog
-     -  install upstream CHANGELOG to /usr/share/ampache/www/docs
-     -  added find and gzip -9 rule to debian/rules
-     -  added symlink creation to debian/links to link
-        /usr/share/ampache/www/docs/CHANGELOG.gz to 
-        /usr/share/doc/ampache/changelog.gz  
+	 -  install upstream CHANGELOG to /usr/share/ampache/www/docs
+	 -  added find and gzip -9 rule to debian/rules
+	 -  added symlink creation to debian/links to link
+	   /usr/share/ampache/www/docs/CHANGELOG.gz to 
+	   /usr/share/doc/ampache/changelog.gz  
    * Lacy Marrow has responded and has stated that he is dropping the GPL-3 
      licensing of his work and is now releasing version 5.9.5 of the 
      XSPF JukeBox under the same BSD license that the original version of XSPF 
      Music Player was released under (XSPF JukeBox is based on XSPF Music 
      Player).  So now XSPF Music Player and XSPF JukeBox are now released under
      the same BSD type license.  This closes RC Bug #526719.  Closes: #526719
-     - Updated debian/copyright to refect this.
-   * Added dh_installman to debian/rules so the manpage now installs correctly.
-     - Added debian/ampache.manpages.
-   * debian/ampache.config downgraded db_input to medium
-   * debian/copyright removed (C) in favor of the word copyright.
+         - Updated debian/copyright to refect this.
+    * Added dh_installman to debian/rules so the manpage now installs correctly.
+         - Added debian/ampache.manpages.
+    * debian/ampache.config downgraded db_input to medium
+    * debian/copyright removed (C) in favor of the word copyright.
+    * addded copyright header info to debian/po/nl.po and debian/po/sv.po.
  
  -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 07 Jul 2009 07:23:35 -0500
 

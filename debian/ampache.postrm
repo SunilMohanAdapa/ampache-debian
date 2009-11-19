@@ -28,10 +28,8 @@ if [ "$1" = "purge" ]; then
    #This is needed to remove user added content.
    if [ -d /etc/ampache ]; then
       rm -rf /etc/ampache
-   fi
-   #This is need to manually remove symlinks.
-   if [ -d /usr/share/ampache ]; then
-      rm -rf /usr/share/ampache
+      #this is needed to remove dangling symlink
+      rm -f /etc/apache2/conf.d/ampache
    fi
 fi
 

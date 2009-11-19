@@ -1,13 +1,11 @@
 #!/usr/bin/make -f
 
 %:
-	dh --with quilt $@
+	dh $@
 
 override_dh_install:
 	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
 	-Xreadme.windows.txt -Xprototype -XSnoopy -XFreeMono-Medium \
 	-Xgather-messages.sh
 	find . -type f -name 'CHANGELOG' -exec gzip -9 {} \;
-	find . -type f -name 'CHANGELOG.gz' -exec chmod 644 {} \; 
-	find . -type f -name 'messages.mo' -exec chmod 644 {} \;
-	find . -type f -name 'messages.po' -exec chmod 644 {} \;
+	find . -type f -name 'CHANGELOG.gz' -exec chmod 644 {} \;

@@ -1,5 +1,5 @@
 /etc/ampache/ampache.cfg.php /usr/share/ampache/www/config/ampache.cfg.php
 /usr/share/javascript/prototype/prototype.js /usr/share/ampache/www/modules/prototype/prototype.js
 /usr/share/php/libphp-snoopy/Snoopy.class.php /usr/share/ampache/www/modules/infotools/Snoopy.class.php
-/usr/share/fonts/trutype/freefont/FreeMono.ttf /usr/share/ampache/www/modules/captcha/FreeMono-Medium.ttf
+/usr/share/fonts/truetype/freefont/FreeMono.ttf /usr/share/ampache/www/modules/captcha/FreeMono-Medium.ttf
 /usr/share/ampache/www/docs/CHANGELOG.gz /usr/share/doc/ampache/changelog.gz

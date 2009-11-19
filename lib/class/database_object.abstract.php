@@ -30,6 +30,7 @@ abstract class database_object {
 
 	// Statistics for debugging
 	public static $cache_hit = 0; 
+	private static $_enabled = false; 
 
 	/**
 	 * get_info
@@ -97,9 +98,34 @@ abstract class database_object {
 	 */
 	public static function add_to_cache($index,$id,$data) { 
 
+		if (!self::$_enabled) { return false; }  
+
 		$value = is_null($data) ? false : $data; 	
 		self::$object_cache[$index][$id] = $value;
 
 	} // add_to_cache
+
+	/**
+	 * remove_from_cache
+	 * This function clears something from the cache, there are a few places we need to do this
+	 * in order to have things display correctly
+	 */
+	public static function remove_from_cache($index,$id) { 
+		
+		if (isset(self::$object_cache[$index]) && isset(self::$object_cache[$index][$id])) { 
+			unset(self::$object_cache[$index][$id]); 
+		} 
+
+	} // remove_from_cache
+
+	/**
+	 * _auto_init
+	 * Load in the cache settings once so we can avoid function calls
+	 */
+	public static function _auto_init() { 
+
+		self::$_enabled = Config::get('memory_cache'); 
+
+	} // _auto_init
 
 } // end database_object

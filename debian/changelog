@@ -1,3 +1,15 @@
+ampache (3.5.3-1) unstable; urgency=high
+
+  *  New upstream release, summary of changes:
+      - Added local authtype which uses PHP's PAM module
+      - Correct potential security issues due to misuse of REQUEST for write
+	  operations rather then POST 
+         (Thx Raphael Geissert <geissert@debian.org>)
+  *  Added php5-auth-pam to debian/control Depends section.
+  *  Setting urgency to high as this fixes potential security issues.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 20 Dec 2009 11:31:45 -0500
+
 ampache (3.5.2-1) unstable; urgency=low
 
    * New upstream maintenance release:

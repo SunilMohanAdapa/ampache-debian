@@ -11,8 +11,8 @@ Standards-Version: 3.8.3
 Package: ampache
 Architecture: all
 Depends: ${misc:Depends}, debconf (>= 0.5) | debconf-2.0, po-debconf, 
-  apache2-mpm-prefork, php5, php5-mysql, php5-cli, libjs-prototype, libphp-snoopy,
-  ttf-freefont
+  apache2-mpm-prefork, php5, php5-mysql, php5-auth-pam, php5-cli,
+  libjs-prototype, libphp-snoopy, ttf-freefont
 Conflicts: ampache-themes-3.3.3.5a-1
 Recommends: eyed3, ampache-themes
 Suggests: php5-gd, phpmyadmin, mysql-server-5.0

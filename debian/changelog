@@ -1,10 +1,3 @@
-ampache (3.5.4-1~bpo50+1) lenny-backports; urgency=low
-
-  *  Backporting to lenny to correct TEMP-0000000-004968.
-     http://security-tracker.debian.org/tracker/TEMP-0000000-004968
-
- -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 06 May 2010 12:53:37 -0600
-
 ampache (3.5.4-1) unstable; urgency=low
 
   * New upstream release, summary of changes:

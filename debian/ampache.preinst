@@ -1,0 +1,28 @@
+#!/bin/sh
+#preinst for Ampache
+
+set -e
+
+AMPCFG=/etc/ampache/ampache.cfg.php
+WWW=/usr/share/ampache/www
+APE=/etc/apache2/conf.d
+AMP=/etc/ampache
+
+if [ "$1" = "reconfigure" ] || [ "$1" = "upgrade" ]; then
+    if [ -f "$APE/ampache" ]; then
+        rm -f $APE/ampache
+        if [ -f "$AMP/ampache.conf" ]; then
+            ln -s $AMP/ampache.conf $APE/ampache.conf
+        fi
+    fi
+fi
+
+if [ "$1" = "upgrade" ]; then
+    if [ -f $AMPCFG ] && [ -h $WWW/config/ampache.cfg.php ]; then
+        cp -a $AMPCFG /etc/ampache/ampache_$(date +%Y%m%d).cfg.php
+    fi
+fi
+
+#DEBHELPER#
+
+exit 0

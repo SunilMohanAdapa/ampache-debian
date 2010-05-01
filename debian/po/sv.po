@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ampache_3.4-2_templates\n"
-"Report-Msgid-Bugs-To: cjsmo@cableone.net\n"
-"POT-Creation-Date: 2007-12-20 08:00-0600\n"
+"Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
+"POT-Creation-Date: 2010-05-01 16:46-0500\n"
 "PO-Revision-Date: 2008-05-28 21:01+0200\n"
 "Last-Translator: Martin Bagge <martin.bagge@bthstudent.se>\n"
 "Language-Team: swedish <sv@li.org>\n"
@@ -16,24 +16,71 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 
-#. Type: boolean
-#. Description
+#. Type: multiselect
+#. Choices
 #: ../ampache.templates:2001
-msgid "Configure Apache 2 web server for use with Ampache?"
-msgstr "Konfigurera Apache 2 att fungera med Ampache?"
+msgid "apache2"
+msgstr ""
+
+#. Type: multiselect
+#. Choices
+#: ../ampache.templates:2001
+msgid "lighttpd"
+msgstr ""
+
+#. Type: multiselect
+#. Description
+#: ../ampache.templates:2002
+msgid "Web server to configure automatically:"
+msgstr ""
+
+#. Type: multiselect
+#. Description
+#: ../ampache.templates:2002
+msgid ""
+"Please select the web server to be configured automatically for Ampache."
+msgstr ""
+
+#. Type: multiselect
+#. Description
+#: ../ampache.templates:2002
+msgid ""
+"Apache2 and Lighttpd are the only supported web servers for automatic "
+"configuration."
+msgstr ""
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
-msgid "Restart Apache 2 web server?"
+#, fuzzy
+#| msgid "Restart Apache 2 web server?"
+msgid "Configure and restart the web server?"
 msgstr "Starta om Apache 2?"
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
+#, fuzzy
+#| msgid ""
+#| "The Apache 2 web server needs to be restarted to enable Ampache. Please "
+#| "choose whether you want to restart it automatically now or do it yourself "
+#| "later."
 msgid ""
-"The Apache 2 web server needs to be restarted to enable Ampache. Please "
-"choose whether you want to restart it automatically now or do it yourself "
-"later."
-msgstr "Webb-servern Apache 2 måste startas om för att aktivera Ampache. Vänligen välj om du vill starta om den automatikst nu eller göra det själv manuellt senare."
+"The web server needs to be reconfigured and restarted to enable Ampache.  "
+"Please choose whether you want to restart it automatically now or  do it "
+"yourself later."
+msgstr ""
+"Webb-servern Apache 2 måste startas om för att aktivera Ampache. Vänligen "
+"välj om du vill starta om den automatikst nu eller göra det själv manuellt "
+"senare."
 
+#. Type: boolean
+#. Description
+#: ../ampache.templates:3001
+msgid ""
+"To manually restart the web server, use one of the following commands.   \"/"
+"etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
+msgstr ""
+
+#~ msgid "Configure Apache 2 web server for use with Ampache?"
+#~ msgstr "Konfigurera Apache 2 att fungera med Ampache?"

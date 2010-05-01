@@ -3,46 +3,59 @@
 
 set -e
 
+ELCA=/etc/lighttpd/conf-available
+ELCAMP=/etc/ampache/lighttpd_ampache.conf
+AMP=/etc/ampache/ampache.conf
+
 . /usr/share/debconf/confmodule
 db_version 2.0
 
-# Ask the question and reconfigure the webserver.
-if [ "$1" = "configure" ]; then 
+lighttpd_install() {
+    if [ ! -f $ELCA/50-ampache.conf ] ; then
+        if [ ! -x /usr/sbin/lighty-enable-mod ] ; then
+            echo "Lighttpd not installed, skipping"
+        else
+            ln -s $ELCAMP $ELCA/50-ampache.conf
+            /usr/sbin/lighty-enable-mod ampache
+            if [ -f $AMP ]; then
+                rm -f $AMP
+            fi
+        fi
+    fi
+}
 
-   db_get ampache/configure-webserver || true
+apache_install() {
+    webserver=$1
+    if [ -d /etc/$webserver/conf.d ] && [ ! -h /etc/$webserver/conf.d/ampache.conf ]; then
+        ln -s $AMP /etc/$webserver/conf.d/ampache.conf
+        if [ -f $ELCAMP ]; then
+            rm -f $ELCAMP
+        fi
+    fi
+}
 
-   if [ "$RET" = "true" ]; then
-      webserver="apache2"
-      if [ ! -f /etc/$webserver/conf.d/ampache ] && [ ! -h /etc/$webserver/conf.d/ampache ]; then
-         ln -s /etc/ampache/ampache.conf /etc/$webserver/conf.d/ampache
-      fi
-   fi
-fi
-#Make a backup copy of ampache.cfg.php.
-if [ "$1" = "configure" ] && [ -f /etc/ampache/ampache.cfg.php ]; then
-      AMPCFG="/etc/ampache/ampache.cfg.php"
-      WWW="/usr/share/ampache/www"
-      cp $AMPCFG $WWW
-      mv $WWW/ampache.cfg.php $WWW/old.ampache.cfg.php
-      mv $WWW/old.ampache.cfg.php /etc/ampache
-      php /usr/share/ampache/www/bin/migrate_config.inc
-fi
-#Ask the question and restart the webserver.
-if [ "$1" = "configure" ]; then 
-   
-   db_get ampache/restart-webserver || true
+if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then 
 
-   if [ "$RET" = "true" ]; then 
-      webserver="apache2"
-      for webserver in $webserver; do
-          webserver=${webserver%,}
-	  if [ -x /usr/sbin/invoke-rc.d ]; then
-	     invoke-rc.d $webserver restart 3>/dev/null || true
-	  else
-             /etc/init.d/$webserver restart 3>/dev/null || true
-	  fi
-      done
-   fi
+    db_get ampache/webserver_type || true
+    webservers="$RET"
+
+    db_get ampache/restart_webserver || true
+
+    if [ "$RET" = "true" ]; then 
+        for webserver in $webservers; do
+            webserver=${webserver%,}
+            if [ "$webserver" = "lighttpd" ] ; then
+                lighttpd_install
+            else
+                apache_install $webserver
+            fi
+            if [ -x /usr/sbin/invoke-rc.d ]; then
+                invoke-rc.d $webserver restart 3>/dev/null || true
+            else
+                /etc/init.d/$webserver restart 3>/dev/null || true
+            fi
+        done
+    fi
 fi
 
 #DEBHELPER#

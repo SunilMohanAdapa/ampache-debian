@@ -42,18 +42,20 @@ SUMMARY
 	5.  Step 3 Web Interface
 	6.  Sign in and start building music catalogs
 
-1.  To install mysql-server-5.0 follow instruction above.  If you already have
+1.
+To install mysql-server-5.0 follow instruction above.  If you already have
 mysql-server installed go to step 2.
 
-2.  To setup Ampache you must have a user account on the mysql-server with root 
-privileges.  You may do this by either the command line or phpmyadmin.  I prefer
-phpmyadmin and that is what will be explained here.  To install phpmyadmin type
-in the command line:
+2.
+To setup Ampache you must have a user account on the mysql-server with root 
+privileges.  You may do this by either the command line or phpmyadmin.  I 
+prefer phpmyadmin and that is what will be explained here.  To install 
+phpmyadmin type in the command line:
 
 	Debian: apt-get install phpmyadmin (as root)
 
-To setup your mysql root account, sign into phpmyadmin by pointing your browser
-to http://localhost/phpmyadmin or http://your.ip.address/phpmyadmin.
+To setup your mysql root account, sign into phpmyadmin by pointing your 
+browser to http://localhost/phpmyadmin or http://your.ip.address/phpmyadmin.
 
 username = root
 password =
@@ -70,9 +72,11 @@ Password  = what ever you want
 Re-type   = retype your password again
 
 Now Scroll down a little and click on "Check All" for Global privileges.  Now
-scroll down to the bottom of the page and click the "Go" button.  Now sign out.
+scroll down to the bottom of the page and click the "Go" button.  Now sign
+out.
 
-3.  Now point your browser to http://localhost/ampache or
+3.
+Now point your browser to http://localhost/ampache or
 http://what.ever.your.ip.address.com/ampache. This will bring you to Ampache's
 Web Installation Interface (step 1)
 
@@ -87,7 +91,8 @@ Ampache Database User Password = set this to a password you like
 
 Click on Insert Database.
 
-4.  This will take you to Ampache's Web Installation Interface (step 2)
+4.  
+This will take you to Ampache's Web Installation Interface (step 2)
 
 Web Path	= /ampache
 Desired Database Name = ampache (default)
@@ -100,36 +105,39 @@ MySQL Password  = this is the password you setup with phpmyadmin blank will not
 Click on Write Config.
 
 Ampache will prompt you to download a file called "ampache.cfg.php".
-Download it to your favorite location.  Now take "ampache.cfg.php and copy it to
-/etc/ampache.
+Download it to your favorite location.  Now take "ampache.cfg.php and copy it
+to /etc/ampache.
 
-Now click on check for config, and everything should turn green.  Click on next
+Now click on check for config, and everything should turn green.  Click on 
+next
 
-5.  This will take you to Ampache's Web Installation Interface (step 3)
-
-Enter a password, you will be using this to initially sign into ampache.  You
-can change the admin username and password after the install is complete through
+5.  
+This will take you to Ampache's Web Installation Interface (step 3).  Enter a 
+password, you will be using this to initially sign into ampache.  You can 
+change the admin username and password after the install is complete through
 the preferences tab
 
 Click next this will take you to Ampache's log in screen
 
 Enter Admin and the password you entered in the above step.
 
-6.  You are now ready to start adding music and building your music catalogs.
+6.  
+You are now ready to start adding music and building your music catalogs.
 
 CREATING A CATALOG
 
 Catalogs are the core of Ampache. They are a logical container for all of your
-music files and other records. There are two main types of catalogs currently in
-Ampache, Remote and Local. Remote catalogs are only for use with XML-RPC and
-reference other Ampache servers. Local catalogs reference a base directory on
-the local file system of the server. To create your first Catalog login to
-Ampache as an administrator and go to the Admin Menu and click on Add a Catalog.
+music files and other records. There are two main types of catalogs currently
+in Ampache, Remote and Local. Remote catalogs are only for use with XML-RPC 
+and reference other Ampache servers. Local catalogs reference a base directory
+on the local file system of the server. To create your first Catalog login to
+Ampache as an administrator and go to the Admin Menu and click on Add a 
+Catalog.
 
 Local Catalog Settings
 
-    * Path -- This is a directory located on the computer Ampache is running on
-	this can be a NFS mount, Windows Network drive etc. This is the full
+    * Path -- This is a directory located on the computer Ampache is running 
+    on this can be a NFS mount, Windows Network drive etc. This is the full
 	path, not a relative one.
     * File Pattern -- This defines the pattern that Ampache will use when
 	attempting to read filenames for tag information, it also defines how
@@ -139,27 +147,28 @@ Local Catalog Settings
 	on read and sort/rename
     * Album Art -- This option defines which methods to use when collecting
 	Album Art, some methods may require additional configuration
-    * Build Playlists from M3u's -- This options tells Ampache to look for .m3us
-	in your catalog and attempts to parse and create playlists based on them.
+    * Build Playlists from M3u's -- This options tells Ampache to look for 
+    .m3u's in your catalog and attempts to parse and create playlists based on
+    them.
 
 CONFIGURING AMPACHE
 
 Ampache has two main locations for its config. The Config file located at
 /etc/ampache/ampache.cfg.php or /usr/share/ampache/www/config/ampache.cfg.php
-and the Database preferences which are per User. This document will cover those
-in the Database as all options in the config file are well documented. You can
-find a current copy of the config file at
-svn.ampache.org/trunk/config/ampache.cfg.php.dist.
+and the Database preferences which are per User. This document will cover 
+those in the Database as all options in the config file are well documented.
+You can find a current copy of the config file at
+https://svn.ampache.org/trunk/config/ampache.cfg.php.dist.
 
 Interface.
 
-This section contains all of the preferences directly relating to the interface
-and how Ampache looks.
+This section contains all of the preferences directly relating to the 
+interface and how Ampache looks.
 
 Popular Threshold: This setting determines how many Top artists, Top Albums,
 Statistics, Recently Played Tracks are listed throughout the interface. Larger
-numbers can increase load times as more data has to be displayed on any one page.
-The Default is 10.
+numbers can increase load times as more data has to be displayed on any one 
+page.  The Default is 10.
 
 Language : Ampache is translated into many different languages using GETTEXT,
 this is a list of all current translations. At any one moment some of the
@@ -168,23 +177,23 @@ fix a missing string or contribute a new language please read
 svn.ampache.org/trunk/locale/base/TRANSLATIONS
 
 Theme : This sets the them for the current user. Ampache reads the /themes
-directory for a listing of all current installed themes. For more information on
-creating a theme see the Forums
+directory for a listing of all current installed themes. For more information
+on creating a theme see the Forums
 
 Album Ellipse Threshold, Artist Ellipse Threshold, Title Ellipse Threshold:
-These define how many letters, numbers, etc are displayed before a ellipse (...)
-is appended to the name and it is truncated. The truncation prevents interface
-distortion due to very long names.
+These define how many letters, numbers, etc are displayed before a 
+ellipse (...) is appended to the name and it is truncated. The truncation 
+prevents interface distortion due to very long names.
 
 Min Album Size: This defines the smallest album that will be viewable when
-Browsing by Album. This can effectively hide a large portion of your music so be
-careful. The default value is 0.
+Browsing by Album. This can effectively hide a large portion of your music so
+be careful. The default value is 0.
 
 Statistics Day Threshold: This defines how many days are used to build the
-statistical displays in Ampache. Because the counts can get meaningless over the
-long periods of time, as it becomes impossible for new albums to ever make it
-near the top of the list you can limit the number of previous days used. The
-default value is 7, or one week.
+statistical displays in Ampache. Because the counts can get meaningless over
+the long periods of time, as it becomes impossible for new albums to ever make
+it near the top of the list you can limit the number of previous days used.
+The default value is 7, or one week.
 
 Streaming
 
@@ -193,10 +202,10 @@ This section defines how Ampache streams your Music.
 Transcode Bitrate : This defines the bitrate you would like Ampache to attempt
 to transcode at. The default is 32kbps
 
-Type of Playback : This is one of the most important options. It appears on the
-menu as well as a drop down. This defines what Ampache is to do with the music
-that is to be streamed. The default is Stream, other options include Localplay,
-Democratic, Downsampling, XSPF Flash
+Type of Playback : This is one of the most important options. It appears on 
+the menu as well as a drop down. This defines what Ampache is to do with the 
+music that is to be streamed. The default is Stream, other options include 
+Localplay, Democratic, Downsampling, XSPF Flash
 
 Transcoding: This defines the transcoding behavior of Ampache.
 
@@ -220,21 +229,22 @@ clicking on their download link. If you have allow zip downloads in the config
 file this Option will also enable the Full Album, Full Artist, Selected,
 Playlist downloads. Default is disabled.
 
-Allow Direct Links : This puts a raw 'stream' URL link on every song line. This
-can be used to effectivly enqueue songs by dragging the raw URL into your audio
-player. This is also disabled by default.
+Allow Direct Links : This puts a raw 'stream' URL link on every song line. 
+This can be used to effectivly enqueue songs by dragging the raw URL into your
+audio player. This is also disabled by default.
 
-Localplay Access Level : This defines what type of access you have to Localplay.
-Global tells Ampache to use the settings defined in Admin --> Config for this
-user and to ignore any locally set settings. Local tells Ampache to first check
-the local settings. If they do not exist then fall back on the global settings.
-Disabled prevents all access to Localplay, this is the default value.
+Localplay Access Level : This defines what type of access you have to 
+Localplay.  Global tells Ampache to use the settings defined in 
+Admin --> Config for this user and to ignore any locally set settings. Local 
+tells Ampache to first check the local settings. If they do not exist then 
+fall back on the global settings.  Disabled prevents all access to Localplay, 
+this is the default value.
 
 System
 
-This section is only visible to Administrators and pertains to non-user options
-that often affect Ampache's operation as a whole, but are not deemed to be a
-security risk and thus are allowed to be in the Interface.
+This section is only visible to Administrators and pertains to non-user 
+options that often affect Ampache's operation as a whole, but are not deemed 
+to be a security risk and thus are allowed to be in the Interface.
 
 Website Title : This defines the Website Title for your Ampache site, the
 default is "Ampache :: Pour l'Amour de la Musique"
@@ -244,18 +254,20 @@ Lock Songs : When enabled this prevents any two users from listening to the
 exact same song at the exact same time. This is a quasi legalize feature meant
 to simulate a shared pile of CD's in an office. Default is off
 
-Forces Http play regardless of port : This tells Ampache to always send HTTP in
-its playlists regardless of what the client is providing. This is enabled by
-default because a vast majority of players can not play HTTPS streams.
+Forces Http play regardless of port : This tells Ampache to always send HTTP 
+in its playlists regardless of what the client is providing. This is enabled 
+by default because a vast majority of players can not play HTTPS streams.
 
-Non-Standard Http Port : If defined this tells ampache to overwrite the current
-port and always use this port when building the stream URLs. Default 80
+Non-Standard Http Port : If defined this tells ampache to overwrite the 
+current port and always use this port when building the stream URLs. 
+Default 80
 
-Catalog Echo Interval : This specifies the number of elements between refreshes
-during Catalog builds. The default is 100, so ever 100 songs it will update the
-count. It is recommended that you leave this rather high as a low interval with
-a large catalog can produce large pages, and extra time is spending rendering
-the count rather then actually working on cataloging your music.
+Catalog Echo Interval : This specifies the number of elements between 
+refreshes during Catalog builds. The default is 100, so ever 100 songs it will
+update the count. It is recommended that you leave this rather high as a low 
+interval with a large catalog can produce large pages, and extra time is 
+spending rendering the count rather then actually working on cataloging your 
+music.
 
 Allow Downsampling, Allow Streaming, Allow Democratic Play,
 Allow Localplay Play : These options control which play types are currently
@@ -264,17 +276,22 @@ require additional configuration on the part of the administrator.
 
 Modules
 
-This is a list of the current Localplay Modules and Plugins that you can enable
-and disable. These Plugins and Modules may add additional preferences to Ampache
-which are not defined here. Catalog Updates will not be performed if there are
-any non-official Plugins currently installed.
+This is a list of the current Localplay Modules and Plugins that you can 
+enable and disable. These Plugins and Modules may add additional preferences 
+to Ampache which are not defined here. Catalog Updates will not be performed 
+if there are any non-official Plugins currently installed.
 
 For installation question and/or questions on how to enable additonal features
 in ampache please visit the forums, wiki and IRC
 
+http://ampache.org/wiki/
 http://ampache.org/forums/
-http://trac.ampache.org/wiki/
+http://ampache.org/bugs/
+https://svn.ampache.org
 IRC Freenode #ampache
 
+For .deb daily builds of ampache please have a look at:
 
- -- Charlie Smotherman <cjsmo@cableone.net>  Sat,  26 Jan 2008 09:56:08 -0500
+https://edge.launchpad.net/~cjsmo/+archive/ppa
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue,  27 Apr 2010 09:30:14 -0500

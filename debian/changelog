@@ -1,3 +1,60 @@
+ampache (3.5.4-2) unstable; urgency=low
+
+   * Added support for lighttpd servers.  What this means is that the default
+   behavior is for apache2 to be installed on new installs.  However if
+   lighttpd is installed and configured correctly the maintainer scripts 
+   should pickup on this and install ampache into the proper locations, 
+   create the need sym links, and enable the needed lighttpd modules.
+   Closes: #549009
+   * Made package depend on nusoap. Closes: #579829
+   * debian/control:
+     - Recommends, package should recommend the mysql-server meta-package so 
+     the default mysql-server is installed.  This will eleminate the need for 
+     additional uploads to increase mysql-server version number.
+     - added additional depends for lighttpd support.
+     - moved apache2 | lighttpd to the Recommends field.
+     - added dependency on libnusoap-php
+   * debian/ampache.postrm: 
+     - added purge statement to webserver restart so webserver reloads on 
+     remove and purge.
+     - added conditional removal statements to ampache.postrm so all user
+     modified config files are removed on purge.
+     - added lighttpd support
+   * debian/ampache.postinst:
+     - correted incorrect ampache.conf symlink creation. (LP: #533989)
+     - added lighttpd support
+   * debian/ampache.preinst:
+     - added ampache.preinst to correct sym link naming mismatch on upgrades.
+     (LP: #558697)
+     - added ampache.cfg.php backup to ampache.preinst, this way we make a 
+     backup copy of ampache.cfg.php before upgrade begins. 
+   * debian/postinst:
+     - removed ampache.cfg.php backup and migration, this was only need until 
+     Ubuntu Hardy reached EOL.
+     - added lighttpd support.
+   * debian/ampache.templates:
+     - added webserver types question for lighttpd support.
+     - combined webserver configuration and webserver restart into one
+     question (webserver_restart).
+     - reworded webserver_restart to be more generic in scope.
+   * debian/ampache.config:
+     - remove webserver-configure bits, this question is no longer needed.
+   * debian/amp-lighty.conf:
+     - added to create the lighttpd alias.
+   * debian/ampache.install:
+     - added amp-lighty.conf to be installed into /etc/ampache.
+   * debian/conf:
+     - added the directory debian/conf and moved debian/ampache.conf and 
+     debian/lighttpd_ampache.conf into it.
+   * debian/README.Debian:
+     - updated outdated links.  Made document 80 characters wide.
+   * debian/rules:
+     - added -Xnusoap to remove upstream copy of nusoap.
+   * debian/links:
+     - added nusoap sym links.
+        
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 01 May 2010 14:12:45 -0500
+
 ampache (3.5.4-1) unstable; urgency=low
 
   * New upstream release, summary of changes:
@@ -20,8 +77,7 @@ ampache (3.5.3-1) unstable; urgency=high
   *  New upstream release, summary of changes:
       - Added local authtype which uses PHP's PAM module
       - Correct potential security issues due to misuse of REQUEST for write
-	  operations rather then POST 
-         (Thx Raphael Geissert <geissert@debian.org>)
+	  operations rather then POST. Thx Raphael Geissert geissert@debian.org.
   *  Added php5-auth-pam to debian/control Depends section.
   *  Setting urgency to high as this fixes potential security issues.
 

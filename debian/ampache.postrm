@@ -3,34 +3,64 @@
 
 set -e
 
+ELCA=/etc/lighttpd/conf-available
+ELCE=/etc/lighttpd/conf-enabled
+EAMP=/etc/ampache
+UAMP=/usr/share/ampache
+
+#source debconf library.
 . /usr/share/debconf/confmodule
 db_version 2.0
 
-if [ "$1" = "remove" ]; then
-   
+lighttpd_remove() {
+	if [ -f $ELCA/50-ampache.conf ] ; then
+		rm -f $ELCA/50-ampache.conf
+		if [ ! -x /usr/sbin/lighty-disable-mod ] ; then
+			echo "Lighttpd not installed, skipping"
+		else
+			/usr/sbin/lighty-disable-mod ampache
+		fi
+		if [ -h $ELCE/50-ampache.conf ] ; then
+		    echo 'Manually deleting lighttpd/ampache configuration link'
+		    rm $ELCE/50-ampache.conf
+		fi
+	fi
+}
+
+apache_remove() {
+	if [ -d /etc/$webserver/conf.d ] && [ -h /etc/$webserver/conf.d/ampache.conf ]; then
+		rm -f /etc/$webserver/conf.d/ampache.conf
+	fi
+}
+
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
    #Ask the question and restart web server.
-   db_get ampache/restart-webserver || true
+   db_get ampache/restart_webserver || true
    
-   if [ "$RET" = "true" ]; then
-      webserver="apache2"
-      for webserver in $webserver; do
-          webserver=${webserver%,}
-	  if [ -x /usr/sbin/invoke-rc.d ]; then
-	     invoke-rc.d $webserver reload 3>/dev/null || true
-	  else
-             /etc/init.d/$webserver reload 3>/dev/null || true
-	  fi
-      done
-   fi
+   webserver="$RET"
+   for webserver in $webservers; do
+       webserver=${webserver%,}
+       if [ "$webserver" = "lighttpd" ] ; then
+            lighttpd_remove
+       else
+	     apache_remove $webserver
+	fi
+       if [ -x /usr/sbin/invoke-rc.d ]; then
+    	     invoke-rc.d $webserver restart 3>/dev/null || true
+       else
+             /etc/init.d/$webserver restart 3>/dev/null || true
+       fi
+   done
 fi
 
-if [ "$1" = "purge" ]; then 
-   #This is needed to remove user added content.
-   if [ -d /etc/ampache ]; then
-      rm -rf /etc/ampache
-      #this is needed to remove dangling symlink
-      rm -f /etc/apache2/conf.d/ampache
-   fi
+if [ "$1" = "purge" ]; then
+    #This is needed to remove user added content.
+    if [ -d $EAMP ]; then
+        rm -rf $EAMP
+    fi
+    if [ -d $UAMP ]; then
+        rm -rf $UAMP
+    fi
 fi
 
 #DEBHELPER#

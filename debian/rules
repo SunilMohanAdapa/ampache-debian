@@ -3,9 +3,13 @@
 %:
 	dh $@
 
-override_dh_install:
+binary:
+	dh --before dh_install $@
 	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
 	-Xreadme.windows.txt -Xprototype -XSnoopy -XFreeMono-Medium \
 	-Xgather-messages.sh
 	find . -type f -name 'CHANGELOG' -exec gzip -9 {} \;
 	find . -type f -name 'CHANGELOG.gz' -exec chmod 644 {} \;
+	dh --remaining $@
+
+.PHONY: binary

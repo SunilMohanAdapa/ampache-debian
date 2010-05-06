@@ -20,7 +20,7 @@
 */
 
 // SVN Fluf
-//$svn_version = 'Subversion ' . trim('$Rev: 2252 $','$ '); 
+//$svn_version = 'Subversion ' . trim('$Rev: 2276 $','$ '); 
 
 // Use output buffering, this gains us a few things and 
 // fixes some CSS issues
@@ -91,7 +91,7 @@ if (!function_exists('hash') OR !function_exists('inet_pton') OR (strtoupper(sub
 } 
 
 /** This is the version.... fluf nothing more... **/
-$results['version']		= '3.5.3'. $svn_version; 
+$results['version']		= '3.5.4'. $svn_version; 
 $results['int_config_version']	= '10'; 
 
 $results['raw_web_path']	= $results['web_path'];
@@ -199,13 +199,19 @@ if (in_array("http",$results['auth_methods']) AND empty($_COOKIE[$session_name])
 // If we want a session
 if (NO_SESSION != '1' AND Config::get('use_auth')) { 
 	/* Verify Their session */
-	if (!vauth::check_session()) { vauth::logout(session_id()); exit; }
+	if (!vauth::session_exists('interface',$_COOKIE[Config::get('session_name')])) { vauth::logout($_COOKIE[Config::get('session_name')]); exit; }  
+
+	// Actually start the session
+	vauth::check_session();
 
 	/* Create the new user */
 	$GLOBALS['user'] = User::get_from_username($_SESSION['userdata']['username']);
 	
 	/* If they user ID doesn't exist deny them */
 	if (!$GLOBALS['user']->id AND !Config::get('demo_mode')) { vauth::logout(session_id()); exit; } 
+
+	/* Actually extend the session */
+	vauth::session_extend(session_id());
 
 	/* Load preferences and theme */
 	$GLOBALS['user']->update_last_seen();
@@ -239,6 +245,7 @@ elseif (!Config::get('use_auth')) {
 	                $GLOBALS['user']->access = $auth['access']; 
 		} 
 		if (!$GLOBALS['user']->id AND !Config::get('demo_mode')) { vauth::logout(session_id()); exit; }
+		vauth::session_extend(session_id()); 
 		$GLOBALS['user']->update_last_seen();
 	} 
 }

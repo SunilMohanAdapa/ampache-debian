@@ -5,8 +5,8 @@ Maintainer: Charlie Smotherman <cjsmo@cableone.net>
 Vcs-Svn: https://svn.ampache.org/trunk
 Vcs-Browser: https://svn.ampache.org
 Homepage: http://www.ampache.org
-Build-Depends: debhelper (>= 7.0.50)
-Standards-Version: 3.8.3
+Build-Depends: debhelper  (>=7.0.15)
+Standards-Version: 3.8.4
 
 Package: ampache
 Architecture: all

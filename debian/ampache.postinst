@@ -6,17 +6,18 @@ set -e
 ELCA=/etc/lighttpd/conf-available
 ELCAMP=/etc/ampache/lighttpd_ampache.conf
 AMP=/etc/ampache/ampache.conf
+EM=/usr/sbin/lighty-enable-mod
 
 . /usr/share/debconf/confmodule
 db_version 2.0
 
 lighttpd_install() {
     if [ ! -f $ELCA/50-ampache.conf ] ; then
-        if [ ! -x /usr/sbin/lighty-enable-mod ] ; then
+        if [ ! -x $EM ] ; then
             echo "Lighttpd not installed, skipping"
         else
             ln -s $ELCAMP $ELCA/50-ampache.conf
-            /usr/sbin/lighty-enable-mod ampache
+            $EM ampache
             if [ -f $AMP ]; then
                 rm -f $AMP
             fi
@@ -56,6 +57,12 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
             fi
         done
     fi
+fi
+
+if [ "$webserver" = "lighttpd" ]; then
+   rm -f /etc/ampache/ampache.conf
+else
+   rm -f /etc/ampache/lighttpd_ampache.conf
 fi
 
 #DEBHELPER#

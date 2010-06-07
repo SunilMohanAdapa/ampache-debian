@@ -21,10 +21,10 @@ Template: ampache/restart_webserver
 Type: boolean
 Default: true
 _Description: Configure and restart the web server?
- The web server needs to be reconfigured and restarted to enable Ampache. 
- Please choose whether you want to restart it automatically now or 
- do it yourself later.
+ The web server needs to be reconfigured and restarted to enable Ampache.
+ Please choose whether you want to restart it automatically now or do it
+ yourself later.
  .
- To manually restart the web server, use one of the following commands.  
+ To manually restart the web server, use one of the following commands:
  "/etc/init.d/apache2 restart" or "/etc/init.d/lighttpd restart"
  

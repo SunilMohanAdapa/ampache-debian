@@ -1,3 +1,26 @@
+ampache (3.5.4-3) unstable; urgency=low
+
+  * Added new sv.po. Thx Martin Bagge. Closes: #582701
+  * Added new es.po. Thx Francisco Javier Cuadrado. Closes: #581870
+  * Added new fr.po. Thx Filippo Rusconi.  Closes: #581654
+  * Added new de.po. Thx Helge Kreutzmann. Closes: #580737
+  * Added new pt.po. Thx Américo Monteiro. Closes: #580440
+  * Removed superfluous spaces in ampache.templates.  Closes: #580738
+  * Added ampache.cron.daily this will run add and clean on all available
+    catalogs once a day (usually early mourning).
+  * debian/postinst made use of variable for /usr/sbin/lighty-enable-mod to
+     satisfy lintian.
+  * debian/postinst added remove statement to remove lighty_ampache.conf if
+     apache2 is installed and vic versa.
+  * debian/postrm made use of variable for /usr/sbin/lighty-disable-mod to
+     satisfy lintian.
+  * debian/postrm added rm statement to remove ampache.cron.daily on purge.
+  * Removed find rule from debian/rules, lintian was complaining of
+     unrepresentable changes to the source.
+  * debian/links added symlink creation for ampache.cron.daily to /etc/ampache.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 06 June 2010 22:22:31 -0500
+
 ampache (3.5.4-2) unstable; urgency=low
 
    * Added support for lighttpd servers.  What this means is that the default

@@ -1,5 +1,5 @@
 # ampache po-debconf translation to Spanish.
-# Copyright (C) 2009 Software in the Public Interest
+# Copyright (C) 2009, 2010 Software in the Public Interest
 # This file is distributed under the same license as the ampache package.
 #
 # Changes:
@@ -7,7 +7,7 @@
 #       Gary Ariel Sandi Vigabriel <gary.gsv@gmail.com>, 2009
 #
 #   - Updates
-#       Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2009
+#       Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2009, 2010
 #
 # Traductores, si no conocen el formato PO, merece la pena leer la
 # documentación de gettext, especialmente las secciones dedicadas a este
@@ -20,7 +20,7 @@
 #
 #   - El proyecto de traducción de Debian al español
 #     http://www.debian.org/intl/spanish/
-#     especialmente las notas de traducción en
+#     especialmente las notas y normas de traducción en
 #     http://www.debian.org/intl/spanish/notas
 #
 #   - La guía de traducción de po's de debconf:
@@ -29,10 +29,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ampache 3.5.1-2\n"
+"Project-Id-Version: ampache 3.5.4-2\n"
 "Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
-"POT-Creation-Date: 2010-05-01 16:46-0500\n"
-"PO-Revision-Date: 2009-10-28 09:30+0100\n"
+"POT-Creation-Date: 2010-05-30 15:04-0500\n"
+"PO-Revision-Date: 2010-05-04 09:22+0100\n"
 "Last-Translator: Francisco Javier Cuadrado <fcocuadrado@gmail.com>\n"
 "Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -43,19 +43,19 @@ msgstr ""
 #. Choices
 #: ../ampache.templates:2001
 msgid "apache2"
-msgstr ""
+msgstr "apache2"
 
 #. Type: multiselect
 #. Choices
 #: ../ampache.templates:2001
 msgid "lighttpd"
-msgstr ""
+msgstr "lighttpd"
 
 #. Type: multiselect
 #. Description
 #: ../ampache.templates:2002
 msgid "Web server to configure automatically:"
-msgstr ""
+msgstr "Servidor web a configurar automáticamente:"
 
 #. Type: multiselect
 #. Description
@@ -63,6 +63,7 @@ msgstr ""
 msgid ""
 "Please select the web server to be configured automatically for Ampache."
 msgstr ""
+"Escoja el servidor web que se configurará automáticamente para Ampache."
 
 #. Type: multiselect
 #. Description
@@ -71,39 +72,36 @@ msgid ""
 "Apache2 and Lighttpd are the only supported web servers for automatic "
 "configuration."
 msgstr ""
+"Apache2 y Lighttpd son los únicos servidores web que se pueden configurar "
+"automáticamente."
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
-#, fuzzy
-#| msgid "Restart Apache 2 web server?"
 msgid "Configure and restart the web server?"
-msgstr "¿Desea reiniciar el servidor web Apache 2?"
+msgstr "¿Desea configurar y reiniciar el servidor web?"
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
-#, fuzzy
-#| msgid ""
-#| "The Apache 2 web server needs to be restarted to enable Ampache. Please "
-#| "choose whether you want to restart it automatically now or do it yourself "
-#| "later."
 msgid ""
-"The web server needs to be reconfigured and restarted to enable Ampache.  "
-"Please choose whether you want to restart it automatically now or  do it "
+"The web server needs to be reconfigured and restarted to enable Ampache. "
+"Please choose whether you want to restart it automatically now or do it "
 "yourself later."
 msgstr ""
-"El servidor web Apache 2 se debe reiniciar para activar Ampache. Por favor, "
-"escoja si desea reiniciarlo automáticamente ahora o si lo hará usted mismo "
-"más tarde."
+"El servidor web se debe reconfigurar y reiniciar para activar Ampache. Por "
+"favor, escoja si desea reiniciarlo automáticamente ahora o si lo hará usted "
+"mismo más tarde."
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
 msgid ""
-"To manually restart the web server, use one of the following commands.   \"/"
+"To manually restart the web server, use one of the following commands: \"/"
 "etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
 msgstr ""
+"Para reiniciar manualmente el servidor web, utilice una de las siguientes "
+"órdenes: «/etc/init.d/apache2 restart» o «/etc/init.d/lighttpd restart»"
 
 #~ msgid "Configure Apache 2 web server for use with Ampache?"
 #~ msgstr ""

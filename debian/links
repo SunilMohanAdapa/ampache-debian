@@ -6,4 +6,4 @@
 /usr/share/php/nusoap/nusoap.php /usr/share/ampache/www/modules/nusoap/nusoap.php
 /usr/share/php/nusoap/nusoapmime.php /usr/share/ampache/www/modules/nusoap/nusoapmime.php
 /usr/share/php/nusoap/class.wsdlcache.php /usr/share/ampache/www/modules/nusoap/class.wsdlcache.php
-
+/etc/cron.daily/ampache /etc/ampache/ampache.cron.daily

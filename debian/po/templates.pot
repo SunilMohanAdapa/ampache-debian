@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
-"POT-Creation-Date: 2010-05-01 16:46-0500\n"
+"POT-Creation-Date: 2010-05-30 15:04-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,8 +59,8 @@ msgstr ""
 #. Description
 #: ../ampache.templates:3001
 msgid ""
-"The web server needs to be reconfigured and restarted to enable Ampache.  "
-"Please choose whether you want to restart it automatically now or  do it "
+"The web server needs to be reconfigured and restarted to enable Ampache. "
+"Please choose whether you want to restart it automatically now or do it "
 "yourself later."
 msgstr ""
 
@@ -68,6 +68,6 @@ msgstr ""
 #. Description
 #: ../ampache.templates:3001
 msgid ""
-"To manually restart the web server, use one of the following commands.   \"/"
+"To manually restart the web server, use one of the following commands: \"/"
 "etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
 msgstr ""

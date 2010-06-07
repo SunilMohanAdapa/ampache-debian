@@ -7,6 +7,7 @@ ELCA=/etc/lighttpd/conf-available
 ELCE=/etc/lighttpd/conf-enabled
 EAMP=/etc/ampache
 UAMP=/usr/share/ampache
+LDM=/usr/sbin/lighty-disable-mod
 
 #source debconf library.
 . /usr/share/debconf/confmodule
@@ -15,10 +16,10 @@ db_version 2.0
 lighttpd_remove() {
 	if [ -f $ELCA/50-ampache.conf ] ; then
 		rm -f $ELCA/50-ampache.conf
-		if [ ! -x /usr/sbin/lighty-disable-mod ] ; then
+		if [ ! -x $LDM ] ; then
 			echo "Lighttpd not installed, skipping"
 		else
-			/usr/sbin/lighty-disable-mod ampache
+			$LDM ampache
 		fi
 		if [ -h $ELCE/50-ampache.conf ] ; then
 		    echo 'Manually deleting lighttpd/ampache configuration link'
@@ -62,6 +63,13 @@ if [ "$1" = "purge" ]; then
         rm -rf $UAMP
     fi
 fi
+
+if [ "$1" = "purge" ]; then
+   if [ -f /etc/cron.daily/ampache ]; then
+	rm -f /etc/cron.daily/ampache
+   fi
+fi
+
 
 #DEBHELPER#
 

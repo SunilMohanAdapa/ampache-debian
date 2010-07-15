@@ -64,12 +64,11 @@ if [ "$1" = "purge" ]; then
     fi
 fi
 
-if [ "$1" = "purge" ]; then
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
    if [ -f /etc/cron.daily/ampache ]; then
 	rm -f /etc/cron.daily/ampache
    fi
 fi
-
 
 #DEBHELPER#
 

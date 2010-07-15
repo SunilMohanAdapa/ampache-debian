@@ -6,24 +6,25 @@ IMPORTANT:
 
 Ampache **REQUIRES** MySQL server to operate.  MySQL server is not installed 
 with Ampache due to the fact that if users are using an older version of 
-MySQL server upgrading to mysql-server-5.0 may render their databases corrupt
+MySQL server upgrading to mysql-server may render their databases corrupt
 and possible useless.  So please upgrade your mysql server with **CAUTION**.
-For those who do not have mysql-server-5.0 installed it is very easy to install.
+For those who do not have mysql-server installed it is very easy to install.
 In the command line type:
 
-	Debian:  apt-get install mysql-server-5.0 (as root)
+	Debian:  apt-get install mysql-server (as root)
 
-SECURITY WARNING:
+When installing mysql-server you will be asked to provide a new password for
+the root user.  Please provide one, and remember this, you will need it later
+to set up phpadmin (if so desired) and during ampache's web installation
+process.
 
-After you have Ampache setup and running it would be a very good idea if you
-changed the root username and password for phpmyadmin.  It is widely known the
-the default sign in for phpmyadmin is
+You can use the mysql root account to set up Ampache, however you can setup
+an additional mysql user account with global privileges which can be used to
+setup ampache if so desired.
 
-username = root
-password = <blank>
-
-So please change this password after Ampache is installed, as it is a potential
-security hole.
+During phpmyadmins installation you will be asked to provide a password for
+the mysql administrative account, this is the password you created during 
+the installation of mysql.  
 
 WARNING
 
@@ -43,28 +44,31 @@ SUMMARY
 	6.  Sign in and start building music catalogs
 
 1.
-To install mysql-server-5.0 follow instruction above.  If you already have
+To install mysql-server follow instruction above.  If you already have
 mysql-server installed go to step 2.
 
 2.
 To setup Ampache you must have a user account on the mysql-server with root 
-privileges.  You may do this by either the command line or phpmyadmin.  I 
-prefer phpmyadmin and that is what will be explained here.  To install 
-phpmyadmin type in the command line:
+privileges (you can use the root account).  If you prefer to setup an
+additional mysql account, you may do this by either the command line or
+with phpmyadmin.  I prefer phpmyadmin and that is what will be explained here.
+To install phpmyadmin type in the command line:
 
 	Debian: apt-get install phpmyadmin (as root)
 
-To setup your mysql root account, sign into phpmyadmin by pointing your 
+During phpmyadmins installation you will be asked to provide a password for
+the mysql administrative account, this is the password you created during 
+the installation of mysql.  
+
+To setup your mysql user account, sign into phpmyadmin by pointing your 
 browser to http://localhost/phpmyadmin or http://your.ip.address/phpmyadmin.
 
 username = root
-password =
+password = <password used during mysql-server install>
 
-***Leave the password blank this is the default sign in for phpmyadmin.****
-
-This takes you to the main page scroll down to where it says "Privileges" and
-click on it.  Now scroll down and click on "Add a new User" and click on it.
-Now fill in
+This takes you to phpmyadmins main page, click on the "Privileges" tab.
+Scroll down to where it says "Add new User" and click on it.  This will take
+you to the "Add New User" page, please fill in the required information. 
 
 User name = what ever you want
 Host      = any host
@@ -83,8 +87,8 @@ Web Installation Interface (step 1)
 Desired Database Name = ampache (default)
 MySQL Hostname  = localhost (default)
 MySQL Administrative Username = root or the user name you setup with phpmyadmin
-MySQL Administrative Password = leave blank if you use root or use the password
-				you created with phpmyadmin
+MySQL Administrative Password = root password or the user password you created
+                                with phpmyadmin
 Create Database User For New Database = set check mark
 Ampache Database Username = ampache (default)
 Ampache Database User Password = set this to a password you like
@@ -97,16 +101,18 @@ This will take you to Ampache's Web Installation Interface (step 2)
 Web Path	= /ampache
 Desired Database Name = ampache (default)
 MySQL Hostname  = localhost (default)
-MySQL Username  = this is the username you setup with phpmyadmin root will not
-                 work
-MySQL Password  = this is the password you setup with phpmyadmin blank will not
-                 work
+MySQL Username  = this is the username you setup with phpmyadmin or root
+MySQL Password  = this is the password you setup with phpmyadmin or use the 
+                  root password
 
 Click on Write Config.
 
 Ampache will prompt you to download a file called "ampache.cfg.php".
 Download it to your favorite location.  Now take "ampache.cfg.php and copy it
-to /etc/ampache.
+to /etc/ampache.  You will need to change the permissions of /etc/ampache,
+During install the permissions for /etc/ampache are set to 644.  Once you copy
+ampache.cfg.php to /etc/ampache don't forget to change the permissions back to
+644 for obvious security reasons.
 
 Now click on check for config, and everything should turn green.  Click on 
 next
@@ -137,28 +143,28 @@ Catalog.
 Local Catalog Settings
 
     * Path -- This is a directory located on the computer Ampache is running 
-    on this can be a NFS mount, Windows Network drive etc. This is the full
-	path, not a relative one.
+      on this can be a NFS mount, Windows Network drive etc. This is the full
+	  path, not a relative one.
     * File Pattern -- This defines the pattern that Ampache will use when
-	attempting to read filenames for tag information, it also defines how
-	ampache will sort/rename files in this collection
+	  attempting to read filenames for tag information, it also defines how
+	  ampache will sort/rename files in this collection
     * Path Pattern -- This defines the directory structure starting from the
-	Path of the catalog up to the filenames, again used for tag information
-	on read and sort/rename
+	  Path of the catalog up to the filenames, again used for tag information
+	  on read and sort/rename
     * Album Art -- This option defines which methods to use when collecting
-	Album Art, some methods may require additional configuration
-    * Build Playlists from M3u's -- This options tells Ampache to look for 
-    .m3u's in your catalog and attempts to parse and create playlists based on
-    them.
+	  Album Art, some methods may require additional configuration
+    * Build Play lists from M3u's -- This options tells Ampache to look for 
+      .m3u's in your catalog and attempts to parse and create play lists based
+	  on them.
 
 CONFIGURING AMPACHE
 
-Ampache has two main locations for its config. The Config file located at
-/etc/ampache/ampache.cfg.php or /usr/share/ampache/www/config/ampache.cfg.php
-and the Database preferences which are per User. This document will cover 
-those in the Database as all options in the config file are well documented.
-You can find a current copy of the config file at
-https://svn.ampache.org/trunk/config/ampache.cfg.php.dist.
+Ampache's main configuration file is located at /etc/ampache/ampache.cfg.php
+and is symbolically linked to /usr/share/ampache/www/config/ampache.cfg.php.
+Please have a look at ampache.cfg.php as there a numerous config options that
+are available which are not available in the web interface.
+
+WEB INTERFACE CONFIG OPTIONS
 
 Interface.
 
@@ -230,8 +236,8 @@ file this Option will also enable the Full Album, Full Artist, Selected,
 Playlist downloads. Default is disabled.
 
 Allow Direct Links : This puts a raw 'stream' URL link on every song line. 
-This can be used to effectivly enqueue songs by dragging the raw URL into your
-audio player. This is also disabled by default.
+This can be used to effectively enqueue songs by dragging the raw URL into
+your audio player. This is also disabled by default.
 
 Localplay Access Level : This defines what type of access you have to 
 Localplay.  Global tells Ampache to use the settings defined in 
@@ -271,7 +277,7 @@ music.
 
 Allow Downsampling, Allow Streaming, Allow Democratic Play,
 Allow Localplay Play : These options control which play types are currently
-allowed. Streaming is the only one enalbed by default as all other options
+allowed. Streaming is the only one enabled by default as all other options
 require additional configuration on the part of the administrator.
 
 Modules
@@ -281,8 +287,8 @@ enable and disable. These Plugins and Modules may add additional preferences
 to Ampache which are not defined here. Catalog Updates will not be performed 
 if there are any non-official Plugins currently installed.
 
-For installation question and/or questions on how to enable additonal features
-in ampache please visit the forums, wiki and IRC
+For installation question and/or questions on how to enable additional
+features in ampache please visit the forums, wiki and IRC
 
 http://ampache.org/wiki/
 http://ampache.org/forums/

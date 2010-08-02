@@ -6,7 +6,7 @@ Vcs-Svn: https://svn.ampache.org/trunk
 Vcs-Browser: https://svn.ampache.org
 Homepage: http://www.ampache.org
 Build-Depends: debhelper (>= 7.0.50), po-debconf
-Standards-Version: 3.9.0
+Standards-Version: 3.9.1
 
 Package: ampache
 Architecture: all

@@ -1,5 +1,20 @@
 Ampache for Debian
 ------------------
+XSPF JUKEBOX FLASH PLAYER NOTE:
+
+Currently the XSPF Jukebox Flash player has been removed until an appropriate
+solution can be found to compile xspf_jukebox.fla at build time.  
+
+To get the Flash player working download 
+
+https://svn.ampache.org/trunk/modules/flash/xspf_jukebox.swf
+
+and place it into 
+
+/usr/share/ampache/www/modules/flash
+
+This will allow the Flash player to work again.  Sorry for the inconvenience.
+
 INSTALLATION
 
 IMPORTANT:

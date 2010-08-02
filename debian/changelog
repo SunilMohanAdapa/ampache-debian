@@ -1,3 +1,19 @@
+ampache (3.5.4-5) unstable; urgency=medium
+
+  * Setting urgency to medium as this fixes an RC bug.
+  * debian/rules
+    - After discussing with upstream it was decided to remove 
+      xspf_jukebox.fla and xspf_jukebox.swf. Added -X option to dh_install to
+      remove xspf_jukebox.fla and xspf_jukebox.swf. Closes: #591202
+  * debian/README.Debian
+    - Added a note regarding the current state of the xspf_jukebox 
+      flash player.
+  * Added updated ja.po, thx Hideki Yamane Closes: #591074
+  * debian/control
+    - Bumped Standards Version to 3.9.1, no changes needed.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 01 Aug 2010 23:11:36 -0500
+
 ampache (3.5.4-4) unstable; urgency=low
 
   * Updated README.Debian to account for changes in mysql and phpmyadmin.

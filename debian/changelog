@@ -1,3 +1,15 @@
+ampache (3.5.4-6) unstable; urgency=high
+
+  * Setting urgency to high as this fixes an RC bug.
+  * Upstream has decided to remove pearxmlrpc and make the package
+    depend on php5-xmlrpc. Closes: #591984
+  * debian/control
+    - added php5-xmlrpc to Depends field.
+  * debian/rules
+    - added -X option to remove /modules/pearxmlrpc
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 12 Aug 2010 09:59:36 -0500
+
 ampache (3.5.4-5) unstable; urgency=medium
 
   * Setting urgency to medium as this fixes an RC bug.

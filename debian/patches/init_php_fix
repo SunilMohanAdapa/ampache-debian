@@ -1,0 +1,25 @@
+Description: /modules/pearxmlrpc removal
+ Upstream removed /modules/pearxmlrpc/* this was done is debian/rules, 
+ however due to a "require once" statement in /lib/init.php, PHP is unable to
+ find /modules/pearxmlrpc/rpc.php thus the initial login after the completion
+ of the web installation process fails.  This patch comments out that
+ statement.
+ .
+ This was communicated to upstream via IRC, thus a bug report was not placed
+ on upstreams bug tracker.
+Author: Charlie Smotherman <cjsmo@cableone.net>
+Last-Update: 2010-08-18
+
+Index: ampache-3.5.4/lib/init.php
+===================================================================
+--- ampache-3.5.4.orig/lib/init.php	2010-08-18 05:53:13.000000000 -0500
++++ ampache-3.5.4/lib/init.php	2010-08-18 05:53:41.000000000 -0500
+@@ -138,7 +138,7 @@
+ require_once $prefix . '/lib/class/localplay.abstract.php';
+ require_once $prefix . '/lib/class/database_object.abstract.php'; 
+ require_once $prefix . '/lib/class/media.interface.php'; 
+-require_once $prefix . '/modules/pearxmlrpc/rpc.php';
++//require_once $prefix . '/modules/pearxmlrpc/rpc.php';
+ require_once $prefix . '/modules/getid3/getid3.php';
+ require_once $prefix . '/modules/nusoap/nusoap.php';
+ require_once $prefix . '/modules/infotools/Snoopy.class.php';

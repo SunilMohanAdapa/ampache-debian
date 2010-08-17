@@ -1,3 +1,14 @@
+ampache (3.5.4-7) unstable; urgency=high
+
+  * Adjusted symlink creation in debian/postinst so it now works.
+    Closes: #593181
+  * Upstream neglected to comment out the "require once" for
+    /modules/pearxmlrpc/rpc.php which causes the inital login after the 
+    completion of the web installer to fail due to php not being able to find
+    /modules/pearxmlrpc/rpc.php.  Closes: #593182
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 17 Aug 2010 06:51:29 -0500
+
 ampache (3.5.4-6) unstable; urgency=high
 
   * Setting urgency to high as this fixes an RC bug.

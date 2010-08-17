@@ -26,9 +26,8 @@ lighttpd_install() {
 }
 
 apache_install() {
-    webserver=$1
-    if [ -d /etc/$webserver/conf.d ] && [ ! -h /etc/$webserver/conf.d/ampache.conf ]; then
-        ln -s $AMP /etc/$webserver/conf.d/ampache.conf
+    if [ ! -f /etc/apache2/conf.d/ampache.conf ] && [ ! -h /etc/apache2/conf.d/ampache.conf ]; then
+        ln -s $AMP /etc/apache2/conf.d/ampache.conf
         if [ -f $ELCAMP ]; then
             rm -f $ELCAMP
         fi

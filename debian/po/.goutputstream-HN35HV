@@ -65,20 +65,4 @@ msgid ""
 "Please choose whether you want to restart it automatically now or do it "
 "yourself later."
 msgstr ""
-"Ãˆ necessario riconfigurare e riavviare il server web per attivare Ampache; Ã¨ "
-"possibile riavviarlo automaticamente adesso oppure manualmente, da soli, in "
-"seguito."
-
-#. Type: boolean
-#. Description
-#: ../ampache.templates:3001
-msgid ""
-"To manually restart the web server, use one of the following commands: \"/"
-"etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
-msgstr ""
-"Per riavviare manualmente il server web, usare uno di questi comandi: "
-"\"etc/init.d/apache2 restart\" oppure \"/etc/init.d/lighttpd restart\""
-
-#~ msgid "Configure Apache 2 web server for use with Ampache?"
-#~ msgstr "Configurare il server web Apache 2 per l'uso con Ampache?"
-
+"�

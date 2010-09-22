@@ -34,7 +34,7 @@ apache_install() {
     fi
 }
 
-if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then 
+if [ "$1" = "configure" ]; then 
 
     db_get ampache/webserver_type || true
     webservers="$RET"
@@ -47,7 +47,7 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
             if [ "$webserver" = "lighttpd" ] ; then
                 lighttpd_install
             else
-                apache_install $webserver
+                apache_install
             fi
             if [ -x /usr/sbin/invoke-rc.d ]; then
                 invoke-rc.d $webserver restart 3>/dev/null || true

@@ -1,3 +1,17 @@
+ampache (3.5.4-8) unstable; urgency=low
+
+  * Made requested changes from the Release Team (Adam) to ampache.config
+    postinst, and postrm to fix symlink creation.  Closes: #593759
+  * Made the requested spacing changes from the Release Team (Adam) in the
+    postrm.
+  * Added updated it.po. Thx  Luca Monducci Closes: #593959
+  * Added updated ta.po. Thx Dr.T.Vasudevan
+  * Added updated cs.po. Thx Miroslav Kure Closes: #595512
+  * Added zh_TW.po.  Thx Kan-Ru Chen
+  * Added da.po.  Thx Joe Dalton Closes: #595197
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 21 Sep 2010 21:34:54 -0500
+
 ampache (3.5.4-7) unstable; urgency=high
 
   * Adjusted symlink creation in debian/postinst so it now works.

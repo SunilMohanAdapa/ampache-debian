@@ -22,8 +22,8 @@ lighttpd_remove() {
 			$LDM ampache
 		fi
 		if [ -h $ELCE/50-ampache.conf ] ; then
-		    echo 'Manually deleting lighttpd/ampache configuration link'
-		    rm $ELCE/50-ampache.conf
+			echo 'Manually deleting lighttpd/ampache configuration link'
+			rm $ELCE/50-ampache.conf
 		fi
 	fi
 }
@@ -35,39 +35,42 @@ apache_remove() {
 }
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
-   #Ask the question and restart web server.
-   db_get ampache/restart_webserver || true
+	#Ask the question and restart web server.
+	db_get ampache/restart_webserver || true
    
-   webserver="$RET"
-   for webserver in $webservers; do
-       webserver=${webserver%,}
-       if [ "$webserver" = "lighttpd" ] ; then
-            lighttpd_remove
-       else
-	     apache_remove $webserver
+	if [ "$RET" = "true" ]; then
+		db_get ampache/webserver_type || true
+		webservers="$RET"
+		for webserver in $webservers; do
+			webserver=${webserver%,}
+			if [ "$webserver" = "lighttpd" ] ; then
+				lighttpd_remove
+			else
+				apache_remove
+			fi
+			if [ -x /usr/sbin/invoke-rc.d ]; then
+				invoke-rc.d $webserver restart 3>/dev/null || true
+			else
+				/etc/init.d/$webserver restart 3>/dev/null || true
+			fi
+		done
 	fi
-       if [ -x /usr/sbin/invoke-rc.d ]; then
-    	     invoke-rc.d $webserver restart 3>/dev/null || true
-       else
-             /etc/init.d/$webserver restart 3>/dev/null || true
-       fi
-   done
 fi
 
 if [ "$1" = "purge" ]; then
-    #This is needed to remove user added content.
-    if [ -d $EAMP ]; then
-        rm -rf $EAMP
-    fi
-    if [ -d $UAMP ]; then
-        rm -rf $UAMP
-    fi
+	#This is needed to remove user added content.
+	if [ -d $EAMP ]; then
+		rm -rf $EAMP
+	fi
+	if [ -d $UAMP ]; then
+		rm -rf $UAMP
+	fi
 fi
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
-   if [ -f /etc/cron.daily/ampache ]; then
-	rm -f /etc/cron.daily/ampache
-   fi
+	if [ -f /etc/cron.daily/ampache ]; then
+		rm -f /etc/cron.daily/ampache
+	fi
 fi
 
 #DEBHELPER#

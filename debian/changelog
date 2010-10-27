@@ -1,3 +1,10 @@
+ampache (3.5.4-9) unstable; urgency=low
+
+  * Actually added updated cs.po. Thx Miroslav Kure for the mail.
+  * Added vi.po.  Thx Clytie Siddall.  Closes: #599153
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 26 Oct 2010 20:19:24 -0500
+
 ampache (3.5.4-8) unstable; urgency=low
 
   * Made requested changes from the Release Team (Adam) to ampache.config

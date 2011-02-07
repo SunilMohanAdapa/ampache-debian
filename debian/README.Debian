@@ -5,14 +5,22 @@ XSPF JUKEBOX FLASH PLAYER NOTE:
 Currently the XSPF Jukebox Flash player has been removed until an appropriate
 solution can be found to compile xspf_jukebox.fla at build time.  
 
-To get the Flash player working download 
+To get the Flash player working you have three options. 
 
-https://svn.ampache.org/trunk/modules/flash/xspf_jukebox.swf
+a) in a terminal run :~$/bin/bash /usr/share/ampache/www/bin/get_xspf.sh
 
-and place it into 
-
+b) Download the source from Lacy Morrows website 
+http://lacymorrow.com/projects/jukebox/source.zip
+unzip the source and place xspf_jukebox.swf into 
 /usr/share/ampache/www/modules/flash
 
+c) or checkout the bzr or svn branches of ampache
+
+bzr branch lp:~cjsmo/ampache/trunk
+or
+svn co https://svn.ampache.org/trunk/modules/flash/
+
+then place xspf_jukebox.swf into /usr/share/ampache/www/modules/flash
 This will allow the Flash player to work again.  Sorry for the inconvenience.
 
 INSTALLATION

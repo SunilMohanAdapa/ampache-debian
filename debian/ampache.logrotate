@@ -1,0 +1,15 @@
+/var/log/ampache/ampache.log {
+	daily
+	missingok
+	rotate 7
+	compress
+	shred
+}
+
+/var/log/ampache/ampache-catalog.log {
+	daily
+	missingok
+	rotate 7
+	compress
+	shred
+}

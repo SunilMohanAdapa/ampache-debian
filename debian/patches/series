@@ -1,1 +1,2 @@
-init_php_fix
+xspf_notification.patch
+logrotate_fix.patch

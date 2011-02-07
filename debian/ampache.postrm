@@ -8,72 +8,109 @@ ELCE=/etc/lighttpd/conf-enabled
 EAMP=/etc/ampache
 UAMP=/usr/share/ampache
 LDM=/usr/sbin/lighty-disable-mod
+APES=/etc/apache2/sites-enabled/mythweb.conf
+APE=/etc/apache2/conf.d
+log=/var/log/ampache
 
 #source debconf library.
 . /usr/share/debconf/confmodule
 db_version 2.0
 
 lighttpd_remove() {
-	if [ -f $ELCA/50-ampache.conf ] ; then
+	if [ -f $ELCA/50-ampache.conf ]; then
 		rm -f $ELCA/50-ampache.conf
-		if [ ! -x $LDM ] ; then
-			echo "Lighttpd not installed, skipping"
-		else
-			$LDM ampache
-		fi
-		if [ -h $ELCE/50-ampache.conf ] ; then
-			echo 'Manually deleting lighttpd/ampache configuration link'
-			rm $ELCE/50-ampache.conf
-		fi
+	fi
+	if [ ! -x $LDM ] ; then
+		printf "Lighttpd not installed, skipping"
+	else
+		$LDM ampache
+	fi
+	if [ -h $ELCE/50-ampache.conf ] ; then
+		printf "Manually deleting lighttpd/ampache configuration link."
+		rm -f $ELCE/50-ampache.conf
 	fi
 }
 
 apache_remove() {
-	if [ -d /etc/$webserver/conf.d ] && [ -h /etc/$webserver/conf.d/ampache.conf ]; then
-		rm -f /etc/$webserver/conf.d/ampache.conf
+	if [ -e /etc/apache2/sites-available/ApacheAmpache ]; then
+		a2dissite ApacheAmpache
+		if [ -f /etc/apache2/sites-available/default ]; then
+			a2ensite default
+		fi
+	fi
+	rm -f /etc/apache2/sites-available/ApacheAmpache
+}
+
+mythbuntu_apache_remove() {
+	if [ /var/www/mythweb -a $APES ]; then
+		rm -f $APE/mythbuntu.ampache.conf
 	fi
 }
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
-	#Ask the question and restart web server.
+	#get webserver type
+	db_get ampache/webserver_type || true
+	webservers="$RET"
+
+	#Ask the webserver restart question.
 	db_get ampache/restart_webserver || true
-   
+	if [ "$RET" = "false" ]; then
+		#This removes everthing except config files.
+		if [ -d $UAMP ]; then
+			rm -rf $UAMP
+		fi
+		if [ -d $log ]; then
+			rm -rf $log
+		fi
+		if [ -f /etc/logrotate.d/ampache ]; then
+			rm -f /etc/logrotate.d/ampache
+		fi
+		if [ -f /etc/cron.daily/ampache ]; then
+			rm -f /etc/cron.daily/ampache
+		fi
+		exit 0
+	fi
+	#This removes the webserver config file symlinks and reloads the
+	#webserver
 	if [ "$RET" = "true" ]; then
-		db_get ampache/webserver_type || true
-		webservers="$RET"
-		for webserver in $webservers; do
-			webserver=${webserver%,}
-			if [ "$webserver" = "lighttpd" ] ; then
-				lighttpd_remove
+		if [ "$webservers" = "apache2" ]; then
+			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
+				mythbuntu_apache_remove
 			else
 				apache_remove
 			fi
-			if [ -x /usr/sbin/invoke-rc.d ]; then
-				invoke-rc.d $webserver restart 3>/dev/null || true
-			else
-				/etc/init.d/$webserver restart 3>/dev/null || true
-			fi
-		done
+		fi
+		if [ "$webservers" = "lighttpd" ]; then
+			lighttpd_remove
+		fi
+		if [ -x /usr/sbin/invoke-rc.d ]; then
+			invoke-rc.d $webservers reload 3>/dev/null || true
+		else
+			/etc/init.d/$webservers reload 3>/dev/null || true
+		fi
+		#This removes everything except config files.
+		if [ -d $UAMP ]; then
+			rm -rf $UAMP
+		fi
+		if [ -d $log ]; then
+			rm -rf $log
+		fi
+		if [ -f /etc/logrotate.d/ampache ]; then
+			rm -f /etc/logrotate.d/ampache
+		fi
+		if [ -f /etc/cron.daily/ampache ]; then
+			rm -f /etc/cron.daily/ampache
+		fi
 	fi
 fi
 
+#Remove config files on purge.  This is needed to remove user added content.
 if [ "$1" = "purge" ]; then
-	#This is needed to remove user added content.
 	if [ -d $EAMP ]; then
 		rm -rf $EAMP
-	fi
-	if [ -d $UAMP ]; then
-		rm -rf $UAMP
-	fi
-fi
-
-if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
-	if [ -f /etc/cron.daily/ampache ]; then
-		rm -f /etc/cron.daily/ampache
 	fi
 fi
 
 #DEBHELPER#
 
 exit 0
-

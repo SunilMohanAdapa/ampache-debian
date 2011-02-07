@@ -1,11 +1,6 @@
 /admin 					/usr/share/ampache/www
 /bin					/usr/share/ampache/www
 /config 				/usr/share/ampache/www
-/debian/conf/ampache.conf 	/etc/ampache
-/debian/conf/lighttpd_ampache.conf /etc/ampache
-/docs/CHANGELOG			/usr/share/doc/ampache
-/docs/MIGRATION 		/usr/share/doc/ampache
-/docs/README 			/usr/share/doc/ampache
 /images 				/usr/share/ampache/www
 /lib 					/usr/share/ampache/www
 /locale 				/usr/share/ampache/www
@@ -16,4 +11,10 @@
 /templates 				/usr/share/ampache/www
 /themes 				/usr/share/ampache/www
 /*php					/usr/share/ampache/www
-
+/docs/CHANGELOG			/usr/share/doc/ampache
+/docs/MIGRATION 		/usr/share/doc/ampache
+/docs/README 			/usr/share/doc/ampache
+debian/conf/lighttpd_ampache.conf		/etc/ampache
+debian/conf/mythbuntu.ampache.conf		/etc/ampache
+debian/grab_xspf.sh						/usr/share/ampache/www/bin
+debian/conf/ApacheAmpache				/etc/apache2/sites-available

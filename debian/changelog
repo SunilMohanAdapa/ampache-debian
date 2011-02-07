@@ -1,3 +1,47 @@
+ampache (3.5.4-10) unstable; urgency=low
+
+  * Made package use a VirtualHost instead of adding alias symlink to 
+    /etc/apache2/conf.d
+  * Added /conf/ApacheAmpache.
+  * Updated postinst and postrm to use a2ensite and a2dissite.
+  * Updated ampache.install to install ApacheAmpache into 
+    /etc/apache2/sites-available.
+  * Removed "for" loop in debian/ampache.postinst debian/ampache.postrm.
+    Thx pitti
+  * Recreated /usr/share/ampache/www/modules/pearxmlrpc dir in debian/dir.
+  * Made package depend on the correct php-xml-rpc package in debian/control.
+    Moved eyed3 to the Suggests field, along with adding lame, faad, 
+    mp3-splt, vorbis-tools to the Suggest field. LP: #681932 
+  * Created the needed symlinks to php-xml-rpc in debian/links.
+  * Corrected spacing in debian/ampache.preinst, added webserver reload,
+    added comments.
+  * Corrected spacing in ampache.postinst, changed from using webserver
+    restart to using webserver reload, added comments.
+  * Removed init_php_fix patch as it is no longer needed, refreshed patches.
+  * Added discription headers to patch files.
+  * debian/patches/xspf_notification.patch: If the user attempts to use the
+    xspfflash player, the user will be pointed to 
+    /usr/share/doc/ampache/README.Debian for details and a work around.
+  * Included /config/mythbuntu_ampache.conf so webserver is configured
+    correctly with Mythbuntu.
+  * Reworked ampache.install, ampache.postinst and ampache.postrm for use on
+    mythbuntu.
+  * Reworked ampache.postinst and ampache.postrm so if the user chooses not to
+    restart the webserver ampache will exit gracefully.
+  * Setup dirs and permissions for logging in ampache.postinst and
+    ampache.postrm, so all the user has to do is turn it on in ampache.cfg.php.
+  * Added ampache.logrotate so if logging is turned on the logs will be
+    rotated daily, and logs older than 7 days old will be deleted.
+  * Added grab_xspf.sh to /usr/share/ampache/www/bin.  This is a simple bash
+    script that grabs xspf_jukebox source and places xspf_jukebox.swf in
+    /usr/share/ampache/www/modules/flash.  This gives the user an opt in
+    choice to using the xspf flash player.
+  * Updated debian/ampache.install to install grab_xspf.sh into 
+    /usr/share/ampache/www/bin.
+  * Updated Vcs fields to reflect new git repository.  
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Mon, 07 Feb 2011 04:52:44 -0500
+
 ampache (3.5.4-9) unstable; urgency=low
 
   * Actually added updated cs.po. Thx Miroslav Kure for the mail.

@@ -3,14 +3,19 @@
 
 set -e
 
+AMP=/etc/ampache/ampache.conf
+APE=/etc/apache2/conf.d
+APES=/etc/apache2/sites-enabled/mythweb.conf
 ELCA=/etc/lighttpd/conf-available
 ELCAMP=/etc/ampache/lighttpd_ampache.conf
-AMP=/etc/ampache/ampache.conf
 EM=/usr/sbin/lighty-enable-mod
+log=/var/log/ampache
+MAMP=/etc/ampache/mythbuntu.ampache.conf
 
 . /usr/share/debconf/confmodule
 db_version 2.0
 
+#Configure the lighttpd webserver.
 lighttpd_install() {
     if [ ! -f $ELCA/50-ampache.conf ] ; then
         if [ ! -x $EM ] ; then
@@ -18,50 +23,76 @@ lighttpd_install() {
         else
             ln -s $ELCAMP $ELCA/50-ampache.conf
             $EM ampache
-            if [ -f $AMP ]; then
-                rm -f $AMP
-            fi
+            rm -f $AMP
+			rm -f $MAMP
         fi
     fi
 }
-
+#Configure the apache2 webserver.
 apache_install() {
-    if [ ! -f /etc/apache2/conf.d/ampache.conf ] && [ ! -h /etc/apache2/conf.d/ampache.conf ]; then
-        ln -s $AMP /etc/apache2/conf.d/ampache.conf
-        if [ -f $ELCAMP ]; then
-            rm -f $ELCAMP
-        fi
+    if [ -e /etc/apache2/sites-available/ApacheAmpache ]; then
+		a2dissite default
+		a2ensite ApacheAmpache
+        rm -f $ELCAMP
+		rm -f $MAMP
+    fi
+}
+#Configure the apache2 webserver on Mythbuntu.
+mythbuntu_apache_install() {
+    if [ -d /var/www/mythweb -a -f $APES ]; then
+        ln -s $MAMP $APE/mythbuntu.ampache.conf
+        rm -f $ELCAMP
+        rm -f $AMP
     fi
 }
 
 if [ "$1" = "configure" ]; then 
-
-    db_get ampache/webserver_type || true
-    webservers="$RET"
-
-    db_get ampache/restart_webserver || true
-
-    if [ "$RET" = "true" ]; then 
-        for webserver in $webservers; do
-            webserver=${webserver%,}
-            if [ "$webserver" = "lighttpd" ] ; then
-                lighttpd_install
-            else
-                apache_install
-            fi
-            if [ -x /usr/sbin/invoke-rc.d ]; then
-                invoke-rc.d $webserver restart 3>/dev/null || true
-            else
-                /etc/init.d/$webserver restart 3>/dev/null || true
-            fi
-        done
-    fi
-fi
-
-if [ "$webserver" = "lighttpd" ]; then
-   rm -f /etc/ampache/ampache.conf
-else
-   rm -f /etc/ampache/lighttpd_ampache.conf
+	#find out what type of webserver we have
+	db_get ampache/webserver_type || true
+	webservers="$RET"
+	#ask the user if we need to restart/reload the webserver
+	db_get ampache/restart_webserver || true
+	if [ "$RET" = "false" ]; then
+		if [ "$webservers" = "apache2" ]; then
+			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
+				mythbuntu_apache_install
+			else
+				apache_install
+			fi
+		fi
+		if [ "$webservers" = "lighttpd" ] ; then
+			lighttpd_install
+		fi
+		if [ -d $log ]; then
+			chmod 755 $log
+			chown www-data:www-data $log
+		fi
+		#exit gracefully and let the user restart the webserver
+		exit 0
+	fi
+	if [ "$RET" = "true" ]; then
+		if [ "$webservers" = "apache2" ]; then
+			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
+				mythbuntu_apache_install
+			else
+				apache_install
+			fi
+			if [ "$webservers" = "lighttpd" ] ; then
+				lighttpd_install
+			fi
+			#reload the webserver config
+			if [ -x /usr/sbin/invoke-rc.d ]; then
+				invoke-rc.d $webservers reload 3>/dev/null || true
+			else
+				/etc/init.d/$webservers reload 3>/dev/null || true
+			fi
+		fi
+		#set log file owner and permissions
+		if [ -d $log ]; then
+			chmod 755 $log
+			chown www-data:www-data $log
+		fi
+	fi
 fi
 
 #DEBHELPER#

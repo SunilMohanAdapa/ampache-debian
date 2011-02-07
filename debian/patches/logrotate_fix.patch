@@ -1,0 +1,17 @@
+Discription: this is needed so logrotate and ampache play nice together
+Author: Charlie Smotherman <cjsmo@cableone.net>
+Last Updated: 11.28.2010
+
+Index: ampache-3.5.4/lib/log.lib.php
+===================================================================
+--- ampache-3.5.4.orig/lib/log.lib.php	2010-11-28 21:07:25.000000000 -0600
++++ ampache-3.5.4/lib/log.lib.php	2010-11-28 21:12:02.000000000 -0600
+@@ -33,7 +33,7 @@
+ 
+ 	$username = $username ? $username : 'ampache'; 
+ 
+-        $log_filename   = Config::get('log_path') . "/$log_name." . date("Ymd",$log_time) . ".log";
++        $log_filename   = Config::get('log_path') . "/$log_name" . ".log";
+         $log_line       = date("Y-m-d H:i:s",$log_time) . " [$username] ($event_name) -> $event_description \n";  
+ 
+ 	$log_write = error_log($log_line, 3, $log_filename);

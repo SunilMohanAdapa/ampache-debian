@@ -7,3 +7,7 @@
 /usr/share/php/nusoap/nusoapmime.php /usr/share/ampache/www/modules/nusoap/nusoapmime.php
 /usr/share/php/nusoap/class.wsdlcache.php /usr/share/ampache/www/modules/nusoap/class.wsdlcache.php
 /etc/cron.daily/ampache /etc/ampache/ampache.cron.daily
+/usr/share/php/XML/RPC.php /usr/share/ampache/www/modules/pearxmlrpc/rpc.php
+/usr/share/php/XML/RPC/Dump.php /usr/share/ampache/www/modules/pearxmlrpc/Dump.php
+/usr/share/php/XML/RPC/Server.php /usr/share/ampache/www/modules/pearxmlrpc/server.php
+

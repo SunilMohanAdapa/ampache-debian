@@ -14,7 +14,9 @@
 /docs/CHANGELOG			/usr/share/doc/ampache
 /docs/MIGRATION 		/usr/share/doc/ampache
 /docs/README 			/usr/share/doc/ampache
+
+debian/conf/vhost /usr/share/ampache
 debian/conf/lighttpd_ampache.conf		/etc/ampache
 debian/conf/mythbuntu.ampache.conf		/etc/ampache
-debian/grab_xspf.sh						/usr/share/ampache/www/bin
 debian/conf/ApacheAmpache				/etc/apache2/sites-available
+debian/grab_xspf.sh						/usr/share/ampache/www/bin

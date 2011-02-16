@@ -34,11 +34,14 @@ lighttpd_remove() {
 apache_remove() {
 	if [ -e /etc/apache2/sites-available/ApacheAmpache ]; then
 		a2dissite ApacheAmpache
-		if [ -f /etc/apache2/sites-available/default ]; then
-			a2ensite default
-		fi
+		a2ensite default
+		rm -f /etc/apache2/sites-available/ApacheAmpache
 	fi
-	rm -f /etc/apache2/sites-available/ApacheAmpache
+	if [ -e /etc/apache2/sites-available/ampvhadd ]; then
+		a2dissite ampvhadd
+		a2ensite default
+		rm -f /etc/apache2/sites-available/ampvhadd
+	fi
 }
 
 mythbuntu_apache_remove() {

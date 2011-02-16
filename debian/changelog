@@ -1,3 +1,13 @@
+ampache (3.5.4-11) unstable; urgency=low
+
+  * Made package check the md5sum of /etc/apache2/sites-available/default for
+    any local changes.  If changes have been made a copy is made and the
+    ampache alias is added to the newly created virtualhost.  If no changes
+    are detected, the ApacheAmpache virtualhost is used instead.  This should
+    capture any changes made by the local usr/sysadmin.  Closes: #612703
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Wed, 16 Feb 2011 09:55:24 -0500
+
 ampache (3.5.4-10) unstable; urgency=low
 
   * Made package use a VirtualHost instead of adding alias symlink to 

@@ -3,14 +3,15 @@
 
 set -e
 
-AMP=/etc/ampache/ampache.conf
-APE=/etc/apache2/conf.d
-APES=/etc/apache2/sites-enabled/mythweb.conf
-ELCA=/etc/lighttpd/conf-available
-ELCAMP=/etc/ampache/lighttpd_ampache.conf
-EM=/usr/sbin/lighty-enable-mod
-log=/var/log/ampache
-MAMP=/etc/ampache/mythbuntu.ampache.conf
+AMP="/etc/ampache/ampache.conf"
+APE="/etc/apache2/conf.d"
+APES="/etc/apache2/sites-enabled/mythweb.conf"
+ELCA="/etc/lighttpd/conf-available"
+ELCAMP="/etc/ampache/lighttpd_ampache.conf"
+EM="/usr/sbin/lighty-enable-mod"
+log="/var/log/ampache"
+MAMP="/etc/ampache/mythbuntu.ampache.conf"
+default_stock="b38ca5a963f52930ede3f4e1958f3275  /etc/apache2/sites-available/default"
 
 . /usr/share/debconf/confmodule
 db_version 2.0
@@ -30,12 +31,43 @@ lighttpd_install() {
 }
 #Configure the apache2 webserver.
 apache_install() {
-    if [ -e /etc/apache2/sites-available/ApacheAmpache ]; then
-		a2dissite default
-		a2ensite ApacheAmpache
-        rm -f $ELCAMP
-		rm -f $MAMP
-    fi
+	x=0
+	y=0
+	APSA="/etc/apache2/sites-available"
+	#check ApacheAmpache and default to see if it is enable, if ApacheAmpache
+	#is enabled there is nothing todo.
+	if [ -e /etc/apache2/sites-enabled/ApacheAmpache ]; then
+		x=1
+	fi
+	if [ -e /etc/apache2/sites-enabled/000-default ]; then
+		y=1
+	fi
+	#if ApacheAmpache is disabled and defaults is enabled then we check 
+	#default for any local changes and create a new virtualhost
+	if [ "$x" = 0 ] && [ "$y" = 1 ]; then
+		default_users=$(md5sum /etc/apache2/sites-available/default)
+		printf "$default_stock\n"
+		printf "$default_users\n"
+		if [ "$default_stock" = "$default_users" ]; then
+			a2dissite default
+			a2ensite ApacheAmpache
+			rm -f $ELCAMP
+			rm -f $MAMP
+		else
+			cp -p $APSA/default $APSA/default2
+			if [ -f $APSA/default2 ]; then
+				sed -e s'/<\/VirtualHost>//' $APSA/default2 > $APSA/default3
+				cat $APSA/default3 /usr/share/ampache/vhost > $APSA/ampvhadd
+				if [ -e $APSA/ampvhadd ]; then
+					a2dissite default
+					a2ensite ampvhadd
+					rm -f $APSA/ApacheAmpache
+					rm -f $APSA/default2
+					rm -f $APSA/default3
+				fi
+			fi
+		fi
+	fi
 }
 #Configure the apache2 webserver on Mythbuntu.
 mythbuntu_apache_install() {

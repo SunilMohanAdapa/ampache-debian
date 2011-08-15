@@ -1,31 +1,39 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Sidebar Localplay
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 ?>
 
 <ul class="sb2" id="sb_localplay">
 <?php if ($server_allow = Config::get('allow_localplay_playback') AND $controller = Config::get('localplay_controller') AND $access_check = Access::check('localplay','5')) { ?>
 <?php
 	// Little bit of work to be done here
-	$localplay = new Localplay(Config::get('localplay_controller')); 
-	$current_instance = $localplay->current_instance(); 
+	$localplay = new Localplay(Config::get('localplay_controller'));
+	$current_instance = $localplay->current_instance();
 	$class = $current_instance ? '' : ' class="active_instance"';
 ?>
 <?php if (Access::check('localplay','25')) { ?>
@@ -42,15 +50,15 @@
   <li><h4><?php echo _('Active Instance'); ?></h4>
     <ul class="sb3" id="sb_localplay_instances">
 	<li id="sb_localplay_instances_none"<?php echo $class; ?>><?php echo Ajax::text('?page=localplay&action=set_instance&instance=0',_('None'),'localplay_instance_none');  ?></li>
-	<?php 
+	<?php
 		// Requires a little work.. :(
-		$instances = $localplay->get_instances(); 
-		foreach ($instances as $uid=>$name) { 
-			$name = scrub_out($name); 
+		$instances = $localplay->get_instances();
+		foreach ($instances as $uid=>$name) {
+			$name = scrub_out($name);
 			$class = '';
-			if ($uid == $current_instance) { 
-				$class = ' class="active_instance"'; 
-			} 
+			if ($uid == $current_instance) {
+				$class = ' class="active_instance"';
+			}
 	?>
 	<li id="sb_localplay_instances_<?php echo $uid; ?>"<?php echo $class; ?>><?php echo Ajax::text('?page=localplay&action=set_instance&instance=' . $uid,$name,'localplay_instance_' . $uid); ?></li>
 	<?php } ?>

@@ -1,24 +1,31 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Test Config
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All Rights Reserved
-
- this program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html lang="en-US">
@@ -27,12 +34,12 @@
 <title>Ampache -- Config Debug Page</title>
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
 <style type="text/css">
-body { 
-	text-align:left; 
-} 
-#content { 
-	padding-left: 10px; 
-} 
+body {
+	text-align:left;
+}
+#content {
+	padding-left: 10px;
+}
 </style>
 </head>
 <body bgcolor="#f0f0f0">
@@ -42,7 +49,7 @@ body {
 </div>
 <div id="content">
 <h3 style="color:red;">Ampache.cfg.php Parse Error</h3>
-<p>You've been redirected to this page because your <strong>/config/ampache.cfg.php</strong> was not parsable. 
+<p>You've been redirected to this page because your <strong>/config/ampache.cfg.php</strong> was not parsable.
 If you are upgrading from 3.3.x please see the directions below.</p>
 
 <h3>Migrating from 3.3.x to 3.4.x</h3>
@@ -58,7 +65,7 @@ This defines which auth methods vauth will attempt to use and in which order, if
 The user must exist locally as well<br />
 <br />
 <strong>tag_order</strong> (<i>id3v2,id3v1,vorbiscomment,quicktime,ape,asf</i>)<br />
-This determines the tag order for all cataloged music. If none of the listed tags are found then ampache will default to 
+This determines the tag order for all cataloged music. If none of the listed tags are found then ampache will default to
 the first tag format that was found. <br />
 <br />
 <strong>album_art_order</strong> (<i>db,id3,folder,lastfm,amazon</i>)<br />

@@ -7,32 +7,32 @@ Files: /*
 Copyright: 2001, Karl Vollmer
 License: GPL-2+
 
-File: /debian/po/sv.po
+Files: /debian/po/sv.po
 Copyright: 2007, Martin Bagge
 License: GPL-2+
 
-File: /debian/po/cs.po
+Files: /debian/po/cs.po
 Copyright: 2007, Miroslav Kure
 License: GPL-2+
 
-File: /debian/po/de.po
+Files: /debian/po/de.po
 Copyright: 2007, Helge Kreutzmann
 License: GPL-2+
 
-File: /debian/po/eu.po
+Files: /debian/po/eu.po
 Copyright: 2007, Piarres Beobide
 License: GPL-2+
 
-File: /debian/po/es.po
+Files: /debian/po/es.po
 Copyright: 2009, Gary Ariel Sandi Vigabriel
-Copyright: 2009, Francisco Javier Cuadrado 
+           2009, Francisco Javier Cuadrado 
 License: GPL-2+
 
-File: /debian/po/fi.po
+Files: /debian/po/fi.po
 Copyright: 2007, Esko Arajärvi
 License: GPL-2+
 
-File: /debian/po/fr.po
+Files: /debian/po/fr.po
 Copyright: 2007, Geoffroy Your Berret
 License: GPL-2+
 
@@ -40,55 +40,55 @@ Files: /debian/po/gl.po
 Copyright: 2007, Jacobo Tarrio
 License: GPL-2+
 
-File: /debian/po/it.po
+Files: /debian/po/it.po
 Copyright: 2007 Luca Monducci
 License: GPL-2+
 
-File: /debian/po/ja.po
+Files: /debian/po/ja.po
 Copyright: 2009 Hideki Yamane
 License: GPL-2+
 
-File: /debian/po/nl.po
+Files: /debian/po/nl.po
 Copyright: 2007, Bart Cornelis
 License: GPL-2+
 
-File: /debian/po/pt.po
+Files: /debian/po/pt.po
 Copyright: 2007, Américo Monteiro
 License: GPL-2+
 
-File: /debian/po/ru.po
+Files: /debian/po/ru.po
 Copyright: 2007, Yuri Kozlov
 License: GPL-2+
 
-File: /debian/po/ta.po
+Files: /debian/po/ta.po
 Copyright: 2007, Dr.T.Vasudevan
 License: GPL-2+
 
-File: /debian/po/vi.po
+Files: /debian/po/vi.po
 Copyright: 2007, Clytie Siddall
 License: GPL-2+
 
-File: /debian/po/pt_BR.po
+Files: /debian/po/pt_BR.po
 Copyright: 2007, Felipe Augusto van de Wiel
 Licnese: GPL-2+
 
-File: /locale/ca_CA/LC_MESSAGES/messages.po
+Files: /locale/ca_CA/LC_MESSAGES/messages.po
 Copyright: 2008, Guillem Lluch Moll
 License: GPL-2+
 
-File: /locale/de_DE/LC_MESSAGES/messages.po
+Files: /locale/de_DE/LC_MESSAGES/messages.po
 Copyright: 2007, Nikolai Faursterling
 License: GPL-2+
 
-File: /locale/en_GB/LC_MESSAGES/messages.po
+Files: /locale/en_GB/LC_MESSAGES/messages.po
 Copyright: 2005, David Lodge
 License: GPL-2+
 
-File: /locale/es_ES/LC_MESSAGES/messages.po
+Files: /locale/es_ES/LC_MESSAGES/messages.po
 Copyright: 2007 LL
 License: GPL-2+
 
-File: /locale/fr_FR/LC_MESSAGES/messages.po
+Files: /locale/fr_FR/LC_MESSAGES/messages.po
 Copyright: 2007, François Jan
 License: GPL-2+
 
@@ -96,60 +96,60 @@ Files: /locale/it_IT/LC_MESSAGES/messages.po
 Copyright: 2007, Mr-miky
 License: GPL-2+
 
-File: /locale/ja_JP/LC_MESSAGES/messages.po
+Files: /locale/ja_JP/LC_MESSAGES/messages.po
 Copyright: 2008, Momo-i
 License: GPL-2+
 
-File: /locale/nl_NL/LC_MESSAGES/messages.po
+Files: /locale/nl_NL/LC_MESSAGES/messages.po
 Copyright: 2007, Terence Theijn
 License: GPL-2+
 
-File: /locale/ru_RU/LC_MESSAGES/messages.po
+Files: /locale/ru_RU/LC_MESSAGES/messages.po
 Copyright: 2007, Alexey Illarionov
 License: GPL-2+
 
-File: /locale/tr_TR/LC_MESSAGES/messages.po
+Files: /locale/tr_TR/LC_MESSAGES/messages.po
 Copyright: 2007, LL
 License: GPL-2+
 
-File: /locale/zh_CN/LC_MESSAGES/messages.po
+Files: /locale/zh_CN/LC_MESSAGES/messages.po
 Copyright: 2007, LL
 License: GPL-2+
 
-File: /modules/infotools/Snoopy.class.php
+Files: /modules/infotools/Snoopy.class.php
 Copyright: 1999, Monte Ohrt
 License: GPL-2+
 
-File: /modules/archive/archive.lib.php
+Files: /modules/archive/archive.lib.php
 Copyright: 2005, Devin Doucette
 License: GPL-2+
 
-File: /modules/mpd/mpd.class.php
+Files: /modules/mpd/mpd.class.php
 Copyright: 2003, Benjamin Carlisle
 License: GPL-2+
 
-File: /modules/mpd/mpd.class-example.php
+Files: /modules/mpd/mpd.class-example.php
 Copyright: 2003, Benjamin Carlisle
 License: GPL-2+
 
-File: /modules/validatemail/validateEmail.php
+Files: /modules/validatemail/validateEmail.php
 Copyright: 1998, Clay Loveless
 License: GPL-2+
 
-File: /modules/validateEmailFormat.php
+Files: /modules/validateEmailFormat.php
 Copyright: 1977, Jeffery E.F Friedl
 License: GPL-2+
 
 Files: /modules/nusoap/*
 Copyright: 2002, NuSphere Corperation
-Copyright: 2002, Dietrich Ayala
-Copyright: 2002, Scott Nichol
-Copyright: 2002, Ingo Fischer
+           2002, Dietrich Ayala
+           2002, Scott Nichol
+           2002, Ingo Fischer
 License: GPL-2+
 
 Files: /modules/getid3/*
 Copyright: 2002-2005, James Heinrick
-Copyright: 2002-2005, Allan Hansen
+           2002-2005, Allan Hansen
 License: GPL-2+
 
 Files: debian/*
@@ -157,202 +157,127 @@ Copyright: 2007, Charlie Smotherman
 License: GPL-2+
 
 License: GPL-2+
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License.
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+ .
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 51
+ Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ .
+ For full wording of above license, see '/usr/share/common-licenses/GPL-2
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-For full wording of above license, see '/usr/share/common-licenses/GPL-2
-
-File: /modules/horde/Browser.php
+Files: /modules/horde/Browser.php
 Copyright: 1999, Chuck Hagenbuch
            1999, Jon Parise
 License: LGPL-2+
 
 License: LGPL-2+
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 2 of the License.
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+ .
+ You should have received a copy of the GNU Lesser General Public License
+ along with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ .
+ For full wording of above license, see '/usr/share/common-licenses/LGPL-2
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software Foundation,
-    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-For full wording of above license, see '/usr/share/common-licenses/LGPL-2
-
-File: /modules/flash/*
+Files: /modules/flash/*
 Copyright: 2007, Lacy Morrow 
 License: BSD
 
 License: BSD
-  This is the original license that XSPF Music Player is released under.
-  XSPF JukeBox is based on XSPF Music Player.
+ This is the original license that XSPF Music Player is released under.
+ XSPF JukeBox is based on XSPF Music Player.
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+ Redistributions of source code must retain the above copyright notice, this
+ list of conditions and the following disclaimer.
+ .
+ Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation 
+ and/or other materials provided with the distribution.
+ .
+ Neither the name of the <ORGANIZATION> nor the names of its contributors may
+ be used to endorse or promote products derived from this software without
+ specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation 
-  and/or other materials provided with the distribution.
-  * Neither the name of the <ORGANIZATION> nor the names of its contributors may
-  be used to endorse or promote products derived from this software without
-  specific prior written permission.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-	"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-	A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-	OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-	TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-	PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-File: /modules/prototype/prototype.js
+Files: /modules/prototype/prototype.js
 Copyright: 2005-2007, Sam Stephenson
 License: MIT.
 
 License: MIT
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
-
-File: /modules/captcha/captcha.php
+Files: /modules/captcha/captcha.php
 Copyright: 2005, Milki
 License: Public Domain
 
 License: Public Domain
-  The person or persons who have associated work with this document
-  (the "Dedicator" or "Certifier") hereby either (a) certifies that, to the best
-  of his knowledge, the work of authorship identified is in the public domain of
-  the country from which the work is published, or (b) hereby dedicates whatever
-  copyright the dedicators holds in the work of authorship identified below
-  (the "Work") to the public domain. A certifier, moreover, dedicates any
-  copyright interest he may have in the associated work, and for these purposes,
-  is described as a "dedicator" below.
-
-  A certifier has taken reasonable steps to verify the copyright status of this
-  work. Certifier recognizes that his good faith efforts may not shield him from
-  liability if in fact the work certified is not in the public domain.
-
-  Dedicator makes this dedication for the benefit of the public at large and to
-  the detriment of the Dedicator's heirs and successors. Dedicator intends this
-  dedication to be an overt act of relinquishment in perpetuity of all present
-  and future rights under copyright law, whether vested or contingent, in the
-  Work. Dedicator understands that such relinquishment of all rights includes
-  the relinquishment of all rights to enforce (by lawsuit or otherwise) those
-  copyrights in the Work.
-
-  Dedicator recognizes that, once placed in the public domain, the Work may be
-  freely reproduced, distributed, transmitted, used, modified, built upon, or
-  otherwise exploited by anyone for any purpose, commercial or non-commercial,
-  and in any way, including by methods that have not yet been invented or
-  conceived.
-
-File: /modules/pearxmlrpc/*
-Copyright: 1999, Edd Dumbill
-		 Stig Bakken <stig@php.net>
-		 Martin Jansen <mj@php.net>
-		 Daniel Convissor <danielc@php.net>
-		 Christian Weiske <cweiske@php.net>
-	   1999-2001 Edd Dumbill
-	   2001-2006 The PHP Group
-License: PHP
-
-License: PHP
-
-                  The PHP License, version 3.01
-Copyright 1999 - 2009 The PHP Group. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, is permitted provided that the following conditions
-are met:
-
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
- 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
- 
-  3. The name "PHP" must not be used to endorse or promote products
-     derived from this software without prior written permission. For
-     written permission, please contact group@php.net.
-  
-  4. Products derived from this software may not be called "PHP", nor
-     may "PHP" appear in their name, without prior written permission
-     from group@php.net.  You may indicate that your software works in
-     conjunction with PHP by saying "Foo for PHP" instead of calling
-     it "PHP Foo" or "phpfoo"
- 
-  5. The PHP Group may publish revised and/or new versions of the
-     license from time to time. Each version will be given a
-     distinguishing version number.
-     Once covered code has been published under a particular version
-     of the license, you may always continue to use it under the terms
-     of that version. You may also choose to use such covered code
-     under the terms of any subsequent version of the license
-     published by the PHP Group. No one other than the PHP Group has
-     the right to modify the terms applicable to covered code created
-     under this License.
-
-  6. Redistributions of any form whatsoever must retain the following
-     acknowledgment:
-     "This product includes PHP software, freely available from
-     <http://www.php.net/software/>".
-
-THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND 
-ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PHP
-DEVELOPMENT TEAM OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-OF THE POSSIBILITY OF SUCH DAMAGE.
-
-This software consists of voluntary contributions made by many
-individuals on behalf of the PHP Group.
-
-The PHP Group can be contacted via Email at group@php.net.
-
-For more information on the PHP Group and the PHP project, 
-please see <http://www.php.net>.
-
-PHP includes the Zend Engine, freely available at
-<http://www.zend.com>.
-
-
-
+ The person or persons who have associated work with this document 
+ (the "Dedicator" or "Certifier") hereby either 
+ .
+ (a) certifies that, to the best of his knowledge, the work of authorship
+ identified is in the public domain of the country from which the work is
+ published, or 
+ .
+ (b) hereby dedicates whatever copyright the dedicators holds in the work of
+ authorship identified below (the "Work") to the public domain. A certifier,
+ moreover, dedicates any copyright interest he may have in the associated 
+ work, and for these purposes, is described as a "dedicator" below.
+ .
+ A certifier has taken reasonable steps to verify the copyright status of this
+ work. Certifier recognizes that his good faith efforts may not shield him
+ from liability if in fact the work certified is not in the public domain.
+ .
+ Dedicator makes this dedication for the benefit of the public at large and to
+ the detriment of the Dedicator's heirs and successors. Dedicator intends this
+ dedication to be an overt act of relinquishment in perpetuity of all present
+ and future rights under copyright law, whether vested or contingent, in the
+ Work. Dedicator understands that such relinquishment of all rights includes
+ the relinquishment of all rights to enforce (by lawsuit or otherwise) those
+ copyrights in the Work.
+ .
+ Dedicator recognizes that, once placed in the public domain, the Work may be
+ freely reproduced, distributed, transmitted, used, modified, built upon, or
+ otherwise exploited by anyone for any purpose, commercial or non-commercial,
+ and in any way, including by methods that have not yet been invented or
+ conceived.

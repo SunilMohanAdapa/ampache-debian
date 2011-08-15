@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------+
 // | PHP version 5                                                        |
 // +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 James Heinrich, Allan Hansen                 |
+// | Copyright (c) 2002-2009 James Heinrich, Allan Hansen                 |
 // +----------------------------------------------------------------------+
 // | This source file is subject to version 2 of the GPL license,         |
 // | that is bundled with this package in the file license.txt and is     |
@@ -11,15 +11,15 @@
 // +----------------------------------------------------------------------+
 // | getID3() - http://getid3.sourceforge.net or http://www.getid3.org    |
 // +----------------------------------------------------------------------+
-// | Authors: James Heinrich <infoÏÈetid3*org>                            |
-// |          Allan Hansen <ah¥êartemis*dk>                                |
+// | Authors: James Heinrich <infoØgetid3*org>                            |
+// |          Allan Hansen <ahØartemis*dk>                                |
 // +----------------------------------------------------------------------+
 // | module.audio.mpc.php                                                 |
 // | Module for analyzing Musepack/MPEG+ Audio files                      |
 // | dependencies: NONE                                                   |
 // +----------------------------------------------------------------------+
 //
-// $Id: module.audio.mpc7.php 1958 2009-03-11 07:47:25Z momo-i $
+// $Id: module.audio.mpc.php,v 1.3 2006/11/02 10:48:01 ah Exp $
 
 
 

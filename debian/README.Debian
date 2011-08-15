@@ -14,14 +14,21 @@ http://lacymorrow.com/projects/jukebox/source.zip
 unzip the source and place xspf_jukebox.swf into 
 /usr/share/ampache/www/modules/flash
 
-c) or checkout the bzr or svn branches of ampache
+c) or checkout the bzr or git branches of ampache
 
-bzr branch lp:~cjsmo/ampache/trunk
+bzr branch lp:ampache
 or
-svn co https://svn.ampache.org/trunk/modules/flash/
+git://gitorious.org/ampache/ampache.git
 
 then place xspf_jukebox.swf into /usr/share/ampache/www/modules/flash
 This will allow the Flash player to work again.  Sorry for the inconvenience.
+
+APACHE2-MPM-ITK
+
+Apache2-mpm-itk has been added as a alternative web server that can be used
+with ampache.  As I feel is is not the maintainers responsibility to set the 
+UID/GID for the ampache VHost, it will be left up to the system administrator
+create the "group" and "user" the Ampache VHost will run under.
 
 INSTALLATION
 

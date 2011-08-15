@@ -1,3 +1,68 @@
+ampache (3.6-alpha1+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+  * Upstream has removed php-pear/xmp-rpc and has changed the source code to use
+    the internal xml-rpc capabilities of php.  Closes: #631130
+  * Upstream has changed the source code so ampache now provides more relevent
+    information in the log files.  This includes removing/correcting depeciated
+    php functions.  Closes: #636438, #624221, #611785
+  * Added postrotate rule to ampache.logrotate to correct ownership of 
+    var/log/ampache after the logs are rotated. (LP: #722274)
+  * added /debian/scripts directory, and moved grab_xspf.sh into it.
+  * debian/po
+    - added updated da.po translations file.  Thx Joe Dalton for the bug report. 
+      Closes: #595197
+    - added updated nl.po translations file.  Thx Jeroen Schot for the bug report.
+      Closes: #637503
+  * debian/dirs
+    - removed /usr/share/ampache/www/modules/pearxmlrpc no longer needed.
+    - added /var/log/ampache/old to contain the old rotated logs.
+  * debian/ampache.conf
+    - removed unused variables
+    - removed debconf db versioning, not need.
+  * debian/ampache.install
+    - reorganized for easier readability.
+    - updated debian/ampache.install to install favicon.ico.
+  * debian/ampache.postinst
+    - added additional checks and logic to verify if ampache.conf,
+      ApacheAmpache, ampvhadd, or 000-default are being used to provide the
+      Ampache alias, and installs Ampache accordingly. Default is to use
+      ApacheAmpache.
+    - added additional comments.
+    - removed debconf db versioning, not needed.
+  * debian/ampache.preinst
+    - removed ampache.conf removal.
+    - removed unused variables.
+  * debian/control
+    - update Standards Version to 3.9.2 no changes needed.
+    - added php5-xmlrpc and libphp-phpmailer to depends.
+    - added apache2-mpm-itk as alternate recommends. (LP: #826443)
+    - reorganized depends field.
+    - removed lame and mp3-splt from suggests so ampaches dependencies can be
+      satisfied on kfreebsd-amd64, mips, s390, alpha, hppa, kfreebsd-i386,
+      powerpc, ia64, mipsel, sparc, amd64, armel, i386.
+  * debian/copyright
+    - corrected the word File to be Files per DEP5 spec.
+    - corrected spacing in copyright notices per DEP5 spec.
+    - removed PHP License, upstream has removed php-pear/xml-rpc.
+  * debian/links
+    - reorganized into groups for easier readability.
+    - added link to link /usr/share/logrotate.d/ampache to /etc/ampache so
+      usr/sysadmin can easily customize the rotation to their needs.
+  * debian/rules
+    - added get-orig-source.  This repacks the .orig.tar.gz to remove unwanted
+      *.swf files along with convienent copies of code that will be excluded 
+      during package build anyway.
+    - removed dh_install excludes from debian/rules.
+  * debian/patches
+    - Removed xspf_notification.patch it has been included upstream.
+    - Updated logratate_fix patch for new upstream code.
+  * debian/README.Debian
+    - added blob about apache2-mpm-itk.
+    - updated the bzr and git repo references.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 14 Aug 2011 22:23:54 -0500
+
 ampache (3.5.4-11) unstable; urgency=low
 
   * Made package check the md5sum of /etc/apache2/sites-available/default for

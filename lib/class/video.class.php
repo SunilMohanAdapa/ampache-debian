@@ -1,46 +1,63 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Video Class
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-
+/**
+ * Video Class
+ *
+ * Description here...
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 class Video extends database_object implements media {
 
-	public $id; 
-	public $title; 
-	public $enabled; 
-	public $file; 	
-	public $size; 
+	public $id;
+	public $title;
+	public $enabled;
+	public $file;
+	public $size;
 
 	/**
 	 * Constructor
 	 * This pulls the shoutbox information from the database and returns
 	 * a constructed object, uses user_shout table
 	 */
-	public function __construct($id) { 
+	public function __construct($id) {
 
 		// Load the data from the database
 		$info = $this->get_info($id);
-		foreach ($info as $key=>$value) { 
-			$this->$key = $value; 
-		} 
+		foreach ($info as $key=>$value) {
+			$this->$key = $value;
+		}
 
-		return true; 
+		return true;
 
 	} // Constructor
 
@@ -48,18 +65,18 @@ class Video extends database_object implements media {
 	 * build_cache
 	 * Build a cache based on the array of ids passed, saves lots of little queries
 	 */
-	public static function build_cache($ids=array()) { 
+	public static function build_cache($ids=array()) {
 
-		if (!is_array($ids) OR !count($ids)) { return false; } 
+		if (!is_array($ids) OR !count($ids)) { return false; }
 
-		$idlist = '(' . implode(',',$ids) . ')'; 
+		$idlist = '(' . implode(',',$ids) . ')';
 
-		$sql = "SELECT * FROM `video` WHERE `video`.`id` IN $idlist"; 
-		$db_results = Dba::read($sql); 
+		$sql = "SELECT * FROM `video` WHERE `video`.`id` IN $idlist";
+		$db_results = Dba::read($sql);
 
-		while ($row = Dba::fetch_assoc($db_results)) { 
-			parent::add_to_cache('video',$row['id'],$row); 
-		} 
+		while ($row = Dba::fetch_assoc($db_results)) {
+			parent::add_to_cache('video',$row['id'],$row);
+		}
 
 	} // build_cache
 
@@ -67,13 +84,13 @@ class Video extends database_object implements media {
 	 * format
 	 * This formats a video object so that it is human readable
 	 */
-	public function format() { 
+	public function format() {
 
-		$this->f_title = scrub_out($this->title); 
-		$this->f_link = scrub_out($this->title);  
-		$this->f_codec = $this->video_codec . ' / ' . $this->audio_codec; 
-		$this->f_resolution = $this->resolution_x . 'x' . $this->resolution_y; 
-		$this->f_tags = ''; 
+		$this->f_title = scrub_out($this->title);
+		$this->f_link = scrub_out($this->title);
+		$this->f_codec = $this->video_codec . ' / ' . $this->audio_codec;
+		$this->f_resolution = $this->resolution_x . 'x' . $this->resolution_y;
+		$this->f_tags = '';
 		$this->f_length = floor($this->time/60) . ' ' .  _('minutes');
 
 	} // format
@@ -82,9 +99,9 @@ class Video extends database_object implements media {
 	 * native_stream
 	 * This returns true or false on the downsampling mojo
 	 */
-	public function native_stream() { 
+	public function native_stream() {
 
-		return true; 
+		return true;
 
 	} // native_stream
 
@@ -93,18 +110,18 @@ class Video extends database_object implements media {
 	 * This returns a "PLAY" url for the video in question here, this currently feels a little
 	 * like a hack, might need to adjust it in the future
 	 */
-	public static function play_url($oid,$sid='',$force_http='') { 
+	public static function play_url($oid,$sid='',$force_http='') {
 
-		$video = new Video($oid); 
+		$video = new Video($oid);
 
-		if (!$video->id) { return false; } 
+		if (!$video->id) { return false; }
 
-		$uid = intval($GLOBALS['user']->id); 
-		$oid = intval($video->id); 
+		$uid = intval($GLOBALS['user']->id);
+		$oid = intval($video->id);
 
-		$url = Stream::get_base_url() . "video=true&uid=$uid&oid=$oid"; 
+		$url = Stream::get_base_url() . "video=true&uid=$uid&oid=$oid";
 
-		return $url; 
+		return $url;
 
 	} // play_url
 
@@ -114,7 +131,7 @@ class Video extends database_object implements media {
 	 * if not it returns the transocding command from the config file
 	 * we can't use this->type because its been formated for the downsampling
 	 */
-	public function stream_cmd() { 
+	public function stream_cmd() {
 
 
 
@@ -125,7 +142,7 @@ class Video extends database_object implements media {
 	 * returns true if the video has been flagged and we shouldn't try to re-read
 	 * the meta data
 	 */
-	public function has_flag() { 
+	public function has_flag() {
 
 
 

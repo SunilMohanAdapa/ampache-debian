@@ -1,23 +1,31 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Dynamic
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 ?>
 <?php show_box_top(_('Advanced Random Rules')); ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
@@ -36,24 +44,24 @@
 <tr>
 	<td valign="top">
 		<select name="field">
-		<?php 
-			$fields = Song::get_fields(); 
-			foreach ($fields as $key=>$value) { 
+		<?php
+			$fields = Song::get_fields();
+			foreach ($fields as $key=>$value) {
 				$name = ucfirst(str_replace('_',' ',$key));
 		?>
-			<option name="<?php echo scrub_out($key); ?>"><?php echo scrub_out($name); ?></option>
+			<option value="<?php echo scrub_out($key); ?>"><?php echo scrub_out($name); ?></option>
 		<?php } ?>
 		</select>
 	</td>
 	<td>
 		<select name="operator">
-			<option value="=">=</option>
-			<option value="!=">!=</option>
-			<option value=">">&gt;</option>
-			<option value=">=">&gt;=</option>
-			<option value="<">&lt;</option>
-			<option value="<=">&lt;=</option>
-			<option value="LIKE"><?php echo _('Like'); ?></option>
+			<option value="eq">=</option>
+			<option value="nq">!=</option>
+			<option value="gt">&gt;</option>
+			<option value="gte">&gt;=</option>
+			<option value="lt">&lt;</option>
+			<option value="lte">&lt;=</option>
+			<option value="like"><?php echo _('Like'); ?></option>
 		</select>
 	</td>
 	<td valign="top">
@@ -76,7 +84,7 @@
 	<td colspan="2">
 		<?php echo Ajax::button('?page=random&action=load_rules','cog',_('Load Saved Rules'),'load_random_rules'); ?><?php echo _('Load Saved Rules'); ?>
 	</td>
-	
+
 </tr>
 <tr>
 	<td colspan="4">

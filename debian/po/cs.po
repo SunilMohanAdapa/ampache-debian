@@ -55,17 +55,12 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
-#| msgid "Restart Apache 2 web server?"
 msgid "Configure and restart the web server?"
 msgstr "Nastavit a restartovat webový server?"
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:3001
-#| msgid ""
-#| "The Apache 2 web server needs to be restarted to enable Ampache. Please "
-#| "choose whether you want to restart it automatically now or do it yourself "
-#| "later."
 msgid ""
 "The web server needs to be reconfigured and restarted to enable Ampache. "
 "Please choose whether you want to restart it automatically now or do it "

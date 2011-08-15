@@ -1,23 +1,30 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Manage Democratic
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 show_box_top(_('Manage Democratic Playlists'));  ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
@@ -40,11 +47,11 @@ show_box_top(_('Manage Democratic Playlists'));  ?>
 	<th class="cel_action"><?php echo _('Action'); ?></th>
 </tr>
 <?php
-	foreach ($playlists as $democratic_id) { 
-		$democratic = new Democratic($democratic_id); 
-		$democratic->format(); 
-		$playlist = new Playlist($democratic->base_playlist); 
-		$playlist->format(); 
+	foreach ($playlists as $democratic_id) {
+		$democratic = new Democratic($democratic_id);
+		$democratic->format();
+		$playlist = new Playlist($democratic->base_playlist);
+		$playlist->format();
 ?>
 <tr class="<?php echo flip_class(); ?>">
 	<td><?php echo scrub_out($democratic->name); ?></td>
@@ -55,7 +62,7 @@ show_box_top(_('Manage Democratic Playlists'));  ?>
 	<td><?php echo $democratic->count_items(); ?></td>
 	<td>
 	<?php echo Ajax::button('?page=democratic&action=send_playlist&democratic_id=' . $democratic->id,'all',_('Play'),'play_democratic'); ?>
-	<a href="<?php echo Config::get('web_path'); ?>/democratic.php?action=delete&amp;democratic_id=<?php echo scrub_out($democratic->id); ?>"><?php echo get_user_icon('delete'); ?></a>
+	<a href="<?php echo Config::get('web_path'); ?>/democratic.php?action=delete&amp;democratic_id=<?php echo scrub_out($democratic->id); ?>"><?php echo get_user_icon('delete', _('Delete')); ?></a>
 	</td>
 </tr>
 <?php } if (!count($playlists)) { ?>

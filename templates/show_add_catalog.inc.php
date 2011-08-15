@@ -1,24 +1,30 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Add Catalog
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 $default_rename = "%a - %T - %t";
 $default_sort = "%a/%A";
@@ -30,7 +36,7 @@ $default_sort = "%a/%A";
 <table class="tabledata" cellpadding="0" cellspacing="0">
 <tr>
 	<td><?php echo _('Catalog Name'); ?>: </td>
-	<td><input size="60" type="text" name="name" value="<?php echo scrub_in($_POST['name']); ?>" /></td>
+	<td><input size="60" type="text" name="name" value="<?php echo scrub_out($_POST['name']); ?>" /></td>
 	<td style="vertical-align:top; font-family: monospace;" rowspan="6">
 		<strong><?php echo _('Auto-inserted Fields'); ?>:</strong><br />
 		%A = <?php echo _('album name'); ?><br />
@@ -45,7 +51,7 @@ $default_sort = "%a/%A";
 
 <tr>
 	<td><?php echo _('Path'); ?>: </td>
-	<td><input size="60" type="text" name="path" value="<?php echo scrub_in($_POST['path']); ?>" /></td>
+	<td><input size="60" type="text" name="path" value="<?php echo scrub_out($_POST['path']); ?>" /></td>
 </tr>
 <tr>
 	<td><?php echo _('Catalog Type'); ?>: </td>
@@ -57,8 +63,12 @@ $default_sort = "%a/%A";
 	</td>
 </tr>
 <tr>
-	<td><?php echo _('XML-RPC Key'); ?>: </td>
-	<td><input size="30" type="text" name="key" value="" /><span class="error">*<?php echo _('Required for Remote Catalogs'); ?></span></td>
+	<td><?php echo _('Remote Catalog Username'); ?>: </td>
+	<td><input size="30" type="text" name="remote_username" value="" /><span class="error">*<?php echo _('Required for Remote Catalogs'); ?></span></td>
+</tr>
+<tr>
+	<td><?php echo _('Remote Catalog Password'); ?>: </td>
+	<td><input size="30" type="password" name="remote_password" value="" /><span class="error">*<?php echo _('Required for Remote Catalogs'); ?></span></td>
 </tr>
 <tr>
 	<td><?php echo _('Filename Pattern'); ?>: </td>
@@ -80,8 +90,8 @@ $default_sort = "%a/%A";
 </tr>
 </table>
 <div class="formValidation">
-  <?php echo Core::form_register('add_catalog'); ?>
   <input type="hidden" name="action" value="add_catalog" />
+  <?php echo Core::form_register('add_catalog'); ?>
   <input class="button" type="submit" value="<?php echo _('Add Catalog'); ?>" />
 </div>
 </form>

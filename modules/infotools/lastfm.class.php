@@ -1,31 +1,52 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * LastFMSearch Class
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @category	LastFMSearch
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; version 2
- of the License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-
+/**
+ * LastFMSearch Class
+ *
+ * Description here...
+ *
+ * @category	LastFMSearch
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 class LastFMSearch {
 
 	protected $base_url = "http://ws.audioscrobbler.com/1.0/album";
+	protected $base_url_v2 = "http://ws.audioscrobbler.com/2.0/"; 
+	protected $api_key = "d5df942424c71b754e54ce1832505ae2";
 	public $results=array();  // Array of results
 	private $_parser;   // The XML parser
-	protected $_grabtags = array('coverart','large','medium','small');
+	protected $_grabtags = array('size','coverart','large','medium','small');
 	private $_subTag; // Stupid hack to make things come our right
 	private $_currentTag; // Stupid hack to make things come out right
 	private $_proxy_host; // Proxy host
@@ -113,20 +134,40 @@ class LastFMSearch {
 	} // run_search
     
 	/**
-	 * search
+	 * album_search
 	 * takes terms and a type
 	 */
-	public function search($artist,$album) {
+	public function album_search($artist,$album) {
 
 		$url = $this->base_url . '/' . urlencode($artist) . '/' . urlencode($album) . '/info.xml';		
 		
-		debug_event('lastfm','Searching: ' . $url,'3');
+		debug_event('LastFM','Album Search: ' . $url,'3');
 		
 		$this->run_search($url);
 
 		return $this->results;
 
-	} // search
+	} // album_search
+
+	/**
+	 * artist_search
+	 * Search for an artists information!
+	 * This uses v2 of the API, need to update the rest of this class to use v2
+	 */
+	public function artist_search($artist) { 
+	
+		$url = $this->base_url_v2 . '?method=artist.getImages&artist=' . urlencode($artist) . '&limit=10';	
+		
+		//FIXME: This should be done by run_search
+		$url .= '&api_key=' . urlencode($this->api_key); 
+
+		debug_event('LastFM','Album Search: ' . $url,'3');
+
+		$this->run_search($url); 
+
+		return $this->results; 
+
+	} // artist_search 
     
     	/**
  	 * start_element
@@ -134,11 +175,19 @@ class LastFMSearch {
 	 */
 	public function start_element($parser, $tag, $attributes) { 
 
-		if ($tag == 'coverart') { 
+		if ($tag == 'coverart' OR $tag == 'sizes') { 
 			$this->_currentTag = $tag;
 		}
 		if ($tag == 'small' || $tag == 'medium' || $tag == 'large') {
 			$this->_subTag = $tag;
+		} 
+		if ($tag == 'size' AND $attributes['name'] == 'original') { 
+			if (!isset($this->results[$this->_currentTag][$tag])) { 
+				$this->_subTag = $tag; 
+			} 
+		} 
+		elseif ($tag == 'size') { 
+			unset($this->_subTag); 
 		} 
 
 	} // start_element
@@ -148,7 +197,6 @@ class LastFMSearch {
 	 * This is called for the content of an XML tag
 	 */
 	public function cdata($parser, $cdata) {
-
 		if (!$this->_currentTag || !$this->_subTag || !trim($cdata)) { return false; } 
 
 		$tag 	= $this->_currentTag;
@@ -165,6 +213,7 @@ class LastFMSearch {
 	public function end_element($parser, $tag) {
 	
 		if ($tag == 'coverart') { $this->_currentTag = ''; } 
+		if ($tag == 'sizes') { $this->_currentTag = ''; } 
 	
 	} // end_element
 

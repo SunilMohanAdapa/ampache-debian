@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------+
 // | PHP version 5                                                        |
 // +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 James Heinrich, Allan Hansen                 |
+// | Copyright (c) 2002-2009 James Heinrich, Allan Hansen                 |
 // +----------------------------------------------------------------------+
 // | This source file is subject to version 2 of the GPL license,         |
 // | that is bundled with this package in the file license.txt and is     |
@@ -223,42 +223,66 @@ class getid3_quicktime extends getid3_handler
                 break;
 
 
-            case '©cpy':
-            case '©day':
-            case '©dir':
-            case '©ed1':
-            case '©ed2':
-            case '©ed3':
-            case '©ed4':
-            case '©ed5':
-            case '©ed6':
-            case '©ed7':
-            case '©ed8':
-            case '©ed9':
-            case '©fmt':
-            case '©inf':
-            case '©prd':
-            case '©prf':
-            case '©req':
-            case '©src':
-            case '©wrt':
-            case '©nam':
-            case '©cmt':
-            case '©wrn':
-            case '©hst':
-            case '©mak':
-            case '©mod':
-            case '©PRD':
-            case '©swr':
-            case '©aut':
-            case '©ART':
-            case '©trk':
-            case '©alb':
-            case '©com':
-            case '©gen':
-            case '©ope':
-            case '©url':
-            case '©enc':
+			case 'aART':
+			case 'catg':
+			case 'covr':
+			case 'cpil':
+			case 'cprt':
+			case 'desc':
+			case 'disk':
+			case 'egid':
+			case 'gnre':
+			case 'keyw':
+			case 'pcst':
+			case 'pgap':
+			case 'purd':
+			case 'purl':
+			case 'rtng':
+			case 'stik':
+			case 'tmpo':
+			case 'trkn':
+			case 'tves':
+			case 'tvnn':
+			case 'tvsh':
+			case 'tvsn':
+			case '©alb':
+			case '©ART':
+			case '©aut':
+			case '©cmt':
+			case '©com':
+			case '©cpy':
+			case '©day':
+			case '©dir':
+			case '©ed1':
+			case '©ed2':
+			case '©ed3':
+			case '©ed4':
+			case '©ed5':
+			case '©ed6':
+			case '©ed7':
+			case '©ed8':
+			case '©ed9':
+			case '©enc':
+			case '©fmt':
+			case '©gen':
+			case '©grp':
+			case '©hst':
+			case '©inf':
+			case '©lyr':
+			case '©mak':
+			case '©mod':
+			case '©nam':
+			case '©ope':
+			case '©PRD':
+			case '©prf':
+			case '©req':
+			case '©src':
+			case '©swr':
+			case '©too':
+			case '©trk':
+			case '©url':
+			case '©wrn':
+			case '©wrt':
                 $atom_structure['data_length'] = getid3_lib::BigEndian2Int(substr($atom_data,  0, 2));
 				$atom_structure['language_id'] = getid3_lib::BigEndian2Int(substr($atom_data,  2, 2));
 				$atom_structure['data']        =                           substr($atom_data,  4);
@@ -1124,12 +1148,20 @@ class getid3_quicktime extends getid3_handler
                 }
                 break;
 
-            case 'FXTC': // Something to do with Adobe After Effects (?)
-            case 'PrmA':
-            case 'code':
-            case 'FIEL': // this is NOT "fiel" (Field Ordering) as describe here: http://developer.apple.com/documentation/QuickTime/QTFF/QTFFChap3/chapter_4_section_2.html
-                // Observed-but-not-handled atom types are just listed here
-                // to prevent warnings being generated
+
+			// Observed-but-not-handled atom types are just listed here to prevent warnings being generated
+			case 'FXTC': // Something to do with Adobe After Effects (?)
+			case 'PrmA':
+			case 'code':
+			case 'FIEL': // this is NOT "fiel" (Field Ordering) as describe here: http://developer.apple.com/documentation/QuickTime/QTFF/QTFFChap3/chapter_4_section_2.html
+			case 'tapt': // TrackApertureModeDimensionsAID - http://developer.apple.com/documentation/QuickTime/Reference/QT7-1_Update_Reference/Constants/Constants.html
+						// tapt seems to be used to compute the video size [http://www.getid3.org/phpBB3/viewtopic.php?f=4&t=838]
+						// * http://lists.apple.com/archives/quicktime-api/2006/Aug/msg00014.html
+						// * http://handbrake.fr/irclogs/handbrake-dev/handbrake-dev20080128_pg2.html
+			case 'ctts'://  STCompositionOffsetAID             - http://developer.apple.com/documentation/QuickTime/Reference/QTRef_Constants/Reference/reference.html
+			case 'cslg'://  STCompositionShiftLeastGreatestAID - http://developer.apple.com/documentation/QuickTime/Reference/QTRef_Constants/Reference/reference.html
+			case 'sdtp'://  STSampleDependencyAID              - http://developer.apple.com/documentation/QuickTime/Reference/QTRef_Constants/Reference/reference.html
+			case 'stps'://  STPartialSyncSampleAID             - http://developer.apple.com/documentation/QuickTime/Reference/QTRef_Constants/Reference/reference.html
                 $atom_structure['data'] = $atom_data;
                 break;
 
@@ -1176,10 +1208,40 @@ class getid3_quicktime extends getid3_handler
 
 
     private function CopyToAppropriateCommentsSection($key_name, $data) {
-
         // http://www.geocities.com/xhelmboyx/quicktime/formats/qtm-layout.txt
-
+        // http://atomicparsley.sourceforge.net/mpeg-4files.html
         static $translator = array (
+			'aART' => 'album_artist',
+			'catg' => 'category',
+			'covr' => 'artwork',
+			'cpil' => 'compilation',
+			'cprt' => 'copyright',
+			'desc' => 'description',
+			'disk' => 'disc_number',
+			'egid' => 'episode_guid',
+			'gnre' => 'genre',
+			'keyw' => 'keyword',
+			'pcst' => 'podcast',
+			'pgap' => 'gapless_playback',
+			'purd' => 'purchase_date',
+			'purl' => 'podcast_url',
+			'rtng' => 'rating',
+			'stik' => 'stik',
+			'tmpo' => 'bpm',
+			'trkn' => 'track_number',
+			'tves' => 'tv_episode',
+			'tvnn' => 'tv_network_name',
+			'tvsh' => 'tv_show_name',
+			'tvsn' => 'tv_season',
+			'©art' => 'artist',
+			'©grp' => 'grouping',
+			'©lyr' => 'lyrics',
+			'©too' => 'encoder',
+            '©alb' => 'album',
+            '©ART' => 'artist',
+            '©aut' => 'author',
+            '©cmt' => 'comment',
+            '©com' => 'comment',
             '©cpy' => 'copyright',
             '©day' => 'creation_date',
             '©dir' => 'director',
@@ -1192,43 +1254,34 @@ class getid3_quicktime extends getid3_handler
             '©ed7' => 'edit7',
             '©ed8' => 'edit8',
             '©ed9' => 'edit9',
+            '©enc' => 'encoder',
             '©fmt' => 'format',
+            '©gen' => 'genre',
+            '©hst' => 'host_computer',
             '©inf' => 'information',
+            '©mak' => 'make',
+            '©mod' => 'model',
+            '©nam' => 'title',
+            '©ope' => 'composer',
             '©prd' => 'producer',
+            '©PRD' => 'product',
             '©prf' => 'performers',
             '©req' => 'system_requirements',
             '©src' => 'source_credit',
-            '©wrt' => 'writer',
-            '©nam' => 'title',
-            '©cmt' => 'comment',
-            '©wrn' => 'warning',
-            '©hst' => 'host_computer',
-            '©mak' => 'make',
-            '©mod' => 'model',
-            '©PRD' => 'product',
             '©swr' => 'software',
-            '©aut' => 'author',
-            '©ART' => 'artist',
             '©trk' => 'track',
-            '©alb' => 'album',
-            '©com' => 'comment',
-            '©gen' => 'genre',
-            '©ope' => 'composer',
             '©url' => 'url',
-            '©enc' => 'encoder'
+            '©wrn' => 'warning',
+            '©wrt' => 'composer',
         );
-
         if (isset($translator[$key_name])) {
             $this->getid3->info['quicktime']['comments'][$translator[$key_name]][] = $data;
         }
-
         return true;
     }
 
 
-
     public static function QuicktimeLanguageLookup($language_id) {
-
         static $lookup = array (
             0   => 'English',
             1   => 'French',
@@ -1341,14 +1394,12 @@ class getid3_quicktime extends getid3_handler
             137 => 'Dzongkha',
             138 => 'JavaneseRom'
         );
-
         return (isset($lookup[$language_id]) ? $lookup[$language_id] : 'invalid');
     }
 
 
 
     public static function QuicktimeVideoCodecLookup($codec_id) {
-
         static $lookup = array (
             '3IVX' => '3ivx MPEG-4',
             '3IV1' => '3ivx MPEG-4 v1',
@@ -1402,7 +1453,6 @@ class getid3_quicktime extends getid3_handler
             'WRAW' => 'Windows RAW',
             'y420' => 'YUV420'
         );
-
         return (isset($lookup[$codec_id]) ? $lookup[$codec_id] : '');
     }
 

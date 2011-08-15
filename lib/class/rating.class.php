@@ -1,213 +1,225 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Rating Class
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 /**
  * Rating class
- * This is an amalgamation(sp?) of code from SoundOfEmotion
- * to track ratings for songs, albums and artists. 
-*/
+ *
+ * This tracks ratings for songs, albums and artists.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 class Rating extends database_object {
 
-	/* Provided vars */
-	var $id; 	// The ID of the object who's ratings we want to pull
-	var $type; 	// The type of object we want
-
-	/* Generated vars */
-	var $rating;	// The average rating as set by all users
-	var $preciserating;  // Rating rounded to 1 decimal
+	// Public variables
+	public $id;		// The ID of the object rated
+	public $type;		// The type of object we want
+	public $rating;		// Integer rating
+	public $preciserating;  // Decimal rating
 
 	/**
 	 * Constructor
-	 * This is run every time a new object is created, it requires
-	 * the id and type of object that we need to pull the raiting for
+	 * This is run every time a new object is created, and requires
+	 * the id and type of object that we need to pull the rating for
 	 */
-	public function __construct($id,$type) { 
+	public function __construct($id, $type) {
+		$id = intval($id);
+		$type = Dba::escape($type);
 
-		$this->id 	= intval($id);
-		$this->type 	= Dba::escape($type);
+		$this->id = $id;
+		$this->type = $type;
 
-		// Check for the users rating
-		if ($rating = $this->get_user($GLOBALS['user']->id)) { 
-			$this->rating = $rating;
-			$this->preciserating = $rating;
-		} 
-		else { 
-			$this->get_average();
+		if (! $rating = $this->get_user_rating()) {
+			$rating = $this->get_average_rating();
 		}
-	
-		return true; 
+
+		$this->rating = floor($rating);
+		$this->preciserating = $rating;
+
+		return true;
 
 	} // Constructor
 
 	/**
  	 * build_cache
-	 * This attempts to get everything we'll need for this page load in a single query, saving
-	 * the connection overhead
-	 * //FIXME: Improve logic so that misses get cached as average
+	 * This attempts to get everything we'll need for this page load in a 
+	 * single query, saving on connection overhead
 	 */
 	public static function build_cache($type, $ids) {
-		
+
 		if (!is_array($ids) OR !count($ids)) { return false; }
 
-		$user_id = Dba::escape($GLOBALS['user']->id); 
+		$user_id = intval($GLOBALS['user']->id);
+		$ratings = array();
+		$user_ratings = array();
 
 		$idlist = '(' . implode(',', $ids) . ')';
-		$sql = "SELECT `rating`, `object_id`,`rating`.`rating` FROM `rating` WHERE `user`='$user_id' AND `object_id` IN $idlist " . 
+		$sql = "SELECT `rating`, `object_id` FROM `rating` " .
+			"WHERE `user`='$user_id' AND `object_id` IN $idlist " .
 			"AND `object_type`='$type'";
 		$db_results = Dba::read($sql);
 
 		while ($row = Dba::fetch_assoc($db_results)) {
-			$user[$row['object_id']] = $row['rating']; 
+			$user_ratings[$row['object_id']] = $row['rating'];
 		}
-		
-		$sql = "SELECT `rating`,`object_id` FROM `rating` WHERE `object_id` IN $idlist AND `object_type`='$type'"; 
-		$db_results = Dba::read($sql); 
-		
-		while ($row = Dba::fetch_assoc($db_results)) { 
-			$rating[$row['object_id']]['rating'] += $row['rating']; 
-			$rating[$row['object_id']]['total']++; 
-  		} 
 
-		foreach ($ids as $id) { 
-			parent::add_to_cache('rating_' . $type . '_user',$id,intval($user[$id])); 
+		$sql = "SELECT AVG(`rating`) as `rating`, `object_id` FROM " .
+			"`rating` WHERE `object_id` IN $idlist AND " .
+			"`object_type`='$type' GROUP BY `object_id`";
+		$db_results = Dba::read($sql);
 
-			// Do the bit of math required to store this
-			if (!isset($rating[$id])) { 
-				$entry = array('average'=>'0','percise'=>'0'); 
-			} 
-			else { 
-				$average = round($rating[$id]['rating']/$rating[$id]['total'],1); 
-				$entry = array('average'=>floor($average),'percise'=>$average); 
-			} 
-			
-			parent::add_to_cache('rating_' . $type . '_all',$id,$entry); 
-		} 
+		while ($row = Dba::fetch_assoc($db_results)) {
+			$ratings[$row['object_id']] = $row['rating'];
+  		}
 
-		return true; 
+		foreach ($ids as $id) {
+			// First store the user-specific rating
+			if (!isset($user_ratings[$id])) {
+				$rating = 0;
+			}
+			else {
+				$rating = intval($user_ratings[$id]);
+			}
+			parent::add_to_cache('rating_' . $type . '_user' . $user_id, $id, $rating);
+
+			// Then store the average
+			if (!isset($ratings[$id])) {
+				$rating = 0;
+			}
+			else {
+				$rating = round($ratings[$id]['rating'], 1);
+			}
+			parent::add_to_cache('rating_' . $type . '_all', $id, $rating);
+		}
+
+		return true;
 
 	} // build_cache
 
 	/**
-	 * get_user
-	 * Get the user's rating this is based off the currently logged
-	 * in user. It returns the value
+	 * get_user_rating
+	 * Get a user's rating.  If no userid is passed in, we use the currently
+	 * logged in user.
 	 */
-	 public function get_user($user_id) {
-		
-		$id = intval($this->id); 
-		
-		if (parent::is_cached('rating_' . $this->type . '_user',$id)) { 
-			return parent::get_from_cache('rating_' . $this->type . '_user',$id); 
-		} 
+	 public function get_user_rating($user_id = null) {
 
-		$user_id = Dba::escape($user_id); 
-
-		$sql = "SELECT `rating` FROM `rating` WHERE `user`='$user_id' AND `object_id`='$id' AND `object_type`='$this->type'";
-		$db_results = Dba::query($sql);
+		$id = intval($this->id);
+		$type = Dba::escape($this->type);
+		if (is_null($user_id)) {
+			$user_id = $GLOBALS['user']->id;
+		}
+		$user_id = intval($user_id);
 		
-		$results = Dba::fetch_assoc($db_results);
+		$key = 'rating_' . $type . '_user' . $user_id;
+		if (parent::is_cached($key, $id)) {
+			return parent::get_from_cache($key, $id);
+		}
 
-		parent::add_to_cache('rating_' . $this->type . '_user',$id,$results['rating']); 
-		
-		return $results['rating'];
+		$sql = "SELECT `rating` FROM `rating` WHERE `user`='$user_id' ".
+			"AND `object_id`='$id' AND `object_type`='$type'";
+		$db_results = Dba::read($sql);
 
-	} // get_user
+		$rating = 0;
+
+		if ($results = Dba::fetch_assoc($db_results)) {
+			$rating = $results['rating'];
+		}
+
+		parent::add_to_cache($key, $id, $rating);
+		return $rating;
+
+	} // get_user_rating
 
 	/**
-	 * get_average
-	 * Get the users average rating this is based off the floor'd average
-	 * of what everyone has rated this album as. This is shown if there
-	 * is no personal rating, and used for random play mojo. It sets 
-	 * $this->average_rating and returns the value
+	 * get_average_rating
+	 * Get the floored average rating of what everyone has rated this object
+	 * as. This is shown if there is no personal rating.
 	 */
-	public function get_average() { 
+	public function get_average_rating() {
 
-		$id = intval($this->id); 
+		$id = intval($this->id);
+		$type = Dba::escape($this->type);
 
-		if (parent::is_cached('rating_' . $this->type . '_all',$id)) { 
-			$data = parent::get_from_cache('rating_' . $this->type . '_user',$id); 
-			$this->rating = $data['rating']; 
-			$this->perciserating = $data['percise']; 
-			return true; 
-		} 
-
-		$sql = "SELECT `rating` FROM `rating` WHERE `object_id`='$id' AND `object_type`='$this->type'";
-		$db_results = Dba::query($sql);
-
-		$i = 0;
-
-		while ($r = Dba::fetch_assoc($db_results)) { 
-			$i++;
-			$total += $r['rating'];
-		} // while we're pulling results
-
-		if ($total > 0) { 
-			$average = round($total/$i, 1);
+		if (parent::is_cached('rating_' . $type . '_all', $id)) {
+			return parent::get_from_cache('rating_' . $type . '_user', $id);
 		}
-		elseif ($i >= '1' AND $total == '0') { 
-			$average = -1;
-		}
-		else { 
-			$average = 0;
-		}
+
+		$sql = "SELECT AVG(`rating`) as `rating` FROM `rating` WHERE " .
+			"`object_id`='$id' AND `object_type`='$type'";
+		$db_results = Dba::read($sql);
+
+		$results = Dba::fetch_assoc($db_results);
 		
-		$this->preciserating = $average;
-		$this->rating = floor($average);
-		
-		return $this->rating;
+		parent::add_to_cache('rating_' . $type . '_all', $id, $results['rating']);
+		return $results['rating'];
 
-	} // get_average
+	} // get_average_rating
 
 	/**
 	 * set_rating
-	 * This function sets a rating for the current $this object. 
-	 * This uses the currently logged in user for the 'user' who is rating
-	 * the object. Returns true on success, false on failure
+	 * This function sets the rating for the current object.
+	 * If no userid is passed in, we use the currently logged in user.
 	 */
-	public function set_rating($score) { 
-		
-		$score = Dba::escape($score);
+	public function set_rating($rating, $user_id = null) {
+		$id = intval($this->id);
+		$type = Dba::escape($this->type);
+		$rating = intval($rating);
+		if (is_null($user_id)) {
+			$user_id = $GLOBALS['user']->id;
+		}
+		$user_id = intval($user_id);
+
+		debug_event('Rating', "Setting rating for $type $id to $rating", 5);
 
 		// If score is -1, then remove rating
-		if ($score == '-1') {
-			$sql = "DELETE FROM `rating` WHERE `object_id`='$this->id' AND `object_type`='$this->type' " . 
-				"AND `user`='" . Dba::escape($GLOBALS['user']->id) . "'";
-			$db_results = Dba::query($sql);
-			return true;
+		if ($rating == '-1') {
+			$sql = "DELETE FROM `rating` WHERE " .
+				"`object_id`='$this->id' AND " .
+				"`object_type`='$this->type' AND " .
+				"`user`='$user_id'";
 		}
-
-		/* Check if it exists */
-		$sql = "SELECT `id` FROM `rating` WHERE `object_id`='$this->id' AND `object_type`='$this->type' " . 
-			"AND `user`='" . Dba::escape($GLOBALS['user']->id) . "'";
-		$db_results = Dba::query($sql);
-
-		if ($existing = Dba::fetch_assoc($db_results)) { 
-			$sql = "UPDATE `rating` SET `rating`='$score' WHERE `id`='" . $existing['id'] . "'";
-			$db_results = Dba::query($sql);
+		else {
+			$sql = "REPLACE INTO `rating` " .
+			"(`object_id`, `object_type`, `rating`, `user`) " .
+			"VALUES ('$id', '$type', '$rating', '$user_id')";
 		}
-		else { 
-			$sql = "INSERT INTO `rating` (`object_id`,`object_type`,`rating`,`user`) VALUES " . 
-				" ('$this->id','$this->type','$score','" . $GLOBALS['user']->id . "')";
-			$db_results = Dba::query($sql);
-		} 
+		$db_results = Dba::write($sql);
+
+		parent::add_to_cache('rating_' . $type . '_user' . $user_id, $id, $rating);
+
+		foreach (Plugin::get_plugins('save_rating') as $plugin_name) {
+			$plugin = new Plugin($plugin_name);
+			if ($plugin->load()) {
+				$plugin->_plugin->save_rating($this, $rating);
+			}
+		}
 
 		return true;
 
@@ -215,33 +227,24 @@ class Rating extends database_object {
 
 	/**
 	 * show
-	 * This takes an id and a type and displays the rating if ratings are enabled. 
+	 * This takes an id and a type and displays the rating if ratings are 
+	 * enabled.  If $static is true, the rating won't be editable.
 	 */
-	public static function show ($object_id,$type) { 
+	public static function show($object_id, $type, $static=false) {
 
-		// If there aren't ratings don't return anything
-		if (!Config::get('ratings')) { return false; } 
+		// If ratings aren't enabled don't do anything
+		if (!Config::get('ratings')) { return false; }
 
-		$rating = new Rating($object_id,$type); 
+		$rating = new Rating($object_id, $type);
 
-		require Config::get('prefix') . '/templates/show_object_rating.inc.php'; 
+		if ($static) {
+			require Config::get('prefix') . '/templates/show_static_object_rating.inc.php';
+		}
+		else {
+			require Config::get('prefix') . '/templates/show_object_rating.inc.php';
+		}
 
-	} // show 
-
-	/**
-	 * show_static
-	 * This is a static version of the ratings created by Andy90 
-	 */
-	public static function show_static ($object_id,$type) { 
-
-		// If there aren't ratings don't return anything
-		if (!Config::get('ratings')) { return false; } 
-
-		$rating = new Rating($object_id,$type); 
-
-		require Config::get('prefix') . '/templates/show_static_object_rating.inc.php'; 
-
-	} // show_static
+	} // show
 
 } //end rating class
 ?>

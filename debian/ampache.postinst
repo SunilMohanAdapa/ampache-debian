@@ -3,6 +3,7 @@
 
 set -e
 
+#set our variables
 AMP="/etc/ampache/ampache.conf"
 APE="/etc/apache2/conf.d"
 APES="/etc/apache2/sites-enabled/mythweb.conf"
@@ -12,15 +13,119 @@ EM="/usr/sbin/lighty-enable-mod"
 log="/var/log/ampache"
 MAMP="/etc/ampache/mythbuntu.ampache.conf"
 default_stock="b38ca5a963f52930ede3f4e1958f3275  /etc/apache2/sites-available/default"
+AA="b17b1eae00bd0ee2d716394ee28bbc62  /etc/apache2/sites-enabled/ApacheAmpache"
+sa=$(ls /etc/apache2/sites-available)
+se=$(ls /etc/apache2/sites-enabled)
+ea=$(ls /etc/ampache)
+confd=$(ls $APE)
 
+#read in the debconf module
 . /usr/share/debconf/confmodule
-db_version 2.0
+
+sc010_check() {
+	#check to see if ampache.conf is present and enabled.
+	sc010=1
+	if [ "$ea" = "ampache.conf" ]; then
+		if [ "$confd" = "ampache.conf" ]; then
+				printf "ampache.conf is present and enabled.\n"
+				sc010=enabled
+		fi
+	fi
+}
+
+sc101_check() {
+	#check to see of ApacheAmpache is enabled
+	sc101=1
+	if [ "$se" = "ApacheAmpache" ]; then
+		AA_user=$(md5sum /etc/apache2/sites-enabled/ApacheAmpache)
+		if [ "$AA_user" = "$AA" ]; then
+			printf "ApacheAmpache is enabled ampache vhost already exists.\n"
+			sc101=enabled
+		fi
+	fi
+}
+
+sc102_check() {
+	#check to see if ampvhadd has been created and is being used.
+	sc102=1
+	if [ "$se" = "ampvhadd" ]; then
+		sc102=enabled
+	fi
+}
+
+sc103_check() {
+	#check to see if 000-default is enabled
+	sc103=1
+	if [ "$se" = "000-default" ]; then
+		sc103=enabled
+	fi
+}
+
+sc104_check() {
+	#check to see if 000-default has been modified
+	sc104=1
+	if [ "$sc103" = "enabled" ]; then
+		default_users=$(md5sum /etc/apache2/sites-available/default)
+		if [ "$default_stock" = "$default_users" ]; then
+			sc104=equal
+		fi
+	fi
+}
+
+apache_install() {
+	#do our sanity checks and install ampache accordingly
+	sc010_check
+	sc101_check
+	sc102_check
+	sc103_check
+	sc104_check
+	printf "Our vars are:\nsc010 is $sc010\nsc101 is $sc101\nsc102 is $sc102\nsc103 is $sc103\nsc104 is $sc104\n"
+	if [ "$sc010" = "enabled" ]; then
+		printf "ampache.conf is enabled let's use it.\n"
+		return 0
+	elif [ "$sc010" = "1" ] && [ "$sc101" = "enabled" ]; then
+		printf "ApacheAmpache is enabled ampache vhost already exists.\n"
+		return 0
+	elif [ "$sc010" = "1" ] && [ "$sc101" = "1" ] && [ "$sc102" = "enabled" ]; then
+		printf "ampvhadd is enabled ampache vhost already exists.\n"
+		return 0
+	elif [ "$sc010" = "1" ] && [ "$sc101" = "1" ] && [ "$sc102" = "1" ] && \
+		[ "$sc103" = "enabled" ] && [ "$sc104" = "equal" ]; then
+		default_users=$(md5sum /etc/apache2/sites-available/default)
+		printf "$default_stock\n"
+		printf "$default_users\n"
+		printf "enableing ApacheAmpache.\n"
+		if [ "$default_stock" = "$default_users" ]; then
+			a2dissite default
+			a2ensite ApacheAmpache
+			rm -f $ELCAMP
+			rm -f $MAMP
+		fi
+	elif [ "$sc010" = "1" ] && [ "$sc101" = "1" ] && [ "$sc102" = "1" ] && \
+		[ "$sc103" = "enabled" ] && ["$sc104" = "1" ]; then
+		printf "need to create ampvhadd\n"
+		cp -p $APSA/default $APSA/default2
+		if [ -f $APSA/default2 ]; then
+			sed -e s'/<\/VirtualHost>//' $APSA/default2 > $APSA/default3
+			cat $APSA/default3 /usr/share/ampache/vhost > $APSA/ampvhadd
+			if [ -e $APSA/ampvhadd ]; then
+				a2dissite default
+				a2ensite ampvhadd
+				rm -f $APSA/ApacheAmpache
+				rm -f $APSA/default2
+				rm -f $APSA/default3
+			fi
+		fi
+	else
+		printf "Something weird has happened,  unable to create ampache vhost.\n"
+	fi
+}
 
 #Configure the lighttpd webserver.
 lighttpd_install() {
     if [ ! -f $ELCA/50-ampache.conf ] ; then
         if [ ! -x $EM ] ; then
-            echo "Lighttpd not installed, skipping"
+            printf "Lighttpd not installed, skipping.\n"
         else
             ln -s $ELCAMP $ELCA/50-ampache.conf
             $EM ampache
@@ -29,71 +134,34 @@ lighttpd_install() {
         fi
     fi
 }
-#Configure the apache2 webserver.
-apache_install() {
-	x=0
-	y=0
-	APSA="/etc/apache2/sites-available"
-	#check ApacheAmpache and default to see if it is enable, if ApacheAmpache
-	#is enabled there is nothing todo.
-	if [ -e /etc/apache2/sites-enabled/ApacheAmpache ]; then
-		x=1
-	fi
-	if [ -e /etc/apache2/sites-enabled/000-default ]; then
-		y=1
-	fi
-	#if ApacheAmpache is disabled and defaults is enabled then we check 
-	#default for any local changes and create a new virtualhost
-	if [ "$x" = 0 ] && [ "$y" = 1 ]; then
-		default_users=$(md5sum /etc/apache2/sites-available/default)
-		printf "$default_stock\n"
-		printf "$default_users\n"
-		if [ "$default_stock" = "$default_users" ]; then
-			a2dissite default
-			a2ensite ApacheAmpache
-			rm -f $ELCAMP
-			rm -f $MAMP
-		else
-			cp -p $APSA/default $APSA/default2
-			if [ -f $APSA/default2 ]; then
-				sed -e s'/<\/VirtualHost>//' $APSA/default2 > $APSA/default3
-				cat $APSA/default3 /usr/share/ampache/vhost > $APSA/ampvhadd
-				if [ -e $APSA/ampvhadd ]; then
-					a2dissite default
-					a2ensite ampvhadd
-					rm -f $APSA/ApacheAmpache
-					rm -f $APSA/default2
-					rm -f $APSA/default3
-				fi
-			fi
-		fi
-	fi
-}
+
 #Configure the apache2 webserver on Mythbuntu.
 mythbuntu_apache_install() {
-    if [ -d /var/www/mythweb -a -f $APES ]; then
+    if [ -d /var/www/mythweb ] && [ -f $APES ]; then
         ln -s $MAMP $APE/mythbuntu.ampache.conf
         rm -f $ELCAMP
         rm -f $AMP
     fi
 }
 
-if [ "$1" = "configure" ]; then 
+if [ "$1" = "configure" ]; then
 	#find out what type of webserver we have
 	db_get ampache/webserver_type || true
 	webservers="$RET"
 	#ask the user if we need to restart/reload the webserver
 	db_get ampache/restart_webserver || true
 	if [ "$RET" = "false" ]; then
+        #if false install everything and DO NOT reload the webserver config
 		if [ "$webservers" = "apache2" ]; then
 			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
 				mythbuntu_apache_install
 			else
 				apache_install
 			fi
-		fi
-		if [ "$webservers" = "lighttpd" ] ; then
+		elif [ "$webservers" = "lighttpd" ] ; then
 			lighttpd_install
+		else
+			printf "unable to configure ampache.\n"
 		fi
 		if [ -d $log ]; then
 			chmod 755 $log
@@ -101,29 +169,32 @@ if [ "$1" = "configure" ]; then
 		fi
 		#exit gracefully and let the user restart the webserver
 		exit 0
-	fi
-	if [ "$RET" = "true" ]; then
+	elif [ "$RET" = "true" ]; then
+        #if true install every thing AND reload the webserver config
 		if [ "$webservers" = "apache2" ]; then
 			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
 				mythbuntu_apache_install
 			else
 				apache_install
 			fi
-			if [ "$webservers" = "lighttpd" ] ; then
+		elif [ "$webservers" = "lighttpd" ] ; then
 				lighttpd_install
-			fi
-			#reload the webserver config
-			if [ -x /usr/sbin/invoke-rc.d ]; then
-				invoke-rc.d $webservers reload 3>/dev/null || true
-			else
-				/etc/init.d/$webservers reload 3>/dev/null || true
-			fi
+		else
+			printf "unable to configure and reload $webservers config file\n"
+		fi
+		#reload the webserver config
+		if [ -x /usr/sbin/invoke-rc.d ]; then
+			invoke-rc.d $webservers reload 3>/dev/null || true
+		else
+			/etc/init.d/$webservers reload 3>/dev/null || true
 		fi
 		#set log file owner and permissions
 		if [ -d $log ]; then
 			chmod 755 $log
 			chown www-data:www-data $log
 		fi
+	else
+		printf "Something weird has happened, unable to configure ampache.\n"
 	fi
 fi
 

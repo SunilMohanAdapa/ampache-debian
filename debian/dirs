@@ -1,3 +1,2 @@
 /usr/share/ampache/www/modules/prototype
-/usr/share/ampache/www/modules/pearxmlrpc
-/var/log/ampache
+/var/log/ampache/old

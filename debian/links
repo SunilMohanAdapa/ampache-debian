@@ -1,13 +1,17 @@
 /etc/ampache/ampache.cfg.php /usr/share/ampache/www/config/ampache.cfg.php
-/usr/share/javascript/prototype/prototype.js /usr/share/ampache/www/modules/prototype/prototype.js
-/usr/share/php/libphp-snoopy/Snoopy.class.php /usr/share/ampache/www/modules/infotools/Snoopy.class.php
-/usr/share/fonts/truetype/freefont/FreeMono.ttf /usr/share/ampache/www/modules/captcha/FreeMono-Medium.ttf
+/etc/cron.daily/ampache /etc/ampache/ampache.cron.daily
+/etc/logrotate.d/ampache /etc/ampache/logrotate-ampache
+
 /usr/share/ampache/www/docs/CHANGELOG.gz /usr/share/doc/ampache/changelog.gz
+/usr/share/fonts/truetype/freefont/FreeMono.ttf /usr/share/ampache/www/modules/captcha/FreeMono-Medium.ttf
+/usr/share/javascript/prototype/prototype.js /usr/share/ampache/www/modules/prototype/prototype.js
+
+/usr/share/php/libphp-snoopy/Snoopy.class.php /usr/share/ampache/www/modules/infotools/Snoopy.class.php
+/usr/share/php/libphp-phpmailer/class.phpmailer.php /usr/share/ampache/www/modules/phpmailer/class.phpmailer.php
+/usr/share/php/libphp-phpmailer/class.smtp.php /usr/share/ampache/www/modules/phpmailer/class.smtp.php
+
 /usr/share/php/nusoap/nusoap.php /usr/share/ampache/www/modules/nusoap/nusoap.php
 /usr/share/php/nusoap/nusoapmime.php /usr/share/ampache/www/modules/nusoap/nusoapmime.php
 /usr/share/php/nusoap/class.wsdlcache.php /usr/share/ampache/www/modules/nusoap/class.wsdlcache.php
-/etc/cron.daily/ampache /etc/ampache/ampache.cron.daily
-/usr/share/php/XML/RPC.php /usr/share/ampache/www/modules/pearxmlrpc/rpc.php
-/usr/share/php/XML/RPC/Dump.php /usr/share/ampache/www/modules/pearxmlrpc/Dump.php
-/usr/share/php/XML/RPC/Server.php /usr/share/ampache/www/modules/pearxmlrpc/server.php
+
 

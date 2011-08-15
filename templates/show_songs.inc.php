@@ -1,27 +1,34 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Songs
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 // First let's setup some vars we're going to use a lot
-$web_path = Config::get('web_path'); 
-$ajax_url = Config::get('ajax_url'); 
+$web_path = Config::get('web_path');
+$ajax_url = Config::get('ajax_url');
 ?>
 <?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
@@ -37,12 +44,12 @@ $ajax_url = Config::get('ajax_url');
 </colgroup>
 <tr class="th-top">
 	<th class="cel_add"><?php echo _('Add'); ?></th>
-	<th class="cel_song"><?php echo Ajax::text('?page=browse&action=set_sort&type=song&sort=title',_('Song Title'),'sort_song_title'); ?></th>
-	<th class="cel_artist"><?php echo Ajax::text('?page=browse&action=set_sort&type=song&sort=artist',_('Artist'),'sort_song_artist'); ?></th>
-	<th class="cel_album"><?php echo Ajax::text('?page=browse&action=set_sort&type=song&sort=album',_('Album'),'sort_song_album'); ?></th>
+	<th class="cel_song"><?php echo Ajax::text('?page=browse&action=set_sort&browse_id=' . $browse->id . '&sort=title', _('Song Title'), 'sort_song_title'); ?></th>
+	<th class="cel_artist"><?php echo Ajax::text('?page=browse&action=set_sort&browse_id=' . $browse->id . '&sort=artist', _('Artist'), 'sort_song_artist'); ?></th>
+	<th class="cel_album"><?php echo Ajax::text('?page=browse&action=set_sort&browse_id=' . $browse->id . '&sort=album', _('Album'), 'sort_song_album'); ?></th>
         <th class="cel_tags"><?php echo _('Tags'); ?></th>
-	<th class="cel_track"><?php echo Ajax::text('?page=browse&action=set_sort&type=song&sort=track',_('Track'),'sort_song_track'); ?></th>
-	<th class="cel_time"><?php echo Ajax::text('?page=browse&action=set_sort&type=song&sort=time',_('Time'),'sort_song_time'); ?></th>
+	<th class="cel_track"><?php echo Ajax::text('?page=browse&action=set_sort&browse_id=' . $browse->id . '&sort=track', _('Track'), 'sort_song_track'); ?></th>
+	<th class="cel_time"><?php echo Ajax::text('?page=browse&action=set_sort&browse_id=' . $browse->id . '&sort=time', _('Time'), 'sort_song_time'); ?></th>
 <?php if (Config::get('ratings')) {
 	Rating::build_cache('song', $object_ids);
 ?>
@@ -51,12 +58,12 @@ $ajax_url = Config::get('ajax_url');
 	<th class="cel_action"><?php echo _('Action'); ?></th>
 </tr>
 <?php
-	foreach ($object_ids as $song_id) { 
-		$song = new Song($song_id); 
-		$song->format(); 
+	foreach ($object_ids as $song_id) {
+		$song = new Song($song_id);
+		$song->format();
 ?>
 <tr class="<?php echo flip_class(); ?>" id="song_<?php echo $song->id; ?>">
-	<?php require Config::get('prefix') . '/templates/show_song_row.inc.php'; ?> 
+	<?php require Config::get('prefix') . '/templates/show_song_row.inc.php'; ?>
 </tr>
 <?php } ?>
 <?php if (!count($object_ids)) { ?>

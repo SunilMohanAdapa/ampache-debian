@@ -1,10 +1,41 @@
 #!/usr/bin/make -f
 
+DEB_UPSTREAM_VERSION=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
+
+DESTDIR=$(CURDIR)/debian/ampache
+US=$(DESTDIR)/usr/share
+AMP=$(DESTDIR)/usr/share/ampache/www
+
 %:
 	dh $@
 
-override_dh_install:
-	dh_install -XGPL-LICENSE -XINSTALL -XCOPYING -Xlicense -XLICENSE \
-	-Xreadme.windows.txt -Xprototype -XSnoopy -XFreeMono-Medium \
-	-Xgather-messages.sh -Xnusoap -Xxspf_jukebox.fla -Xxspf_jukebox.swf \
-	-Xpearxmlrpc
+get-orig-source:
+	echo "deb upstream version is $(DEB_UPSTREAM_VERSION)"
+	uscan --noconf --force-download --upstream-version 3.6-alpha1 --no-symlink --destdir=.
+	echo "deb upstream version is $(DEB_UPSTREAM_VERSION)"
+	tar -xvf a*.tar.gz
+	rm a*tar.gz
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/docs/INSTALL
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/locale/base/gather-messages.sh
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/captcha/FreeMono-Medium.ttf
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/flash/LICENSE
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/flash/xspf_jukebox.swf
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/flash/xspf_jukebox.fla
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/getid3/docs/readme.windows.txt
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/nusoap/nusoap.php
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/nusoap/nusoapmime.php
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/php_musicbrainz/COPYING
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/phpmailer/LICENSE
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/phpmailer/class.phpmailer.php
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/phpmailer/class.smtp.php
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/twitter/LICENSE
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/prototype/prototype.js
+	rm ampache-$(DEB_UPSTREAM_VERSION)-alpha1/modules/infotools/Snoopy.class.php
+	find ampache-$(DEB_UPSTREAM_VERSION)-alpha1 -type d -exec chmod 755 {} \;
+	find ampache-$(DEB_UPSTREAM_VERSION)-alpha1 -type f -exec chmod 644 {} \;
+	find ampache-$(DEB_UPSTREAM_VERSION)-alpha1 -name ".gitignore" -exec rm {} \;
+	GZIP=--best tar -cz --owner root --group root --mode a+rX -f \
+		ampache_$(DEB_UPSTREAM_VERSION)-alpha1+dfsg.orig.tar.gz \
+		ampache-$(DEB_UPSTREAM_VERSION)-alpha1
+	rm -r ampache-$(DEB_UPSTREAM_VERSION)-alpha1
+

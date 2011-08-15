@@ -1,59 +1,65 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All Rights Reserved
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Search
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 require_once 'lib/init.php';
 
-show_header(); 
+show_header();
 
 /**
- * action switch 
+ * action switch
  */
-switch ($_REQUEST['action']) { 
-	case 'quick_search':
-		/* This needs to be done because we don't know what thing
-		 * they used the quick search to search on until after they've
-		 * submited it 
-		 */
-		$_REQUEST['s_all'] = $_REQUEST['search_string'];
-		
-		if (strlen($_REQUEST['search_string']) < 1) { 
-			Error::add('keyword',_('Error: No Keyword Entered'));
-			require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
-			break;
-		}
+switch ($_REQUEST['action']) {
 	case 'search':
-		require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
-		require_once Config::get('prefix') . '/templates/show_search_options.inc.php'; 
-		$results = run_search($_REQUEST);
-		Browse::set_type('song'); 
-		Browse::reset(); 
-		Browse::show_objects($results); 
+		$browse = new Browse();
+		require_once Config::get('prefix') . '/templates/show_search.inc.php';
+		require_once Config::get('prefix') . '/templates/show_search_options.inc.php';
+		$results = Search::run($_REQUEST);
+		$browse->set_type($_REQUEST['type']);
+		$browse->show_objects($results);
+		$browse->store();
 	break;
 	case 'save_as_track':
 		$playlist_id = save_search($_REQUEST);
 		$playlist = new Playlist($playlist_id);
-		show_confirmation("Search Saved","Your Search has been saved as a track in $playlist->name",conf('web_path') . "/search.php");
+		show_confirmation(_('Search Saved'),sprintf(_('Your Search has been saved as a track in %s'), $playlist->name),conf('web_path') . "/search.php");
 	break;
+	case 'save_as_smartplaylist':
+		$playlist = new Search();
+		$playlist->parse_rules(Search::clean_request($_REQUEST));
+		$playlist->save();
 	default:
-		require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
+		require_once Config::get('prefix') . '/templates/show_search.inc.php';
+	break;
+	case 'descriptor':
+		// This is a little special we don't want header/footers so trash what we've got in the OB
+		ob_clean();
+		require_once Config::get('prefix') . '/templates/show_search_descriptor.inc.php';
+		exit;
 	break;
 }
 

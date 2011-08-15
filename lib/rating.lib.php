@@ -1,32 +1,39 @@
 <?php
-/*
-
- Copyright 2001 - 2007 Ampache.org
- All Rights Reserved
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Rating Library
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 /**
  * show_rating
  * This takes an artist id and includes the right file
  */
-function show_rating($object_id,$type) { 
+function show_rating($object_id,$type) {
 
 	$rating = new Rating($object_id,$type);
-	
+
 	require Config::get('prefix') . '/templates/show_object_rating.inc.php';
 
 } // show_rating
@@ -42,11 +49,11 @@ function show_rating_static($object_id,$type) {
 
 /**
  * get_rating_name
- * This takes a score and returns the name that we should use 
+ * This takes a score and returns the name that we should use
  */
-function get_rating_name($score) { 
+function get_rating_name($score) {
 
-	switch ($score) { 
+	switch ($score) {
 		case '0':
 			return _("Don't Play");
 		break;
@@ -72,7 +79,7 @@ function get_rating_name($score) {
 	} // end switch
 
 	return true;
-	
+
 } // get_rating_name
 
 ?>

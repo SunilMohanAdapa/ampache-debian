@@ -1,28 +1,41 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Core Class
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 /**
- * Core
+ * Core Class
+ *
  * This is really just a namespace class, it's full of static functions
  * would be replaced by a namespace library once that exists in php
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
  */
 class Core {
 
@@ -30,9 +43,9 @@ class Core {
 	 * constructor
 	 * This doesn't do anything
 	 */
-	private function __construct() { 
+	private function __construct() {
 
-		return false; 
+		return false;
 
 	} // construction
 
@@ -41,25 +54,25 @@ class Core {
 	 * This registers a form with a SID, inserts it into the session variables
 	 * and then returns a string for use in the HTML form
 	 */
-	public static function form_register($name,$type='post') { 
+	public static function form_register($name,$type='post') {
 
 		// Make ourselves a nice little sid
 		$sid =  md5(uniqid(rand(), true));
 
 		// Register it
-		$_SESSION['forms'][$name] = array('sid'=>$sid,'expire'=>time() + Config::get('session_length')); 
+		$_SESSION['forms'][$name] = array('sid'=>$sid,'expire'=>time() + Config::get('session_length'));
 
-		switch ($type) { 
-			default: 
-			case 'post': 
-				$string = '<input type="hidden" name="form_validation" value="' . $sid . '" />'; 
-			break; 
-			case 'get': 
-				$string = $sid; 
-			break; 
-		} // end switch on type 
+		switch ($type) {
+			default:
+			case 'post':
+				$string = '<input type="hidden" name="form_validation" value="' . $sid . '" />';
+			break;
+			case 'get':
+				$string = $sid;
+			break;
+		} // end switch on type
 
-		return $string; 
+		return $string;
 
 	} // form_register
 
@@ -68,30 +81,30 @@ class Core {
 	 * This takes a form name and then compares it with the posted sid, if they don't match
 	 * then it returns false and doesn't let the person continue
 	 */
-	public static function form_verify($name,$method='post') { 
+	public static function form_verify($name,$method='post') {
 
-		switch ($method) { 
-			case 'post': 
-				$source = $_POST['form_validation']; 
-			break; 
-			case 'get': 
+		switch ($method) {
+			case 'post':
+				$source = $_POST['form_validation'];
+			break;
+			case 'get':
 				$source = $_GET['form_validation'];
-			break; 
-			case 'cookie': 
-				$source = $_COOKIE['form_validation']; 
-			break; 
-			case 'request': 
-				$source = $_REQUEST['form_validation']; 
-			break; 
-		} 
+			break;
+			case 'cookie':
+				$source = $_COOKIE['form_validation'];
+			break;
+			case 'request':
+				$source = $_REQUEST['form_validation'];
+			break;
+		}
 
-		if ($source == $_SESSION['forms'][$name]['sid'] AND $_SESSION['forms'][$name]['expire'] > time()) { 
-			unset($_SESSION['forms'][$name]); 
-			return true; 
-		} 
+		if ($source == $_SESSION['forms'][$name]['sid'] AND $_SESSION['forms'][$name]['expire'] > time()) {
+			unset($_SESSION['forms'][$name]);
+			return true;
+		}
 
-		unset($_SESSION['forms'][$name]); 
-		return false; 
+		unset($_SESSION['forms'][$name]);
+		return false;
 
 	} // form_verify
 
@@ -100,21 +113,21 @@ class Core {
 	* This returns the dimensions of the passed song of the passed type
 	* returns an empty array if PHP-GD is not currently installed, returns
 	* false on error
-	*/ 
-	public static function image_dimensions($image_data) { 
+	*/
+	public static function image_dimensions($image_data) {
 
-		if (!function_exists('ImageCreateFromString')) { return false; } 
+		if (!function_exists('ImageCreateFromString')) { return false; }
 
-		$image = ImageCreateFromString($image_data); 
+		$image = ImageCreateFromString($image_data);
 
-		if (!$image) { return false; } 
+		if (!$image) { return false; }
 
-		$width = imagesx($image); 
-		$height = imagesy($image); 
+		$width = imagesx($image);
+		$height = imagesy($image);
 
-		if (!$width || !$height) { return false; } 
+		if (!$width || !$height) { return false; }
 
-		return array('width'=>$width,'height'=>$height); 
+		return array('width'=>$width,'height'=>$height);
 
 	} // image_dimensions
 

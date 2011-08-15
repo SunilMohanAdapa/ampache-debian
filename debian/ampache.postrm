@@ -45,7 +45,7 @@ apache_remove() {
 }
 
 mythbuntu_apache_remove() {
-	if [ /var/www/mythweb -a $APES ]; then
+	if [ -e /var/www/mythweb -a $APES ]; then
 		rm -f $APE/mythbuntu.ampache.conf
 	fi
 }
@@ -71,20 +71,18 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 		if [ -f /etc/cron.daily/ampache ]; then
 			rm -f /etc/cron.daily/ampache
 		fi
-		exit 0
-	fi
-	#This removes the webserver config file symlinks and reloads the
-	#webserver
-	if [ "$RET" = "true" ]; then
+		return 0
+	elif [ "$RET" = "true" ]; then
 		if [ "$webservers" = "apache2" ]; then
 			if [ -d /var/www/mythweb ] && [ -f $APES ]; then
 				mythbuntu_apache_remove
 			else
 				apache_remove
 			fi
-		fi
-		if [ "$webservers" = "lighttpd" ]; then
+		elif [ "$webservers" = "lighttpd" ]; then
 			lighttpd_remove
+		else
+			printf "unable to configure $webservers\n"
 		fi
 		if [ -x /usr/sbin/invoke-rc.d ]; then
 			invoke-rc.d $webservers reload 3>/dev/null || true
@@ -104,6 +102,8 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 		if [ -f /etc/cron.daily/ampache ]; then
 			rm -f /etc/cron.daily/ampache
 		fi
+	else
+		printf "unable to configure ampache.\n"
 	fi
 fi
 

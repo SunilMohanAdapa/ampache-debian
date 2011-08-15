@@ -1,24 +1,31 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Test
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All Rights Reserved
-
- this program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html lang="en-US">
@@ -37,7 +44,7 @@
 <tr>
 	<td><font size="+1"><?php echo _('CHECK'); ?></font></td>
 	<td>
-		<font size="+1"><?php echo _('STATUS'); ?></font>	
+		<font size="+1"><?php echo _('STATUS'); ?></font>
 	</td>
 	<td><font size="+1"><?php echo _('DESCRIPTION'); ?></font></td>
 </tr>
@@ -45,13 +52,13 @@
 	<td valign="top"><?php echo _('PHP Version'); ?></td>
 	<td valign="top">[
 	<?php
-		if (!check_php_ver()) { 
+		if (!check_php_ver()) {
 			echo debug_result('',false);
-			if (function_exists('hash_algos')) { $algos = hash_algos(); } 
-			$string = "<strong>" .  phpversion() . " " . _('Hash Function Exists') . " " . print_boolean(function_exists('hash_algos')) . " " . _('SHA256 Support') . " " . print_boolean(in_array('sha256',$algos)) . "</strong>"; 
+			if (function_exists('hash_algos')) { $algos = hash_algos(); }
+			$string = "<strong>" .  phpversion() . " " . _('Hash Function Exists') . " " . print_bool(function_exists('hash_algos')) . " " . _('SHA256 Support') . " " . print_bool(in_array('sha256',$algos)) . "</strong>";
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>
 	]
@@ -66,10 +73,10 @@
         <td valign="top">[
         <?php
                 if (!check_php_mysql()) {
-			echo debug_result('',false); 
+			echo debug_result('',false);
                 }
                 else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
                 }
         ?>
         ]
@@ -82,11 +89,11 @@
 	<td valign="top"><?php echo _('PHP Session Support'); ?></td>
 	<td valign="top">[
 	<?php
-		if (!check_php_session()) { 
-			echo debug_result('',false); 
+		if (!check_php_session()) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>
 	]
@@ -99,11 +106,11 @@
 	<td valign="top"><?php echo _('PHP ICONV Support'); ?></td>
 	<td valign="top">[
 	<?php
-		if (!check_php_iconv()) { 
-			echo debug_result('',false); 
+		if (!check_php_iconv()) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>]
 	</td>
@@ -115,11 +122,11 @@
 	<td valign="top"><?php echo _('PHP PCRE Support'); ?></td>
 	<td valign="top">[
 	<?php
-		if (!check_php_pcre()) { 
-			echo debug_result('',false); 
+		if (!check_php_pcre()) {
+			echo debug_result('',false);
 		}
-		else { 
-			echo debug_result('',true); 
+		else {
+			echo debug_result('',true);
 		}
 	?>]
 	</td>
@@ -131,27 +138,27 @@
 	<td valign="top"><?php echo _('PHP PutENV Support'); ?></td>
 	<td valign="top">[
 	<?php
-		if (!check_putenv()) { 
-			echo debug_result('',false); 
+		if (!check_putenv()) {
+			echo debug_result('',false);
 		}
-		else { 
-			echo debug_result('',true); 
-		} 
+		else {
+			echo debug_result('',true);
+		}
 	?>]
 	</td>
 	<td>
 	<?php echo _('This test makes sure that PHP isn\'t running in SafeMode and that we are able to modify the memory limits. While not required, without these abilities some features of ampache may not work correctly'); ?>
 	</td>
-</tr> 
+</tr>
 <tr>
-	<td valign="top"><?php echo _('Ampache.cfg.php Exists'); ?></td>
-	<td valign="top">[ 
+	<td valign="top"><?php echo sprintf(_("%s is readable"),"ampache.cfg.php"); ?></td>
+	<td valign="top">[
 	<?php
-		if (!is_readable($configfile)) { 
-			echo debug_result('',false); 
+		if (!is_readable($configfile)) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>
 	]
@@ -165,15 +172,15 @@
 	<td valign="top">
 		<?php echo _('Ampache.cfg.php Configured?'); ?>
 	</td>
-	<td valign="top">[ 
+	<td valign="top">[
 	<?php
 		$results = @parse_ini_file($configfile);
 		Config::set_by_array($results);
-		if (!check_config_values($results)) { 
-			echo debug_result('',false); 
+		if (!check_config_values($results)) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>
 	]
@@ -187,12 +194,12 @@
 	<td valign="top">[
 	<?php
 		$db = check_database($results['database_hostname'], $results['database_username'], $results['database_password'],$results['database_name']);
-		if (!$db) { 
-			echo debug_result('',false); 
+		if (!$db) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
-		}		
+			echo debug_result('',true);
+		}
 	?>
 	]
 	</td>
@@ -205,11 +212,11 @@
 	<td valign="top">[
 	<?php
 		$db_inserted = check_database_inserted($db,$results['local_db']);
-		if (!$db_inserted) { 
-			echo debug_result('',false); 
+		if (!$db_inserted) {
+			echo debug_result('',false);
 		}
 		else {
-			echo debug_result('',true); 
+			echo debug_result('',true);
 		}
 	?>
 	]
@@ -226,18 +233,18 @@
 		/*
 		 Check to see if this is Http or https
 		 */
-		if ($_SERVER['HTTPS'] == 'on') { 
+		if ($_SERVER['HTTPS'] == 'on') {
          		$http_type = "https://";
 	 	}
-	 	else { 
+	 	else {
 	        	$http_type = "http://";
 		}
 		$results['web_path'] = $http_type . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . Config::get('web_path');
-		if (check_config_values($results)) { 
+		if (check_config_values($results)) {
 			echo "&nbsp;&nbsp;&nbsp;<img src=\"" . $results['web_path'] ."/images/icon_enable.png\" />&nbsp;&nbsp;&nbsp;";
 		}
 		else {
-			echo debug_result('',false); 
+			echo debug_result('',false);
 		}
 
 	?>

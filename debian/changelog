@@ -1,8 +1,26 @@
+ampache (3.6-alpha1+dfsg-2) unstable; urgency=low
+
+  * Use conditional statements to create the "$sa", "$se", "$ea", "$confd"
+    variables in ampache.postinst.  These vars are only needed if Apache2 is
+    installed and no attempt should be made to create them when using lighttpd.
+    Thx Matt Wheeler for the bug report. Closes: #640530
+  * Added additional check in mythbuntu_apache_install to check for the
+    presents of the needed symlink so mythbuntu upgrades do not fail. Thx Bill
+    Walker for the bug report. (LP: #874142 #880654)
+  * Corrected line lengths in changelog to correct lintian warning.
+  * Added exclude statements to dh_install to not install extra license files,
+    as reported by lintian.
+  * Removed install statement from debian/ampache.install so a duplicate copy
+    of the upstream changelog is not installed as reported by lintian.
+  * Reformatted Variables print statement in debian/ampache.postinst. 
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 17 Sep 2011 22:27:14 -0500
+
 ampache (3.6-alpha1+dfsg-1) unstable; urgency=low
 
   * New upstream release.
-  * Upstream has removed php-pear/xmp-rpc and has changed the source code to use
-    the internal xml-rpc capabilities of php.  Closes: #631130
+  * Upstream has removed php-pear/xmp-rpc and has changed the source code to
+    use the internal xml-rpc capabilities of php.  Closes: #631130
   * Upstream has changed the source code so ampache now provides more relevent
     information in the log files.  This includes removing/correcting depeciated
     php functions.  Closes: #636438, #624221, #611785
@@ -10,10 +28,10 @@ ampache (3.6-alpha1+dfsg-1) unstable; urgency=low
     var/log/ampache after the logs are rotated. (LP: #722274)
   * added /debian/scripts directory, and moved grab_xspf.sh into it.
   * debian/po
-    - added updated da.po translations file.  Thx Joe Dalton for the bug report. 
-      Closes: #595197
-    - added updated nl.po translations file.  Thx Jeroen Schot for the bug report.
-      Closes: #637503
+    - added updated da.po translations file.  Thx Joe Dalton for the bug
+      report. Closes: #595197
+    - added updated nl.po translations file.  Thx Jeroen Schot for the bug
+      report. Closes: #637503
   * debian/dirs
     - removed /usr/share/ampache/www/modules/pearxmlrpc no longer needed.
     - added /var/log/ampache/old to contain the old rotated logs.

@@ -9,6 +9,9 @@ AMP=$(DESTDIR)/usr/share/ampache/www
 %:
 	dh $@
 
+override_dh_install:
+	dh_install -Xlicense.commercial.txt -Xlicense.txt
+
 get-orig-source:
 	echo "deb upstream version is $(DEB_UPSTREAM_VERSION)"
 	uscan --noconf --force-download --upstream-version 3.6-alpha1 --no-symlink --destdir=.

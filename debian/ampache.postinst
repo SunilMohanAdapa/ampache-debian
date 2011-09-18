@@ -3,25 +3,36 @@
 
 set -e
 
-#set our variables
-AMP="/etc/ampache/ampache.conf"
-APE="/etc/apache2/conf.d"
-APES="/etc/apache2/sites-enabled/mythweb.conf"
-ELCA="/etc/lighttpd/conf-available"
-ELCAMP="/etc/ampache/lighttpd_ampache.conf"
-EM="/usr/sbin/lighty-enable-mod"
+#set our variables, placed them in conditional if statements so if apache2 is
+#being used lighttpd vars are not created and vice versa.
 log="/var/log/ampache"
-MAMP="/etc/ampache/mythbuntu.ampache.conf"
-default_stock="b38ca5a963f52930ede3f4e1958f3275  /etc/apache2/sites-available/default"
-AA="b17b1eae00bd0ee2d716394ee28bbc62  /etc/apache2/sites-enabled/ApacheAmpache"
-sa=$(ls /etc/apache2/sites-available)
-se=$(ls /etc/apache2/sites-enabled)
-ea=$(ls /etc/ampache)
-confd=$(ls $APE)
+
+if [ -e /etc/ampache ]; then
+	AMP="/etc/ampache/ampache.conf"
+	ELCAMP="/etc/ampache/lighttpd_ampache.conf"
+	MAMP="/etc/ampache/mythbuntu.ampache.conf"
+	ea=$(ls /etc/ampache)
+fi
+
+if [ -e /etc/apache2 ]; then
+	APE="/etc/apache2/conf.d"
+	APES="/etc/apache2/sites-enabled/mythweb.conf"
+	confd=$(ls $APE)
+	sa=$(ls /etc/apache2/sites-available)
+	se=$(ls /etc/apache2/sites-enabled)
+	default_stock="b38ca5a963f52930ede3f4e1958f3275  /etc/apache2/sites-available/default"
+	AA="b17b1eae00bd0ee2d716394ee28bbc62  /etc/apache2/sites-enabled/ApacheAmpache"
+fi
+
+if [ -e /etc/lighttpd ]; then
+	ELCA="/etc/lighttpd/conf-available"
+	EM="/usr/sbin/lighty-enable-mod"
+fi
 
 #read in the debconf module
 . /usr/share/debconf/confmodule
 
+#apache2 sanity checks
 sc010_check() {
 	#check to see if ampache.conf is present and enabled.
 	sc010=1
@@ -79,7 +90,12 @@ apache_install() {
 	sc102_check
 	sc103_check
 	sc104_check
-	printf "Our vars are:\nsc010 is $sc010\nsc101 is $sc101\nsc102 is $sc102\nsc103 is $sc103\nsc104 is $sc104\n"
+	printf "Our vars are:\n"
+	printf "sc010 is $sc010\n"
+	printf "sc101 is $sc101\n"
+	printf "sc102 is $sc102\n"
+	printf "sc103 is $sc103\n"
+	printf "sc104 is $sc104\n"
 	if [ "$sc010" = "enabled" ]; then
 		printf "ampache.conf is enabled let's use it.\n"
 		return 0
@@ -92,9 +108,7 @@ apache_install() {
 	elif [ "$sc010" = "1" ] && [ "$sc101" = "1" ] && [ "$sc102" = "1" ] && \
 		[ "$sc103" = "enabled" ] && [ "$sc104" = "equal" ]; then
 		default_users=$(md5sum /etc/apache2/sites-available/default)
-		printf "$default_stock\n"
-		printf "$default_users\n"
-		printf "enableing ApacheAmpache.\n"
+		printf "enabling ApacheAmpache.\n"
 		if [ "$default_stock" = "$default_users" ]; then
 			a2dissite default
 			a2ensite ApacheAmpache
@@ -137,14 +151,16 @@ lighttpd_install() {
 
 #Configure the apache2 webserver on Mythbuntu.
 mythbuntu_apache_install() {
-    if [ -d /var/www/mythweb ] && [ -f $APES ]; then
-        ln -s $MAMP $APE/mythbuntu.ampache.conf
+    if [ -e $APE/mythbuntu.ampache.conf ]; then
+		printf "mythbuntu symlink already exists"
+	else
+		ln -s $MAMP $APE/mythbuntu.ampache.conf
         rm -f $ELCAMP
         rm -f $AMP
     fi
 }
 
-if [ "$1" = "configure" ]; then
+if [ "$1" = "configure" ] || [ "1" = "upgrade" ]; then
 	#find out what type of webserver we have
 	db_get ampache/webserver_type || true
 	webservers="$RET"

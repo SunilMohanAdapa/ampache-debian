@@ -29,7 +29,9 @@ function arrayToJSON($array) {
 			$json .= arrayToJSON($value);
 		}
 		else {
-			$json .= '"' . $value . '"';
+			// Make sure to strip backslashes and convert things to
+			// entities in our output
+			$json .= '"' . scrub_out(str_replace('\\', '', $value)) . '"';
 		}
 		$json .= ' , ';
 	}
@@ -45,5 +47,5 @@ echo 'var types = $H(\'';
 echo arrayToJSON($search->types) . "'.evalJSON());\n";
 echo 'var basetypes = $H(\'';
 echo arrayToJSON($search->basetypes) . "'.evalJSON());\n";
-echo 'removeIcon = \'<a href="javascript: void(0)">' . get_user_icon('disable', _('Remove')) . '</a>\';';
+echo 'removeIcon = \'<a href="javascript: void(0)">' . get_user_icon('disable', T_('Remove')) . '</a>\';';
 ?>

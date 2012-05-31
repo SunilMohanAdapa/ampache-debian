@@ -3,9 +3,78 @@
 --------------------------------------------------------------------------
 
 --------------------------------------------------------------------------
-  v.3.6-Alpha1 04/26/2011
+  v.3.6-Alpha2
+        - Fixed CLI database load to work regardless of whether it's run from
+                the top-level directory (reported by porthose)
+        - Fixed XML cleanup to work with newer versions of libpcre
+                (patch by Natureshadow)
+        - Fixed ID3v2 disk number parsing
+        - Updated getID3 to 1.9.3
+        - Added php-gettext for fallback emulation when a locale (or gettext)
+                isn't supported
+        - Fixed pluralisation issue in Recently Played
+        - Added support for extracting MBIDs from M4A files
+        - Fixed parsing of some tag types (most notably M4A)
+        - Corrected PLS output to work with more players (reported by bhassel)
+        - Fixed an issue with compound artists in media with MusicBrainz tags
+                (reported by greengeek)
+        - Fixed an issue with filename pattern matching when patterns contained
+                characters that are part of regex syntax (such as -)
+        - Fixed display of logic operator in rules (reported by Twister)
+        - Fixed newsearch issue preventing use of more than 9 rules 
+                (reported by Twister)
+        - Fixed JSON escaping issue that broke search in some cases
+                (reported by XeeNiX)
+        - Overhauled CLI tools for installation and database management
+        - Fixed admin form issue (reported by the3rdbit)
+        - Improved efficiency of fetching song lists via the API
+                (reported by lotan_rm)
+        - Added admin_enable_required option to user registration
+        - Fixed session issue preventing some users from streaming
+                (reported by miir01)
+        - Quote Content-Disposition header for art, fixes Chrome issue
+                (patch by Sébastien LIENARD)
+        - Fixed art URL returned via the API (patch by lotan_rm)
+        - Fixed video searches (reported by mchugh19)
+	- Fixed Database Upgrade issue that caused catalog user/pass for
+		remote catalogs to not be added correctly
+        - Added the ability to locally cache passwords validated by external
+                means (e.g. to allow LDAP authenticated users to use the API)
+        - Fixed session handling to actually use our custom handler
+                (reported by ss23)
+        - Fixed Last.FM art method (reported by claudio)
+        - Updated Captcha PHP to 2.3
+        - Updated PHPMailer to 5.2.0
+        - Fixed bug in MPD module which affected toggling random or repeat 
+                (patch from jherold)
+        - Properly escape config values when writing ampache.cfg.php
+        - Fixed session persistence with auth disabled (reported by Nathanael
+                Anderson)
+        - Fixed item count retention for Advanced Random (reported by USAF_Pride) 
+        - Made catalog verify respect memory_cache
+        - Some catalog operations are now done in chunks, which works better on
+                large catalogs
+        - API now returns year and bitrate for songs
+        - Fixed search_songs API method to use Search::run properly
+        - Fixed require_session when auth_type is 'local'
+        - Catalog filtering fix
+        - Toggle artwork with a button instead of a checkbox (patch from mywindow)
+        - API handshake code cleanup, including a bugfix from postfuturist
+        - Improved install process when JavaScript is disabled
+        - Fixed duplicate searching even more
+        - Committed minor bugfixes for Penguin theme
+        - Added Fresh theme
+        - Fixed spurious API handshake failure output
+
+
+--------------------------------------------------------------------------
+  v.3.6-Alpha1 04/27/2011
+        - Fixed forced transcoding
         - Fixed display during catalog updates (reported by Demonic)
         - Fixed duplicate searching (patch from Demonic)
+        - Cleaned up transcoding assumptions
+        - Fixed tag browsing
+        - Added new search/advanced random/dynamic playlist interface
         - byterange handling for ranges starting with 0 (patch from uberbrady)
         - Fixed issue with updating ACLs under Windows (reported by Citlali)
 	- Add function that check ampache and php version from each website.

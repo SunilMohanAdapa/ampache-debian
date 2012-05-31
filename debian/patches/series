@@ -1,1 +1,2 @@
-logrotate_fix
+01_logrotate.patch
+02_nonfree_font.patch

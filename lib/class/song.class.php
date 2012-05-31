@@ -127,6 +127,7 @@ class Song extends database_object implements media {
 		Album::build_cache($albums);
 		Tag::build_cache($tags);
 		Tag::build_map_cache('song',$song_ids);
+		Art::build_cache($albums);
 
 		// If we're rating this then cache them as well
 		if (Config::get('ratings')) {
@@ -700,6 +701,7 @@ class Song extends database_object implements media {
 		$this->f_artist = truncate_with_ellipsis($this->f_artist_full,Config::get('ellipse_threshold_artist'));
 
 		// Format the title
+		$this->f_title_full = $this->title;
 		$this->f_title = truncate_with_ellipsis($this->title,Config::get('ellipse_threshold_title'));
 
 		// Create Links for the different objects
@@ -835,53 +837,6 @@ class Song extends database_object implements media {
 
 	} // get_rel_path
 
-
-	/*!
-		@function fill_info
-		@discussion this takes the $results from getid3 and attempts to fill
-			as much information as possible from the file name using the
-			pattern set in the current catalog
-	*/
-	function fill_info($results,$pattern,$catalog_id,$key) {
-
-		$filename = $this->get_rel_path($results['file'],$catalog_id);
-
-		if (!strlen($results[$key]['title'])) {
-			$results[$key]['title']		= $this->get_info_from_filename($filename,$pattern,"%t");
-		}
-		if (!strlen($results[$key]['track'])) {
-			$results[$key]['track']		= $this->get_info_from_filename($filename,$pattern,"%T");
-		}
-		if (!strlen($results[$key]['year'])) {
-			$results[$key]['year']		= $this->get_info_from_filename($filename,$pattern,"%y");
-		}
-		if (!strlen($results[$key]['album'])) {
-			$results[$key]['album']		= $this->get_info_from_filename($filename,$pattern,"%A");
-		}
-		if (!strlen($results[$key]['artist'])) {
-			$results[$key]['artist']	= $this->get_info_from_filename($filename,$pattern,"%a");
-		}
-
-		return $results;
-
-	} // fill_info
-
-	/*!
-		@function get_info_from_filename
-		@discussion get information from a filename based on pattern
-	*/
-	function get_info_from_filename($file,$pattern,$tag) {
-
-		$preg_pattern = str_replace("$tag","(.+)",$pattern);
-		$preg_pattern = preg_replace("/\%\w/",".+",$preg_pattern);
-		$preg_pattern = "/" . str_replace("/","\/",$preg_pattern) . "\..+/";
-
-		preg_match($preg_pattern,$file,$matches);
-
-		return stripslashes($matches[1]);
-
-	} // get_info_from_filename
-
 	/**
 	 * play_url
 	 * This function takes all the song information and correctly formats a
@@ -899,9 +854,7 @@ class Song extends database_object implements media {
 		// working player, don't report this as a bug!
 		if ($song->type == 'flac') { $type = 'ogg'; }
 
-		$song->format();
-
-		$song_name = rawurlencode($song->f_artist_full . " - " . $song->title . "." . $type);
+		$song_name = rawurlencode($song->get_artist_name() . " - " . $song->title . "." . $type);
 
 		$url = Stream::get_base_url() . "oid=$song->id&uid=$user_id&name=/$song_name";
 

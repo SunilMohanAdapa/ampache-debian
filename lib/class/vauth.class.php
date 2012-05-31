@@ -84,7 +84,7 @@ class vauth {
 
 		if (!is_array($results)) {
 			debug_event('SESSION', 'Error unable to read session from key ' . $key . ' no data found', '1');
-			return false;
+			return '';
 		}
 
 		return $results['value'];
@@ -259,7 +259,7 @@ class vauth {
 		$remember_length = Config::get('remember_length');
 		$session_name = Config::get('session_name');
 
-		Config::set('cookie_life',$remember_length,'1');
+		Config::set('cookie_life', $remember_length, true);
 		setcookie($session_name . '_remember',"Rappelez-vous, rappelez-vous le 27 mars", time() + $remember_length, '/');
 
 	} // create_remember_cookie
@@ -379,8 +379,11 @@ class vauth {
 				$key = Dba::escape($key);
 				$time = time();
 				// Build a list of enabled authentication types
-				$enabled_types = implode("','",
-					Config::get('auth_methods'));
+				$types = Config::get('auth_methods');
+				if (!Config::get('use_auth')) {
+					$types[] = '';
+				}
+				$enabled_types = implode("','", $types);
 				$sql = "SELECT * FROM `session` WHERE " .
 					"`id`='$key' AND `expire` > '$time' " .
 					"AND `type` IN('$enabled_types')"; 
@@ -421,20 +424,18 @@ class vauth {
 	 * This takes a SID and extends its expiration.
 	 */
 	public static function session_extend($sid) {
-
+		$time = time();
 		$sid = Dba::escape($sid);
 		$expire = isset($_COOKIE[Config::get('session_name') . '_remember']) 
-			? time() + Config::get('remember_length') 
-			: time() + Config::get('session_length');
-		$len = $expire - time();
+			? $time + Config::get('remember_length') 
+			: $time + Config::get('session_length');
 
 		$sql = "UPDATE `session` SET `expire`='$expire' WHERE `id`='$sid'";
 		$db_results = Dba::write($sql);
 
-		debug_event('SESSION', 'Session:' . $sid . ' has been extended to ' . date("r",$expire) . ' extension length ' . $len, '6');
+		debug_event('SESSION', $sid . ' has been extended to ' . date('r', $expire) . ' extension length ' . ($expire - $time), 5);
 
 		return $db_results;
-
 	} // session_extend
 
 	/**
@@ -544,6 +545,15 @@ class vauth {
 				$hashed_password[] = hash('sha256', $password);
 				$hashed_password[] = hash('sha256', 
 					Dba::escape(scrub_in($password)));
+
+				// Automagically update the password if it's 
+				// old and busted.
+				if($row['password'] == $hashed_password[1] &&
+					$hashed_password[0] != $hashed_password[1]) {
+					$user = User::get_from_username($username);
+					$user->update_password($password);
+				}
+
 				if(in_array($row['password'], $hashed_password)) {
 					$results['success']	= true;
 					$results['type']	= 'mysql';

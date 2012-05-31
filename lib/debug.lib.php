@@ -85,12 +85,7 @@ function check_database_inserted($dbh,$db_name) {
  */
 function check_php_ver($level=0) {
 
-	if (floatval(phpversion()) < 5.1) {
-		return false;
-	}
-
-	// Poor windows users if only their OS wasn't behind the times
-	if (strtoupper(substr(PHP_OS,0,3)) == 'WIN' AND floatval(phpversion()) < 5.3) {
+	if (floatval(phpversion()) < 5.3) {
 		return false;
 	}
 
@@ -226,34 +221,38 @@ function check_php_memory() {
 /**
  * check_php_timelimit
  * This checks to make sure that the php timelimit is set to some
- * semi-sane limit, IE greater then 30 seconds
+ * semi-sane limit, IE greater then 60 seconds
  */
 function check_php_timelimit() {
 
-	$current = ini_get('max_execution_time');
-	if (intval($current) < 60) {
-		return false;
-	}
-
-	return true;
+	$current = intval(ini_get('max_execution_time'));
+	return ($current >= 60 || $current == 0);
 
 } // check_php_timelimit
 
 /**
- * check_putenv
- * This checks to see if we can manually set the
- * memory limit, and other putenvs we need for
- * ampache to work correctly
+ * check_safe_mode
+ * Checks to make sure we aren't in safe mode
  */
-function check_putenv() {
+function check_safemode() {
+	if (ini_get('safe_mode')) {
+		return false;
+	}
+	return true;
+}
 
+/**
+ * check_override_memory
+ * This checks to see if we can manually override the memory limit
+ */
+function check_override_memory() {
 	/* Check memory */
 	$current_memory = ini_get('memory_limit');
 	$current_memory = substr($current_memory,0,strlen($current_memory)-1);
 	$new_limit = ($current_memory+16) . "M";
 
 	/* Bump it by 16 megs (for getid3)*/
-	if (!ini_set(memory_limit,$new_limit)) {
+	if (!ini_set('memory_limit',$new_limit)) {
 		return false;
 	}
 
@@ -264,12 +263,14 @@ function check_putenv() {
 		return false;
 	}
 
-	/* Check if safe mode is on */
-	if (ini_get('safe_mode')) {
-		return false;
-	}
+	return true;
+}
 
-	// See if we can override the set_time_limit();
+/**
+ * check_override_exec_time
+ * This checks to see if we can manually override the max execution time
+ */
+function check_override_exec_time() {
 	$current = ini_get('max_execution_time');
 	set_time_limit($current+60);
 
@@ -277,10 +278,8 @@ function check_putenv() {
 		return false;
 	}
 
-
 	return true;
-
-} // check_putenv
+}
 
 /**
  * check_gettext
@@ -311,6 +310,17 @@ function check_mbstring() {
 } // check_mbstring
 
 /**
+ * check_config_writable
+ * This checks whether we can write the config file
+ */
+function check_config_writable() {
+
+	// file eixsts && is writable, or dir is writable
+	return ((file_exists(Config::get('prefix') . '/config/ampache.cfg.php') && is_writable(Config::get('prefix') . '/config/ampache.cfg.php')) 
+		|| (!file_exists(Config::get('prefix') . '/config/ampache.cfg.php') && is_writeable(Config::get('prefix') . '/config/')));
+}
+
+/**
  * generate_config
  * This takes an array of results and re-generates the config file
  * this is used by the installer and by the admin/system page
@@ -338,10 +348,10 @@ function generate_config($current) {
 
 			/* Put in the current value */
 			if ($key == 'config_version') {
-				$line = $key . ' = ' . $value;
+				$line = $key . ' = ' . escape_ini($value);
 			}
 			elseif (isset($current[$key])) {
-				$line = $key . ' = "' . $current[$key] . '"';
+				$line = $key . ' = "' . escape_ini($current[$key]) . '"';
 				unset($current[$key]);
 			} // if set
 
@@ -354,6 +364,18 @@ function generate_config($current) {
 	return $final;
 
 } // generate_config
+
+/**
+ * escape_ini
+ * Escape a value used for inserting into an ini file. 
+ * Won't quote ', like addslashes does.
+ */
+function escape_ini($str) {
+
+	return str_replace('"', '\"', $str);
+
+}
+
 
 /**
  * debug_ok

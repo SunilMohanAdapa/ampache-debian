@@ -7,16 +7,6 @@
 # Even minor modifications require translation updates and such
 # changes should be coordinated with translators and reviewers.
 
-Template: ampache/webserver_type
-Type: multiselect
-__Choices: apache2, lighttpd
-Default: apache2
-_Description: Web server to configure automatically:
- Please select the web server to be configured automatically for Ampache.
- .
- Apache2 and Lighttpd are the only supported web servers for automatic
- configuration.
-
 Template: ampache/restart_webserver
 Type: boolean
 Default: true

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ampache-debconf\n"
 "Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
-"POT-Creation-Date: 2010-05-30 15:04-0500\n"
+"POT-Creation-Date: 2012-05-24 09:56-0500\n"
 "PO-Revision-Date: 2007-10-09 11:55+0200\n"
 "Last-Translator: Piarres Beobide <pi@beobide.net>\n"
 "Language-Team: Euskara <librezale@librezale.org>\n"
@@ -16,42 +16,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. Type: multiselect
-#. Choices
-#: ../ampache.templates:2001
-msgid "apache2"
-msgstr ""
-
-#. Type: multiselect
-#. Choices
-#: ../ampache.templates:2001
-msgid "lighttpd"
-msgstr ""
-
-#. Type: multiselect
-#. Description
-#: ../ampache.templates:2002
-msgid "Web server to configure automatically:"
-msgstr ""
-
-#. Type: multiselect
-#. Description
-#: ../ampache.templates:2002
-msgid ""
-"Please select the web server to be configured automatically for Ampache."
-msgstr ""
-
-#. Type: multiselect
-#. Description
-#: ../ampache.templates:2002
-msgid ""
-"Apache2 and Lighttpd are the only supported web servers for automatic "
-"configuration."
-msgstr ""
-
 #. Type: boolean
 #. Description
-#: ../ampache.templates:3001
+#: ../ampache.templates:2001
 #, fuzzy
 #| msgid "Restart Apache 2 web server?"
 msgid "Configure and restart the web server?"
@@ -59,7 +26,7 @@ msgstr "Apache2 web zerbitzaria berreabiarazi?"
 
 #. Type: boolean
 #. Description
-#: ../ampache.templates:3001
+#: ../ampache.templates:2001
 #, fuzzy
 #| msgid ""
 #| "The Apache 2 web server needs to be restarted to enable Ampache. Please "
@@ -75,7 +42,7 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../ampache.templates:3001
+#: ../ampache.templates:2001
 msgid ""
 "To manually restart the web server, use one of the following commands: \"/"
 "etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""

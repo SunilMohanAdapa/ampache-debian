@@ -1,5 +1,63 @@
 Ampache for Debian
 ------------------
+
+PACKAGE SPLIT:
+
+Ampache has been split into ampache and ampache-common.  The ampache package
+installs everything needed to install and configure the Apache2 web server.
+The ampache-common package is provided for users who would like to deploy
+ampache on other web servers or in LXC's VM's or ChRoots where a web server
+installation in not wanted.  With the use of ampache-common the user/sys admin
+will have to manually setup ampache.  This will require the user/sys admin to
+configure apache2 (an alias file in /etc/apache2/conf.d) along with creating
+sysmlinks to some needed system libs.  Additional packages that are needed:
+
+	libapache2-mod-php5 or php5
+	php5-cli
+	php5-mysql
+	php5-xmlrpc
+	php-gettext
+	libjs-prototype
+	libnusoap-php
+	libphp-phpmailer
+	libphp-snoopy
+
+Users/sys admins will have to make the appropriate sysmlinks to the above
+mentioned packages for ampache to work properly.
+
+/etc/cron.daily/ampache =>
+/etc/ampache/ampache.cron.daily
+
+/etc/logrotate.d/ampache =>
+/etc/ampache/logrotate-ampache
+
+/usr/share/ampache/www/docs/CHANGELOG.gz =>
+/usr/share/doc/ampache/changelog.gz
+
+/usr/share/javascript/prototype/prototype.js =>
+/usr/share/ampache/www/modules/prototype/prototype.js
+
+/usr/share/php/libphp-snoopy/Snoopy.class.php =>
+/usr/share/ampache/www/modules/infotools/Snoopy.class.php
+
+/usr/share/php/libphp-phpmailer/class.phpmailer.php =>
+/usr/share/ampache/www/modules/phpmailer/class.phpmailer.php
+
+/usr/share/php/libphp-phpmailer/class.smtp.php =>
+/usr/share/ampache/www/modules/phpmailer/class.smtp.php
+
+/usr/share/php/nusoap/nusoap.php =>
+/usr/share/ampache/www/modules/nusoap/nusoap.php
+
+/usr/share/php/nusoap/nusoapmime.php =>
+/usr/share/ampache/www/modules/nusoap/nusoapmime.php
+
+/usr/share/php/nusoap/class.wsdlcache.php =>
+/usr/share/ampache/www/modules/nusoap/class.wsdlcache.php
+
+/usr/share/php/php-gettext/streams.php =>
+/usr/share/ampache/www/modules/php-gettext/streams.php
+
 XSPF JUKEBOX FLASH PLAYER NOTE:
 
 Currently the XSPF Jukebox Flash player has been removed until an appropriate

@@ -321,7 +321,7 @@ class Stream {
 		header("Cache-control: public");
 		header("Content-Disposition: filename=ampache_playlist.pls");
 		header("Content-Type: audio/x-scpls;");
-		echo "[Playlist]\n";
+		echo "[playlist]\n";
 		echo "NumberOfEntries=$total_entries\n";
 		foreach ($this->media as $element) {
 			$i++;
@@ -617,7 +617,6 @@ class Stream {
 		$min_bitrate = Config::get('min_bit_rate');
 		$time = time();
 		$user_sample_rate = Config::get('sample_rate');
-		$browser = new Browser();
 
 		if (!$song_name) {
 			$song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
@@ -692,7 +691,7 @@ class Stream {
 		$eofss  = floor($song->time - ($eofmm * 60));
 		$eof    = sprintf('%02d.%02d', $eofmm, $eofss);
 
-		$song_file = escapeshellarg($song->file);
+		$song_file = scrub_arg($song->file);
 
 		$transcode_command = $song->stream_cmd();
 		if ($transcode_command == null) {

@@ -117,6 +117,20 @@ function unhtmlentities($string) {
 } //unhtmlentities
 
 /**
+ * scrub_arg
+ *
+ * This function behaves like escapeshellarg, but isn't broken
+ */
+function scrub_arg($arg)
+{
+	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+		return '"' . str_replace(array('"', '%'), array('', ''), $arg) . '"';
+	} else {
+		return "'" . str_replace("'", "'\\''", $arg) . "'";
+	}
+}
+
+/**
  * format_bytes
  * Turns a size in bytes into a human-readable value
  */
@@ -238,7 +252,7 @@ function get_languages() {
 				case 'ar_SA'; $name = '&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;'; break; /* Arabic */
 				case 'he_IL'; $name = '&#1506;&#1489;&#1512;&#1497;&#1514;'; break; /* Hebrew */
 				case 'fa_IR'; $name = '&#1601;&#1575;&#1585;&#1587;&#1610;'; break; /* Farsi */
-				default: $name = _('Unknown'); break;
+				default: $name = T_('Unknown'); break;
 			} // end switch
 
 
@@ -283,30 +297,5 @@ function translate_pattern_code($code) {
 	return false;
 
 } // translate_pattern_code
-
-/**
- * __autoload
- * This function automatically loads any missing classes as they are needed so 
- * that we don't use a million include statements which load more than we need.
- */
-function __autoload($class) {
-	// Lowercase the class
-	$class = strtolower($class);
-
-	$file = Config::get('prefix') . "/lib/class/$class.class.php";
-
-	// See if it exists
-	if (is_readable($file)) {
-		require_once $file;
-		if (is_callable($class . '::_auto_init')) {
-			call_user_func(array($class, '_auto_init'));
-		}
-	}
-	// Else log this as a fatal error
-	else {
-		debug_event('__autoload', "'$class' not found!",'1');
-	}
-
-} // __autoload
 
 ?>

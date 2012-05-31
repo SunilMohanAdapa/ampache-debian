@@ -45,7 +45,7 @@ if (!vauth::session_exists('interface',$_COOKIE[Config::get('session_name')]) AN
 }
 
 // If we aren't resizing just trash thumb
-if (!Config::get('resize_images')) { unset($_GET['thumb']); } 
+if (!Config::get('resize_images')) { $_GET['thumb'] = null; } 
 
 // FIXME: Legacy stuff - should be removed after a version or so
 if (!isset($_GET['object_type'])) { 
@@ -85,7 +85,7 @@ switch ($_GET['type']) {
 	case 'session':
 		vauth::check_session();
 		$key = scrub_in($_REQUEST['image_index']);
-		$image = Art::get_from_source($_SESSION['form']['images'][$key]);
+		$image = Art::get_from_source($_SESSION['form']['images'][$key], 'album');
 		$mime = $_SESSION['form']['images'][$key]['mime'];
 		$data = explode("/",$mime);
 		$extension = $data['1'];
@@ -124,7 +124,8 @@ switch ($_GET['type']) {
 		header("Cache-Control: no-store, no-cache, must-revalidate");
 		header("Pragma: no-cache");
 		header("Content-type: $mime");
-		header("Content-Disposition: filename=" . scrub_out($media->name) . "." . $extension);
+		header('Content-Disposition: filename="' . scrub_out($media->name) . '.' .
+			$extension . '"');
 		echo $source;
 
 	break;

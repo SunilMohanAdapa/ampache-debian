@@ -44,7 +44,8 @@ switch($_REQUEST['action']) {
 		/* Reset the Theme */
 		if ($_POST['method'] == 'admin') {
 			$user_id = '-1';
-			$fullname = _('Server');
+			$system = true;
+			$fullname = T_('Server');
 			$_REQUEST['action'] = 'admin';
 		}
 		else {
@@ -56,7 +57,11 @@ switch($_REQUEST['action']) {
 		update_preferences($user_id);
 		Preference::init();
 
-		$preferences = $GLOBALS['user']->get_preferences($user_id,$_REQUEST['tab']);
+		// Reset gettext so that it's clear whether the preference took
+		// FIXME: do we need to do any header fiddling?
+		load_gettext();
+
+		$preferences = $GLOBALS['user']->get_preferences($_REQUEST['tab'], $system);
 	break;
 	case 'admin_update_preferences':
 		// Make sure only admins here
@@ -79,8 +84,8 @@ switch($_REQUEST['action']) {
 			access_denied();
 			exit;
 		}
-		$fullname= _('Server');
-		$preferences = $GLOBALS['user']->get_preferences(-1,$_REQUEST['tab']);
+		$fullname= T_('Server');
+		$preferences = $GLOBALS['user']->get_preferences($_REQUEST['tab'], true);
 	break;
 	case 'user':
 		if (!Access::check('interface','100')) {
@@ -89,7 +94,7 @@ switch($_REQUEST['action']) {
 		}
 		$client = new User($_REQUEST['user_id']);
 		$fullname = $client->fullname;
-		$preferences = $client->get_preferences(0,$_REQUEST['tab']);
+		$preferences = $client->get_preferences($_REQUEST['tab']);
 	break;
 	case 'update_user':
 		// Make sure we're a user and they came from the form
@@ -111,18 +116,18 @@ switch($_REQUEST['action']) {
 		$_POST['username'] = $GLOBALS['user']->username;
 
 		if (!$GLOBALS['user']->update($_POST)) {
-			Error::add('general',_('Error Update Failed'));
+			Error::add('general', T_('Error Update Failed'));
 		}
 		else {
 			$_REQUEST['action'] = 'confirm';
-			$title = _('Updated');
-			$text = _('Your Account has been updated');
+			$title = T_('Updated');
+			$text = T_('Your Account has been updated');
 			$next_url = Config::get('web_path') . '/preferences.php?tab=account';
 		}
 	break;
 	default:
 		$fullname = $GLOBALS['user']->fullname;
-		$preferences = $GLOBALS['user']->get_preferences(0,$_REQUEST['tab']);
+		$preferences = $GLOBALS['user']->get_preferences($_REQUEST['tab']);
 	break;
 } // End Switch Action
 

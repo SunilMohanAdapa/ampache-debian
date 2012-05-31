@@ -1,5 +1,4 @@
 #!/bin/sh
-#preinst for Ampache
 
 set -e
 
@@ -10,6 +9,16 @@ if [ "$1" = "upgrade" ]; then
 	#make a backup copy of ampache.cfg.php on upgrades
 	if [ -f $AMPCFG ] && [ -h $WWW/config/ampache.cfg.php ]; then
 		cp -a $AMPCFG /etc/ampache/ampache_$(date +%Y%m%d).cfg.php
+	fi
+	#ensure ApacheAmpache is gone, if not the upgrade will fail. 
+	if [ -e /etc/apache2/sites-enabled/ApacheAmpache ]; then
+		a2dissite ApacheAmache
+		a2ensite default
+		service apache2 reload
+		rm /etc/apache2/sites-available/ApacheAmpache
+		printf "ampache-preinst: ApacheAmpache removed\n"
+	else
+		printf "ampache.preinst: ApacheAmpache not present, nothing to do\n"
 	fi
 fi
 

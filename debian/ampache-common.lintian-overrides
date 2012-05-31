@@ -1,0 +1,2 @@
+#The empty dir is needed so we can symlink the prototype system lib into it.
+ampache-common binary: package-contains-empty-directory usr/share/ampache/www/modules/prototype/

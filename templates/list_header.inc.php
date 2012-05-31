@@ -41,7 +41,7 @@ $uid	= Config::get('list_header_uid');
 $sides  = 5;
 
 // ++ the uid
-Config::set('list_header_uid', $uid + 1, 1);
+Config::set('list_header_uid', $uid + 1, true);
 
 // Next
 $next_offset = $start + $limit;
@@ -106,8 +106,8 @@ if ($pages > 1) {
 ?>
 <div class="list-header">
 
-  <?php echo Ajax::text('?page=browse&action=page&browse_id=' . $browse->id . '&start=' . $prev_offset,_('Prev'),'browse_' . $uid . 'prev','','prev'); ?>
-	<?php echo Ajax::text('?page=browse&action=page&browse_id=' . $browse->id . '&start=' . $next_offset,_('Next'),'browse_' . $uid . 'next','','next'); ?>
+  <?php echo Ajax::text('?page=browse&action=page&browse_id=' . $browse->id . '&start=' . $prev_offset, T_('Prev'),'browse_' . $uid . 'prev','','prev'); ?>
+	<?php echo Ajax::text('?page=browse&action=page&browse_id=' . $browse->id . '&start=' . $next_offset, T_('Next'),'browse_' . $uid . 'next','','next'); ?>
 	<?php
 		/* Echo everything below us */
 		foreach ($page_data['down'] as $page => $offset) {

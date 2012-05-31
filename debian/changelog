@@ -1,3 +1,33 @@
+ampache (3.6-git408e713+dfsg-1) unstable; urgency=low
+
+  * New upstream git snapshot, using commit 
+    408e71344ade84685c181cd326e2ec5e79c9157b Closes: #668932, #668936
+  * Prep for apache2.4 transition.
+  * Removed files ApacheAmpache, lighttpd_ampache.conf, mythbuntu.ampache.conf
+    and vhost, they are no longer needed.
+  * Added debain/conf/ampache.conf to be more inline with the apache2.4
+    transition.  This required a rewrite of the postinst, postrm, and preinst.
+    Closes: #668639, #656553 LP: #996507
+  * Split package into ampache and ampache-common.  Ampache behaves the same 
+    and installs the apache2 web server, as where ampache-common will not.
+    This will allow users to deploy ampache on other web servers if they wish.
+    Removed support for lighttpd and mythbuntu as I do not feel comfortable
+    supporting web servers I no longer use.  Closes: #666005
+  * Removed debconf question from ampache.config and ampache.templates,
+    updated po files with debconf-updatepo.
+  * Updated README.Debian to mention the package split.
+  * Removed cruft from debian/rules and updated get-orig-source to retrieve
+    source files from upstreams git repo.  Added additional rules to remove
+    embedded copies of code and nonfree fonts.  Disabled debian/watch.
+  * debian/control added ampache-common binary stanza and adjusted
+    dependencies to remove mythbuntu and lighttpd support.  Added php-gettext
+    to dependencies as upstream now uses it.
+  * Update debian/copyright with the fresh theme copyright info, udated 
+    header information. Added missing CC-BY-3.0 license field.  Corrected
+    typo's. 
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 31 May 2012 15:25:52 -0500
+
 ampache (3.6-alpha1+dfsg-3) unstable; urgency=low
 
   * Removed dependency on php5-auth-pam as it is being removed from the archive
@@ -11,7 +41,7 @@ ampache (3.6-alpha1+dfsg-3) unstable; urgency=low
   * Corrected syntax error in debian/ampache.templates.
   * Increased Standards Version to 3.9.3 no changes needed.
 
- -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 13 Sep 2012 23:19:11 -0500
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 13 Mar 2012 23:19:11 -0500
 
 ampache (3.6-alpha1+dfsg-2) unstable; urgency=low
 

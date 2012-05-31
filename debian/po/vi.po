@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ampache 3.5.4-7\n"
 "Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
-"POT-Creation-Date: 2010-05-30 15:04-0500\n"
+"POT-Creation-Date: 2012-05-24 09:56-0500\n"
 "PO-Revision-Date: 2010-10-05 17:34+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -17,60 +17,49 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 
-#: ../ampache.templates:2001
-#. Type: multiselect
-#. Choices
-msgid "apache2"
-msgstr "apache2"
-
-#: ../ampache.templates:2001
-#. Type: multiselect
-#. Choices
-msgid "lighttpd"
-msgstr "lighttpd"
-
-#: ../ampache.templates:2002
-#. Type: multiselect
-#. Description
-msgid "Web server to configure automatically:"
-msgstr "Trình phục vụ Web cần tự động cấu hình:"
-
-#: ../ampache.templates:2002
-#. Type: multiselect
-#. Description
-msgid ""
-"Please select the web server to be configured automatically for Ampache."
-msgstr "Hãy chọn trình phục vụ Web cần tự động cấu hình cho Ampache."
-
-#: ../ampache.templates:2002
-#. Type: multiselect
-#. Description
-msgid ""
-"Apache2 and Lighttpd are the only supported web servers for automatic "
-"configuration."
-msgstr "Chỉ có khả năng tự động cấu hình Apache2 và Lighttpd thôi."
-
-#: ../ampache.templates:3001
 #. Type: boolean
 #. Description
+#: ../ampache.templates:2001
 msgid "Configure and restart the web server?"
 msgstr "Cấu hình và khởi chạy lại trình phục vụ Web ?"
 
-#: ../ampache.templates:3001
 #. Type: boolean
 #. Description
+#: ../ampache.templates:2001
 msgid ""
 "The web server needs to be reconfigured and restarted to enable Ampache. "
 "Please choose whether you want to restart it automatically now or do it "
 "yourself later."
 msgstr ""
-"Trình phục vụ Web cần phải được cấu hình lại và khởi chạy lại để hiệu lực Ampache. Hãy chọn nếu bạn muốn tự động khởi chạy lại nó ngay bây giờ, hoặc nếu bạn muốn tự khởi chạy nó về sau."
+"Trình phục vụ Web cần phải được cấu hình lại và khởi chạy lại để hiệu lực "
+"Ampache. Hãy chọn nếu bạn muốn tự động khởi chạy lại nó ngay bây giờ, hoặc "
+"nếu bạn muốn tự khởi chạy nó về sau."
 
-#: ../ampache.templates:3001
 #. Type: boolean
 #. Description
+#: ../ampache.templates:2001
 msgid ""
 "To manually restart the web server, use one of the following commands: \"/"
 "etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
-msgstr "Để khởi chạy lại trình phục vụ Web bằng tay, hãy sử dụng một của hai câu lệnh này: « /"
-"etc/init.d/apache2 restart » hoặc « /etc/init.d/lighttpd restart »"
+msgstr ""
+"Để khởi chạy lại trình phục vụ Web bằng tay, hãy sử dụng một của hai câu "
+"lệnh này: « /etc/init.d/apache2 restart » hoặc « /etc/init.d/lighttpd "
+"restart »"
+
+#~ msgid "apache2"
+#~ msgstr "apache2"
+
+#~ msgid "lighttpd"
+#~ msgstr "lighttpd"
+
+#~ msgid "Web server to configure automatically:"
+#~ msgstr "Trình phục vụ Web cần tự động cấu hình:"
+
+#~ msgid ""
+#~ "Please select the web server to be configured automatically for Ampache."
+#~ msgstr "Hãy chọn trình phục vụ Web cần tự động cấu hình cho Ampache."
+
+#~ msgid ""
+#~ "Apache2 and Lighttpd are the only supported web servers for automatic "
+#~ "configuration."
+#~ msgstr "Chỉ có khả năng tự động cấu hình Apache2 và Lighttpd thôi."

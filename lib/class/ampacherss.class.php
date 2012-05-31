@@ -80,10 +80,10 @@ class AmpacheRSS {
 	 */
 	public function get_title() {
 
-		$titles = array('now_playing'=>_('Now Playing'),
-				'recently_played'=>_('Recently Played'),
-				'latest_album'=>_('Newest Albums'),
-				'latest_artist'=>_('Newest Artists'));
+		$titles = array('now_playing' => T_('Now Playing'),
+				'recently_played' => T_('Recently Played'),
+				'latest_album' => T_('Newest Albums'),
+				'latest_artist' => T_('Newest Artists'));
 
 		return scrub_out(Config::get('site_title')) . ' - ' . $titles[$this->type];
 
@@ -126,7 +126,7 @@ class AmpacheRSS {
 		// Default to now playing
 		$type = self::validate_type($type);
 
-		$string = '<a href="' . Config::get('web_path') . '/rss.php?type=' . $type . '">' . get_user_icon('feed',_('RSS Feed')) . '</a>';
+		$string = '<a href="' . Config::get('web_path') . '/rss.php?type=' . $type . '">' . get_user_icon('feed', T_('RSS Feed')) . '</a>';
 
 		return $string;
 
@@ -144,15 +144,29 @@ class AmpacheRSS {
 		$data = Stream::get_now_playing();
 
 		$results = array();
-
+		$format = Config::get('rss_format') ?: '%t - %a - %A';
+		$string_map = array(
+			'%t' => 'title',
+			'%a' => 'artist',
+			'%A' => 'album'
+		);
 		foreach ($data as $element) {
 			$song = $element['media'];
 			$client = $element['user'];
-			$xml_array = array('title'=>$song->f_title . ' - ' . $song->f_artist . ' - ' . $song->f_album,
-					'link'=>$song->link,
-					'description'=>$song->title . ' - ' . $song->f_artist_full . ' - ' . $song->f_album_full,
-					'comments'=>$client->fullname . ' - ' . $element['agent'],
-					'pubDate'=>date("r",$element['expire'])
+			$title = $format;
+			$description = $format;
+			foreach($string_map as $search => $replace) {
+				$trep = 'f_' . $replace;
+				$drep = 'f_' . $replace . '_full';
+				$title = str_replace($search, $song->$trep, $title);
+				$description = str_replace($search, $song->$drep, $description);
+			}
+			$xml_array = array(
+					'title' => $title,
+					'link' => $song->link,
+					'description' => $description,
+					'comments' => $client->fullname . ' - ' . $element['agent'],
+					'pubDate' => date('r', $element['expire'])
 					);
 			$results[] = $xml_array;
 		} // end foreach
@@ -185,7 +199,7 @@ class AmpacheRSS {
 
 		//FIXME: The time stuff should be centralized, it's currently in two places, lame
 
-		$time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago'));
+		$time_unit = array('', T_('seconds ago'), T_('minutes ago'), T_('hours ago'), T_('days ago'), T_('weeks ago'), T_('months ago'), T_('years ago'));
 		$data = Song::get_recently_played();
 
 		$results = array();

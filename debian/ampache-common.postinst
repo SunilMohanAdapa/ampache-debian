@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+if [ -e /etc/apache2/sites-enabled/ApacheAmpache ]; then
+	a2dissite ApacheAmpache
+	a2ensite default
+	service apache2 reload
+	rm /etc/apache2/sites-available/ApacheAmpache
+elif [ -e /etc/apache2/sites-enabled/ampvhadd ]; then
+	a2dissite ampvhadd
+	a2ensite default
+	service apache2 reload
+	rm /etc/apache2/sites-available/ampvhadd
+else
+	printf "ampache-common: Vhost not present, nothing to do"
+fi
+
+#DEBHELPER#
+
+exit 0

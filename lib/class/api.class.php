@@ -115,80 +115,69 @@ class Api {
 
 	/**
 	 * handshake
-	 * This is the function that handles the verifying a new handshake
-	 * this takes a timestamp, auth key, and client IP. Optionally it
-	 * can take a username, if non is passed the ACL must be non-use
-	 * specific
+	 *
+	 * This is the function that handles verifying a new handshake
+	 * Takes a timestamp, auth key, and username.
 	 */
 	public static function handshake($input) {
 
-		$timestamp = $input['timestamp'];
+		$timestamp = preg_replace('/[^0-9]/', '', $input['timestamp']);
 		$passphrase = $input['auth'];
 		$ip = $_SERVER['REMOTE_ADDR'];
 		$username = $input['user'];
 		$version = $input['version'];
 
-			// Let them know we're attempting
-			debug_event('API',"Attempting Handshake IP:$ip User:$username Version:$version",'5');
+		// Log the attempt
+		debug_event('API', "Handshake Attempt, IP:$ip User:$username Version:$version", 5);
 
 		if (intval($version) < self::$version) {
-			debug_event('API','Login Failed version too old','1');
-			Error::add('api','Login Failed version too old');
+			debug_event('API', 'Login Failed: version too old', 1);
+			Error::add('api', T_('Login Failed: version too old'));
 			return false;
 		}
 
-		// If the timestamp is over 2hr old sucks to be them
-		if ($timestamp < (time() - 14400)) {
-			debug_event('API','Login Failed, timestamp too old','1');
-			Error::add('api','Login Failed, timestamp too old');
+		// If the timestamp isn't within 30 minutes sucks to be them
+		if (($timestamp < (time() - 1800)) || 
+			($timestamp > (time() + 1800))) {
+			debug_event('API', 'Login Failed: timestamp out of range', 1);
+			Error::add('api', T_('Login Failed: timestamp out of range'));
 			return false;
 		}
 
-		// First we'll filter by username and IP
+		// Grab the correct userid
+		// FIXME: Does this if/else make sense with the new ACLs?
 		if (!trim($username)) {
 			$user_id = '-1';
 		}
 		else {
 			$client = User::get_from_username($username);
-			$user_id =$client->id;
+			$user_id = $client->id;
 		}
-
-		// Clean incomming variables
-		$user_id 	= Dba::escape($user_id);
-		$timestamp 	= intval($timestamp);
-		$ip 		= inet_pton($ip);
+		$user_id = Dba::escape($user_id);
 
 		// Log this attempt
-		debug_event('API','Login Attempt, IP:' . inet_ntop($ip) . ' Time:' . $timestamp . ' User:' . $username . '(' . $user_id . ') Auth:' . $passphrase,'1');
+		debug_event('API', "Login Attempt, IP:$ip Time: $timestamp User:$username ($user_id) Auth:$passphrase", 1);
 
-		$ip = Dba::escape($ip);
-
-		// Run the query and return the passphrases as we'll have to mangle them
-		// to figure out if they match what we've got
-		$sql = "SELECT * FROM `access_list` " .
-			"WHERE `type`='rpc' AND (`user`='$user_id' OR `access_list`.`user`='-1') " .
-			"AND `start` <= '$ip' AND `end` >= '$ip'";
-		$db_results = Dba::read($sql);
-
-		while ($row = Dba::fetch_assoc($db_results)) {
-
-			// Now we're sure that there is an ACL line that matches this user or ALL USERS,
-			// pull the users password and then see what we come out with
+		if (Access::check_network('api', $user_id, 5, $ip)) {
+			// Now we're sure that there is an ACL line that matches
+			// this user or ALL USERS, pull the user's password and
+			// then see what we come out with
 			$sql = "SELECT * FROM `user` WHERE `id`='$user_id'";
-			$user_results = Dba::read($sql);
+			$db_results = Dba::read($sql);
 
-			$row = Dba::fetch_assoc($user_results);
+			$row = Dba::fetch_assoc($db_results);
 
 			if (!$row['password']) {
-				debug_event('API','Unable to find user with username of ' . $user_id,'1');
-				Error::add('api','Invalid Username/Password');
+				debug_event('API', 'Unable to find user with userid of ' . $user_id, 1);
+				Error::add('api', T_('Invalid Username/Password'));
 				return false;
 			}
 
-			$sha1pass = hash('sha256',$timestamp . $row['password']);
+			$sha1pass = hash('sha256', $timestamp . $row['password']);
 
 			if ($sha1pass === $passphrase) {
-				// Create the Session, in this class for now needs to be moved
+				// Create the session
+				// FIXME: needs to be moved to the correct class
 				$data['username']	= $client->username;
 				$data['type']		= 'api';
 				$data['value']		= $timestamp;
@@ -196,16 +185,19 @@ class Api {
 
 				// Insert the token into the streamer
 				Stream::insert_session($token,$client->id);
-				debug_event('API','Login Success, passphrase matched','1');
+				debug_event('API', 'Login Success, passphrase matched', 1);
 
-				// We need to also get the 'last update' of the catalog information in an RFC 2822 Format
+				// We need to also get the 'last update' of the
+				// catalog information in an RFC 2822 Format
 				$sql = "SELECT MAX(`last_update`) AS `update`,MAX(`last_add`) AS `add`, MAX(`last_clean`) AS `clean` FROM `catalog`";
 				$db_results = Dba::read($sql);
 				$row = Dba::fetch_assoc($db_results);
 
-				// Now we need to quickly get the totals of songs
-				$sql = "SELECT COUNT(`id`) AS `song`,COUNT(DISTINCT(`album`)) AS `album`," .
-					"COUNT(DISTINCT(`artist`)) AS `artist` FROM `song`";
+				// Now we need to quickly get the song totals
+				$sql = 'SELECT COUNT(`id`) AS `song`, ' .
+					'COUNT(DISTINCT(`album`)) AS `album`, '.
+					'COUNT(DISTINCT(`artist`)) AS `artist` ' .
+					'FROM `song`';
 				$db_results = Dba::read($sql);
 				$counts = Dba::fetch_assoc($db_results);
 
@@ -218,8 +210,13 @@ class Api {
 				$db_results = Dba::read($sql);
 				$playlist = Dba::fetch_assoc($db_results);
 
+				$sql = "SELECT COUNT(`id`) AS `catalog` FROM `catalog` WHERE `catalog_type`='local'"; 
+				$db_results = Dba::read($sql); 
+				$catalog = Dba::fetch_assoc($db_results); 
+
 				echo xmlData::keyed_array(array('auth'=>$token,
 					'api'=>self::$version,
+					'session_expire'=>date("c",time()+Config::get('session_length')-60),
 					'update'=>date("c",$row['update']),
 					'add'=>date("c",$row['add']),
 					'clean'=>date("c",$row['clean']),
@@ -227,13 +224,15 @@ class Api {
 					'albums'=>$counts['album'],
 					'artists'=>$counts['artist'],
 					'playlists'=>$playlist['playlist'],
-					'videos'=>$vcounts['video']));
+					'videos'=>$vcounts['video'],
+					'catalogs'=>$catalog['catalog'])); 
+				return true;
 			} // match
 
 		} // end while
 
 		debug_event('API','Login Failed, unable to match passphrase','1');
-		xmlData::error('401',_('Error Invalid Handshake - ') . _('Invalid Username/Password'));
+		xmlData::error('401', T_('Error Invalid Handshake - ') . T_('Invalid Username/Password'));
 
 	} // handshake
 
@@ -249,7 +248,7 @@ class Api {
 		// Check and see if we should extend the api sessions (done if valid sess is passed)
 		if (vauth::session_exists('api', $input['auth'])) {
 			vauth::session_extend($input['auth']);
-			$xmldata = array_merge(array('session_expire'=>date("r",time()+Config::get('session_length')-60)),$xmldata);
+			$xmldata = array_merge(array('session_expire'=>date("c",time()+Config::get('session_length')-60)),$xmldata);
 		}
 
 		debug_event('API','Ping Received from ' . $_SERVER['REMOTE_ADDR'] . ' :: ' . $input['auth'],'5');
@@ -588,6 +587,7 @@ class Api {
 	 * This searches the songs and returns... songs
 	 */
 	public static function search_songs($input) {
+			$array['type'] = 'song';
 			$array['rule_1'] = 'anywhere';
 			$array['rule_1_input'] = $input['filter'];
 			$array['rule_1_operator'] = 0;
@@ -659,7 +659,7 @@ class Api {
 				break;
 				default:
 					// They are doing it wrong
-					echo xmlData::error('405',_('Invalid Request'));
+					echo xmlData::error('405', T_('Invalid Request'));
 				break;
 			} // end switch on command
 
@@ -680,7 +680,7 @@ class Api {
 					$type = 'song';
 					$media = new $type($input['oid']);
 					if (!$media->id) {
-						echo xmlData::error('400',_('Media Object Invalid or Not Specified'));
+						echo xmlData::error('400', T_('Media Object Invalid or Not Specified'));
 						break;
 					}
 					$democratic->vote(array(array('song',$media->id)));
@@ -693,7 +693,7 @@ class Api {
 					$type = 'song';
 					$media = new $type($input['oid']);
 					if (!$media->id) {
-						echo xmlData::error('400',_('Media Object Invalid or Not Specified'));
+						echo xmlData::error('400', T_('Media Object Invalid or Not Specified'));
 					}
 
 					$uid = $democratic->get_uid_from_object_id($media->id,$type);
@@ -715,7 +715,7 @@ class Api {
 					echo xmlData::keyed_array($xml_array);
 				break;
 				default:
-					echo xmlData::error('405',_('Invalid Request'));
+					echo xmlData::error('405', T_('Invalid Request'));
 			break;
 		} // switch on method
 

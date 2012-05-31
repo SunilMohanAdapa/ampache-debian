@@ -136,13 +136,18 @@ class Dba {
 	/**
 	 * fetch_assoc
 	 * This emulates the mysql_fetch_assoc and takes a resource result
-	 * we force it to always return an array, albit an empty one
+	 * we force it to always return an array, albeit an empty one
+	 * The optional finish parameter affects whether we automatically clean
+	 * up the result set after the last row is read.
 	 */
-	public static function fetch_assoc($resource) {
+	public static function fetch_assoc($resource, $finish = true) {
 
 		$result = mysql_fetch_assoc($resource);
 
 		if (!$result) {
+			if ($finish) {
+				self::finish($resource);
+			}
 			return array();
 		}
 
@@ -153,13 +158,18 @@ class Dba {
 	/**
 	 * fetch_row
 	 * This emulates the mysql_fetch_row and takes a resource result
-	 * we force it to always return an array, albit an empty one
+	 * we force it to always return an array, albeit an empty one
+	 * The optional finish parameter affects whether we automatically clean
+	 * up the result set after the last row is read.
 	 */
-	public static function fetch_row($resource) {
+	public static function fetch_row($resource, $finish = true) {
 
 		$result = mysql_fetch_row($resource);
 
 		if (!$result) {
+			if ($finish) {
+				self::finish($resource);
+			}
 			return array();
 		}
 
@@ -174,15 +184,23 @@ class Dba {
 	 * doesn't work for updates or inserts
 	 */
 	public static function num_rows($resource) {
-
-		$result = mysql_num_rows($resource);
-
-		if (!$result) {
-			return '0';
+		if ($resource) {
+			$result = mysql_num_rows($resource);
+			if ($result) {
+				return $result;
+			}
 		}
 
-		return $result;
+		return 0;
 	} // num_rows
+
+	/**
+	 * seek
+	 * This resets the row pointer to the specified position
+	 */
+	public static function seek($resource, $row) {
+		return mysql_data_seek($resource, $row);
+	}
 
 	/**
 	 * finish
@@ -289,7 +307,7 @@ class Dba {
 
 		if (!is_resource(Config::get($handle))) {
 			$dbh = self::_connect($database);
-			Config::set($handle,$dbh,1);
+			Config::set($handle, $dbh, true);
 			return $dbh;
 		}
 		else {
@@ -313,7 +331,7 @@ class Dba {
 		mysql_close(Config::get($handle));
 
 		// Nuke it
-		Config::set($handle,false,1);
+		Config::set($handle, false, true);
 
 		return true;
 

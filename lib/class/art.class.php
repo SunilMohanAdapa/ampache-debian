@@ -63,6 +63,28 @@ class Art extends database_object {
 	} // constructor
 
 	/**
+	 * build_cache
+	 * This attempts to reduce # of queries by asking for everything in the
+	 * browse all at once and storing it in the cache, this can help if the
+	 * db connection is the slow point
+	 */
+	public static function build_cache($object_ids) {
+
+		if (!is_array($object_ids) || !count($object_ids)) { return false; }
+		$uidlist = '(' . implode(',', $object_ids) . ')';
+		$sql = "SELECT `object_type`, `object_id`, `mime`, `size` FROM `image` WHERE `object_id` IN $uidlist";
+		$db_results = Dba::read($sql);
+
+		while ($row = Dba::fetch_assoc($db_results)) {
+			parent::add_to_cache('art', $row['object_type'] . 
+				$row['object_id'] . $row['size'], $row);
+		}
+
+		return true;
+	} // build_cache
+
+
+	/**
 	 * _auto_init
 	 * Called on creation of the class
 	 */
@@ -431,7 +453,7 @@ class Art extends database_object {
 	 * ['file']     = FILENAME *** OPTIONAL ***
 	 * ['raw']      = Actual Image data, already captured
 	 */
-	public function get_from_source($data) {
+	public static function get_from_source($data, $type = 'album') {
 
 		// Already have the data, this often comes from id3tags
 		if (isset($data['raw'])) {
@@ -442,7 +464,7 @@ class Art extends database_object {
 		if (isset($data['db'])) {
 			// Repull it
 			$uid = Dba::escape($data['db']);
-			$type = Dba::escape($this->type);
+			$type = Dba::escape($type);
 
 			$sql = "SELECT * FROM `image` WHERE `object_type`='$type' AND `object_id`='$uid' AND `size`='original'";
 			$db_results = Dba::read($sql);
@@ -501,18 +523,31 @@ class Art extends database_object {
 		$sid = $sid ? scrub_out($sid) : scrub_out(session_id());
 		$type = self::validate_type($type);
 
-		$type = Dba::escape($type);
-		$uid = Dba::escape($uid);
+		$key = $type . $uid;
+		if (parent::is_cached('art', $key . '275x275') && Config::get('resize_images')) {
+			$row = parent::get_from_cache('art', $key . '275x275');
+			$mime = $row['mime'];
+		}
+		if (parent::is_cached('art', $key . 'original')) {
+			$row = parent::get_from_cache('art', $key . 'original');
+			$thumb_mime = $row['mime'];
+		}
+		if (!$mime && !$thumb_mime) {
 
-		$sql = "SELECT `mime`,`size` FROM `image` WHERE `object_type`='$type' AND `object_id`='$uid'";
-		$db_results = Dba::read($sql);
+			$type = Dba::escape($type);
+			$uid = Dba::escape($uid);
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			if ($row['size'] == 'original') {
-				$mime = $row['mime'];
-			}
-			else if ($row['size'] == '275x275' && Config::get('resize_images')) {
-				$thumb_mime = $row['mime'];
+			$sql = "SELECT `object_type`, `object_id`, `mime`, `size` FROM `image` WHERE `object_type`='$type' AND `object_id`='$uid'";
+			$db_results = Dba::read($sql);
+
+			while ($row = Dba::fetch_assoc($db_results)) {
+				parent::add_to_cache('art', $key . $row['size'], $row);
+				if ($row['size'] == 'original') {
+					$mime = $row['mime'];
+				}
+				else if ($row['size'] == '275x275' && Config::get('resize_images')) {
+					$thumb_mime = $row['mime'];
+				}
 			}
 		}
 
@@ -520,7 +555,7 @@ class Art extends database_object {
 		$extension = self::extension($mime);
 
 		$name = 'art.' . $extension;
-		$url = Config::get('web_path') . '/image.php?id=' . scrub_out($uid) . 'object_type=' . scrub_out($type) . '&auth=' . $sid . '&name=' . $name;
+		$url = Config::get('web_path') . '/image.php?id=' . scrub_out($uid) . '&object_type=' . scrub_out($type) . '&auth=' . $sid . '&name=' . $name;
 
 		return $url;
 
@@ -542,43 +577,18 @@ class Art extends database_object {
 		} // foreach
 	} // clean
 
-	public function checkOrderDB($method, $gatherAll) {
-
-		if( !($gatherAll) ) {
-			return true;
-		}
-
-		$config = Config::get('art_order');
-		$config = array($config);
-		$art_order = array();
-		
-
-		for( $i = 0; $i < sizeof($config[0]); $i++) {
-			$art_order[$config[0][$i]] = $i;
-		}
-
-		$sql = 'SELECT object_id FROM image WHERE object_id = ' . $this->uid;
-		debug_event('Art', $sql, 6);
-		$db_results = Dba::read($sql);
-
-		if( $art_order['db'] < $art_order[$method] && (Dba::num_rows($db_results) != 0)  ) {
-			return false;
-		} else {
-			return true;
-		}
-	}
 	/**
 	 * gather
 	 * This tries to get the art in question
 	 */
-	public function gather($options = array(), $limit = false, $gatherAll = false) {
+	public function gather($options = array(), $limit = false) {
 
 		// Define vars
 		$results = array();
 
 		switch ($this->type) {
 			case 'album':
-				$allowed_methods = array('lastfm','folder','amazon','google','musicbrainz','tag');
+				$allowed_methods = array('db','lastfm','folder','amazon','google','musicbrainz','tags');
 			break;
 			case 'artist':
 				$allowed_methods = array();
@@ -594,38 +604,38 @@ class Art extends database_object {
 		/* If it's not set */
 		if (empty($config)) {
 			// They don't want art!
+			debug_event('Art', 'art_order is empty, skipping art gathering', 3);
 			return array();
 		}
 		elseif (!is_array($config)) {
 			$config = array($config);
 		}
 
-		debug_event('Art','Searching using:' . print_r($config, true),3);
+		debug_event('Art','Searching using:' . print_r($config, true), 3);
 
 		foreach ($config as $method) {
 
 			$data = array();
 
-			debug_event('Art',"method used " .$method_name,3);
+			if (!in_array($method, $allowed_methods)) {
+				debug_event('Art', "$method not in allowed_methods, skipping", 3);
+				continue;
+			}
 
 			$method_name = "gather_" . $method;
+
 			if (in_array($method_name, $methods)) {
+				debug_event('Art', "Method used: $method_name", 3);
 				// Some of these take options!
 				switch ($method_name) {
 					case 'gather_amazon':
-						if($this->checkOrderDB($method,$gatherAll)) {
-							$data = $this->{$method_name}($limit, $options['keyword']);
-						}
+						$data = $this->{$method_name}($limit, $options['keyword']);
 					break;
 					case 'gather_lastfm':
-						if($this->checkOrderDB($method,$gatherAll)) {
-							$data = $this->{$method_name}($limit, $options);
-						}
+						$data = $this->{$method_name}($limit, $options);
 					break;
 					default:
-						if($this->checkOrderDB($method,$gatherAll)) { 
-							$data = $this->{$method_name}($limit);
-						}
+						$data = $this->{$method_name}($limit);
 					break;
 				}
 
@@ -637,6 +647,9 @@ class Art extends database_object {
 				}
 
 			} // if the method exists
+			else {
+				debug_event("Art", "$method_name not defined", 1);
+			}
 
 		} // end foreach
 
@@ -648,6 +661,17 @@ class Art extends database_object {
 	///////////////////////////////////////////////////////////////////////
 	// Art Methods
 	///////////////////////////////////////////////////////////////////////
+
+	/**
+	 * gather_db
+	 * This function retrieves art that's already in the database
+	 */
+	public function gather_db($limit = null) {
+		if ($this->get_db()) {
+			return array('db' => true);
+		}
+		return array();
+	}
 
 	/**
 	 * gather_musicbrainz
@@ -976,7 +1000,7 @@ class Art extends database_object {
 			$handle = opendir($dir);
 
 			if (!$handle) {
-				Error::add('general',_('Error: Unable to open') . ' ' . $dir);
+				Error::add('general', T_('Error: Unable to open') . ' ' . $dir);
 				debug_event('folder_art', "Error: Unable to open $dir for album art read", 2);
 				continue;
 			}
@@ -1164,30 +1188,32 @@ class Art extends database_object {
 			$proxyport = Config::get('proxy_port');
 			$proxyuser = Config::get('proxy_user');
 			$proxypass = Config::get('proxy_pass');
-			debug_event("lastfm", "set Proxy", "5");
+			debug_event('LastFM', 'proxy set', 5);
 			$lastfm->setProxy($proxyhost, $proxyport, $proxyuser, $proxypass);
 		}
-		$raw_data = $lastfm->album_search($artist,$album);
+
+		$raw_data = $lastfm->album_search($artist, $album);
 
 		if (!count($raw_data)) { return array(); }
 
-		$coverart = ksort($raw_data['coverart']);
-		$i = 0;
+		$coverart = $raw_data['coverart'];
+		if (!is_array($coverart)) { return array(); }
 
-		foreach ($coverart as $key => $value) {
-			$i++;
-			$url = $coverart[$key];
-
+		ksort($coverart);
+		foreach ($coverart as $url) {
 			// We need to check the URL for the /noimage/ stuff
-			if (strpos($url,"/noimage/") !== false) {
-				debug_event('LastFM','Detected as noimage, skipped ' . $url,'3');
+			if (strpos($url, '/noimage/') !== false) {
+				debug_event('LastFM', 'Detected as noimage, skipped ' . $url, 3);
 				continue;
 			}
-
-			$results = pathinfo($url);
+			
+			// HACK: we shouldn't rely on the extension to determine file type
+	        	$results = pathinfo($url);
 			$mime = 'image/' . $results['extension'];
-			$data[] = array('url'=>$url,'mime'=>$mime);
-			if ($i >= $limit) { return $data; }
+			$data[] = array('url' => $url, 'mime' => $mime);
+			if ($limit && count($data) >= $limit) {
+				return $data;
+			}
 		} // end foreach
 
 		return $data;

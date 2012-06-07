@@ -4,30 +4,42 @@ set -e
 
 . /usr/share/debconf/confmodule
 
+rm_log(){
+	if [ -d /var/log/ampache ]; then
+		rm -rf /var/log/ampache
+	fi
+}
+
+rm_logr(){
+	if [ -f /etc/logrotate.d/ampache ]; then
+		rm -f /etc/logrotate.d/ampache
+	fi
+}
+
+rm_cron(){
+	if [ -f /etc/cron.daily/ampache ]; then
+		rm -f /etc/cron.daily/ampache
+	fi
+}
+
+restart_server(){
+	if [ -e /var/run/apache2.pid ]; then
+		service apache2 reload
+	fi
+}
+
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 	db_get ampache/restart_webserver || true
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
-		if [ -d /var/log/ampache ]; then
-			rm -rf /var/log/ampache
-		fi
-		if [ -f /etc/logrotate.d/ampache ]; then
-			rm -f /etc/logrotate.d/ampache
-		fi
-		if [ -f /etc/cron.daily/ampache ]; then
-			rm -f /etc/cron.daily/ampache
-		fi
+		rm_log
+		rm_logr
+		rm_cron
 	elif [ "$re_start" = "true" ]; then
-		service apache2 reload
-		if [ -d /var/log/ampache ]; then
-			rm -rf /var/log/ampache
-		fi
-		if [ -f /etc/logrotate.d/ampache ]; then
-			rm -f /etc/logrotate.d/ampache
-		fi
-		if [ -f /etc/cron.daily/ampache ]; then
-			rm -f /etc/cron.daily/ampache
-		fi
+		rm_log
+		rm_logr
+		rm_cron
+		restart_server
 	else
 		printf "unable to de-configure ampache, please do so manually.\n"
 	fi

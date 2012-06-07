@@ -1,3 +1,13 @@
+ampache (3.6-git408e713+dfsg-2) unstable; urgency=low
+
+  * Added functions to ampache.postrm so it is formated similar to 
+    ampache.posinst.
+  * Moved "service apache2 reload" into a conditional if statement in
+    debian/ampache.postinst and debian/ampache.postrm, which runs if
+    /var/run/apache2.pid is present.  Closes: #676451
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 07 Jun 2012 00:48:12 -0500
+
 ampache (3.6-git408e713+dfsg-1) unstable; urgency=low
 
   * New upstream git snapshot, using commit 

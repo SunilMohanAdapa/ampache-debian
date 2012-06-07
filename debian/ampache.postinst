@@ -20,6 +20,12 @@ create_log(){
 	fi
 }
 
+restart_server(){
+	if [ -e /var/run/apache2.pid ]; then
+		service apache2 reload
+	fi
+}
+
 if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 
 	db_get ampache/restart_webserver || true
@@ -30,7 +36,7 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 	elif [ "$re_start" = "true" ]; then
 		create_link
 		create_log
-		service apache2 reload
+		restart_server
 	else
 		printf "Something weird has happened, unable to configure ampache.\n"
 	fi

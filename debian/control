@@ -2,18 +2,15 @@ Source: ampache
 Section: web
 Priority: optional
 Maintainer: Charlie Smotherman <cjsmo@cableone.net>
-Vcs-Git: git://gitorious.org/ampache/ampache.git
-Vcs-Browser: http://gitorious.org/ampache/ampache/trees/master
 Homepage: http://www.ampache.org
 Build-Depends: debhelper (>= 7.0.50), po-debconf
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 
 Package: ampache
 Architecture: all
 Depends: ${misc:Depends},
  debconf (>= 0.5) | debconf-2.0,
  libapache2-mod-php5 | php5-cgi | php5,
- php5-auth-pam,
  php5-cli,
  php5-mysql,
  php5-xmlrpc,

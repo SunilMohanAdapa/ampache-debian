@@ -27,4 +27,3 @@ _Description: Configure and restart the web server?
  .
  To manually restart the web server, use one of the following commands:
  "/etc/init.d/apache2 restart" or "/etc/init.d/lighttpd restart"
- 

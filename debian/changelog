@@ -1,3 +1,18 @@
+ampache (3.6-alpha1+dfsg-3) unstable; urgency=low
+
+  * Removed dependency on php5-auth-pam as it is being removed from the archive
+    due to non maintenance, refer to bug 663694 for more information.
+    Closes: #663005
+  * Added new nl.po translation file.  Update po files with debconf-updatepo.  
+    Thx Jeroen Schot Closes: #658515
+  * Updated debian/copyright with new nl.po copyright info.
+  * Remove Vcs fields as the urls point to ampache trunk and not to packaging
+    branches.
+  * Corrected syntax error in debian/ampache.templates.
+  * Increased Standards Version to 3.9.3 no changes needed.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 13 Sep 2012 23:19:11 -0500
+
 ampache (3.6-alpha1+dfsg-2) unstable; urgency=low
 
   * Use conditional statements to create the "$sa", "$se", "$ea", "$confd"

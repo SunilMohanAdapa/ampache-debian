@@ -4,21 +4,11 @@ set -e
 
 . /usr/share/debconf/confmodule
 
-rm_log(){
-	if [ -d /var/log/ampache ]; then
-		rm -rf /var/log/ampache
-	fi
-}
-
-rm_logr(){
-	if [ -f /etc/logrotate.d/ampache ]; then
-		rm -f /etc/logrotate.d/ampache
-	fi
-}
-
-rm_cron(){
-	if [ -f /etc/cron.daily/ampache ]; then
-		rm -f /etc/cron.daily/ampache
+#ampache.conf is left behind during purge so remove it manually this way
+#everything is removed on purge.
+ampconf_rm(){
+	if [ -e /etc/ampache/ampache.conf ]; then
+		rm -f /etc/ampache/ampache.conf
 	fi
 }
 
@@ -32,22 +22,12 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 	db_get ampache/restart_webserver || true
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
-		rm_log
-		rm_logr
-		rm_cron
+		printf "Please restart the web server manually."
 	elif [ "$re_start" = "true" ]; then
-		rm_log
-		rm_logr
-		rm_cron
+		ampconf_rm
 		restart_server
 	else
 		printf "unable to de-configure ampache, please do so manually.\n"
-	fi
-fi
-
-if [ "$1" = "purge" ]; then
-	if [ -d /etc/ampache ]; then
-		rm -rf /etc/ampache
 	fi
 fi
 

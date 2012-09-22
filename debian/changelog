@@ -1,3 +1,10 @@
+ampache (3.6-git408e713+dfsg-3) unstable; urgency=low
+
+  * Remove statements in debian/ampache.postrm that manually remove conffiles,
+    log files on remove and purge.  Closes: #688436
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 22 Sep 2012 14:24:41 -0500
+
 ampache (3.6-git408e713+dfsg-2) unstable; urgency=low
 
   * Added functions to ampache.postrm so it is formated similar to 

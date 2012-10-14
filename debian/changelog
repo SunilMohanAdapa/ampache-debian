@@ -1,3 +1,10 @@
+ampache (3.6-git408e713+dfsg-3.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Remove generated link in prerm.  Closes: #688436
+
+ -- Bas Wijnen <wijnen@debian.org>  Sun, 14 Oct 2012 16:31:58 +0200
+
 ampache (3.6-git408e713+dfsg-3) unstable; urgency=low
 
   * Remove statements in debian/ampache.postrm that manually remove conffiles,

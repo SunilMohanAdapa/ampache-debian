@@ -4,14 +4,6 @@ set -e
 
 . /usr/share/debconf/confmodule
 
-#ampache.conf is left behind during purge so remove it manually this way
-#everything is removed on purge.
-ampconf_rm(){
-	if [ -e /etc/ampache/ampache.conf ]; then
-		rm -f /etc/ampache/ampache.conf
-	fi
-}
-
 restart_server(){
 	if [ -e /var/run/apache2.pid ]; then
 		service apache2 reload
@@ -24,7 +16,6 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 	if [ "$re_start" = "false" ]; then
 		printf "Please restart the web server manually."
 	elif [ "$re_start" = "true" ]; then
-		ampconf_rm
 		restart_server
 	else
 		printf "unable to de-configure ampache, please do so manually.\n"

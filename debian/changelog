@@ -1,9 +1,3 @@
-ampache (3.6-git408e713+dfsg-4~bpo70+1) wheezy-backports; urgency=low
-
-  * Rebuild for wheezy-backports.
-
- -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 25 Aug 2013 12:12:08 +0200
-
 ampache (3.6-git408e713+dfsg-4) unstable; urgency=low
 
   * Acknowledge non-maintainer upload and included changes.

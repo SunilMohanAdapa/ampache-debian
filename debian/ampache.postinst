@@ -13,13 +13,6 @@ create_link(){
 	fi
 }
 
-create_log(){
-	if [ -d /var/log/ampache ]; then
-		chmod 755 /var/log/ampache
-		chown www-data:www-data /var/log/ampache
-	fi
-}
-
 restart_server(){
 	if [ -e /var/run/apache2.pid ]; then
 		service apache2 reload
@@ -32,10 +25,8 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
 		create_link
-        create_log
 	elif [ "$re_start" = "true" ]; then
 		create_link
-		create_log
 		restart_server
 	else
 		printf "Something weird has happened, unable to configure ampache.\n"

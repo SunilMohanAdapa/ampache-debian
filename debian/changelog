@@ -1,3 +1,25 @@
+ampache (3.6-git408e713+dfsg-4~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sun, 25 Aug 2013 12:12:08 +0200
+
+ampache (3.6-git408e713+dfsg-4) unstable; urgency=low
+
+  * Acknowledge non-maintainer upload and included changes.
+  * Removed debian/ampache.logrotate and debian/ampache.cron.daily.
+  * Added ampache.maintscript to gracefully remove /etc/logrotate.d/ampache
+    and /etc/cron.daily/ampache as these are now obsolete conffiles.
+    Closes: #691433
+  * Removed log file creation from ampache.postinst.
+  * Removed sym link creation from ampache.links.
+  * Pre-Depends on dpkg so dpkg-maintscript-helper can be used.
+  * Create /etc/ampache in ampache.dirs dh_links was doing this for use.
+  * Increased debhelper to >=8.1.0 to use dpkg-maintscript-helper.
+  * Increased debian/compat to 8.
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 12 July 2013 20:24:28 -0500
+
 ampache (3.6-git408e713+dfsg-3.1) unstable; urgency=low
 
   * Non-maintainer upload.

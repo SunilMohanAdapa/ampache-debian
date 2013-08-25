@@ -3,11 +3,12 @@ Section: web
 Priority: optional
 Maintainer: Charlie Smotherman <cjsmo@cableone.net>
 Homepage: http://www.ampache.org
-Build-Depends: debhelper (>= 7.0.50), po-debconf
+Build-Depends: debhelper (>= 8.1.0), po-debconf
 Standards-Version: 3.9.3
 
 Package: ampache
 Architecture: all
+Pre-Depends: dpkg (>= 1.15.7.2)
 Depends: ${misc:Depends},
  debconf (>= 0.5) | debconf-2.0,
  libapache2-mod-php5 | php5,

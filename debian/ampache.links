@@ -1,6 +1,4 @@
 /etc/ampache/ampache.cfg.php /usr/share/ampache/www/config/ampache.cfg.php
-/etc/cron.daily/ampache /etc/ampache/ampache.cron.daily
-/etc/logrotate.d/ampache /etc/ampache/logrotate-ampache
 
 /usr/share/ampache/www/docs/CHANGELOG.gz /usr/share/doc/ampache/changelog.gz
 /usr/share/javascript/prototype/prototype.js /usr/share/ampache/www/modules/prototype/prototype.js

@@ -1,5 +1,5 @@
 <?php
-/* vim:set tabstop=4 softtabstop=4 shiftwidth=4 expandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /*
  *  mpd.class.php - PHP Object Interface to the MPD Music Player Daemon
  *  Version 1.3
@@ -277,7 +277,7 @@ class mpd {
      * above).
      */
     public function SendCommand($command, $arguments = null, $refresh_info = true) {
-        $this->_debug('SendCommand', "cmd: $command, args: " . print_r($arguments, true), 5);
+        $this->_debug('SendCommand', "cmd: $command, args: " . json_encode($arguments), 5);
         if ( ! $this->connected ) {
             $this->_error('SendCommand', 'Not connected', 1);
             return false;
@@ -337,7 +337,7 @@ class mpd {
      * method. The syntax for queueing commands is identical to SendCommand.
      */
     public function QueueCommand($command, $arguments = '') {
-        $this->_debug('QueueCommand', "start; cmd: $command args: " . print_r($arguments, true), 5);
+        $this->_debug('QueueCommand', "start; cmd: $command args: " . json_encode($arguments), 5);
         if ( ! $this->connected ) {
             $this->_error('QueueCommand', 'Not connected');
             return false;
@@ -480,7 +480,7 @@ class mpd {
         $this->_debug('GetDir', 'start', 5);
         $response = $this->SendCommand(self::COMMAND_LSDIR, $dir, false);
         $dirlist = self::_parseFileListResponse($response);
-        $this->_debug('GetDir', "return " . print_r($dirlist, true), 5);
+        $this->_debug('GetDir', 'return: ' . json_encode($dirlist), 5);
         return $dirlist;
     }
 
@@ -584,26 +584,6 @@ class mpd {
         $this->_debug('PLClear', "return: $response", 5);
         return $response;
     }
-
-    /* ClearPLIfStopped()
-     *
-     * This function clears the mpd playlist ONLY IF the mpd state is
-     * self::STATE_STOPPED
-     */
-    public function ClearPLIfStopped() {
-
-        $this->_debug('ClearPLIfStopped', 'start', 5);
-
-        $this->RefreshInfo();
-
-        if ($this->status['state'] == self::STATE_STOPPED) {
-            $this->PLClear();
-            return true;
-        }
-
-        return false;
-
-    } // ClearPLIfStopped
 
     /* PLRemove
      *
@@ -801,7 +781,7 @@ class mpd {
         if ($response) {
             $results = self::_parseFileListResponse($response);
         }
-        $this->_debug('Search', 'return: ' . print_r($results, true), 5);
+        $this->_debug('Search', 'return: ' . json_encode($results), 5);
         return $results;
     }
 
@@ -830,7 +810,7 @@ class mpd {
             $results = self::_parseFileListResponse($response);
         }
 
-        $this->_debug('Find', 'return: ' . print_r($results, true), 5);
+        $this->_debug('Find', 'return: ' . json_encode($results), 5);
         return $results;
     }
 
@@ -867,7 +847,7 @@ class mpd {
             }
         }
 
-        $this->_debug('GetArtists', 'return: ' . print_r($results, true), 5);
+        $this->_debug('GetArtists', 'return: ' . json_encode($results), 5);
         return $results;
     }
 
@@ -898,7 +878,7 @@ class mpd {
             }
         }
 
-        $this->_debug('GetAlbums', 'return: ' . print_r($results, true), 5);
+        $this->_debug('GetAlbums', 'return: ' . json_encode($results), 5);
         return $results;
     }
 

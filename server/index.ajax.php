@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Index Ajax
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -32,30 +26,30 @@
 if (!defined('AJAX_INCLUDE')) { exit; }
 
 switch ($_REQUEST['action']) {
-	case 'random_albums':
-		$albums = Album::get_random_albums('6');
-		if (count($albums) AND is_array($albums)) {
-			ob_start();
-			require_once Config::get('prefix') . '/templates/show_random_albums.inc.php';
-			$results['random_selection'] = ob_get_clean();
-		}
-		else {
-			$results['random_selection'] = '<!-- None found -->';
-		}
-	break;
-	case 'reloadnp':
-		ob_start();
-		show_now_playing();
-		$results['now_playing'] = ob_get_clean();
-		ob_start();
-		$data = Song::get_recently_played();
-		Song::build_cache(array_keys($data));
-		if (count($data)) {
+    case 'random_albums':
+        $albums = Album::get_random_albums('6');
+        if (count($albums) AND is_array($albums)) {
+            ob_start();
+            require_once Config::get('prefix') . '/templates/show_random_albums.inc.php';
+            $results['random_selection'] = ob_get_clean();
+        }
+        else {
+            $results['random_selection'] = '<!-- None found -->';
+        }
+    break;
+    case 'reloadnp':
+        ob_start();
+        show_now_playing();
+        $results['now_playing'] = ob_get_clean();
+        ob_start();
+        $data = Song::get_recently_played();
+        Song::build_cache(array_keys($data));
+        if (count($data)) {
                         require_once Config::get('prefix') . '/templates/show_recently_played.inc.php';
-		}
-		$results['recently_played'] = ob_get_clean();
-	break;
-	case 'sidebar':
+        }
+        $results['recently_played'] = ob_get_clean();
+    break;
+    case 'sidebar':
                 switch ($_REQUEST['button']) {
                         case 'home':
                         case 'modules':
@@ -78,9 +72,9 @@ switch ($_REQUEST['action']) {
                 require_once Config::get('prefix') . '/templates/sidebar.inc.php';
                 $results['sidebar'] = ob_get_contents();
                 ob_end_clean();
-	default:
-		$results['rfc3514'] = '0x1';
-	break;
+    default:
+        $results['rfc3514'] = '0x1';
+    break;
 } // switch on action;
 
 // We always do this

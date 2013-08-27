@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Test
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2012 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,28 +18,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2012 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $prefix = dirname(__FILE__);
 require_once $prefix . '/lib/init-tiny.php';
 
 switch ($_REQUEST['action']) {
-	case 'config':
-		// Check to see if the config file is working now, if so fall
-		// through to the default, else show the appropriate template
-		$configfile = "$prefix/config/ampache.cfg.php";
-		
-		if (!count(parse_ini_file($configfile))) {
-			require_once $prefix . '/templates/show_test_config.inc.php';
-			break;
-		}
-	default:
-		require_once $prefix . '/templates/show_test.inc.php';
-	break;
+    case 'config':
+        // Check to see if the config file is working now, if so fall
+        // through to the default, else show the appropriate template
+        $configfile = "$prefix/config/ampache.cfg.php";
+        
+        if (!count(parse_ini_file($configfile))) {
+            require_once $prefix . '/templates/show_test_config.inc.php';
+            break;
+        }
+    default:
+        require_once $prefix . '/templates/show_test.inc.php';
+    break;
 } // end switch on action
 
 ?>

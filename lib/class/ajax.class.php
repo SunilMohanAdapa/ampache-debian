@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Ajax Class
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All rights reserved.
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -33,183 +27,188 @@
  * elements onto a page. It takes care of the observing and all that 
  * raz-a-ma-taz.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @link	http://www.ampache.org/
  */
 class Ajax {
 
-	private static $include_override;
+    private static $include_override;
 
-	/**
-	 * constructor
-	 * This is what is called when the class is loaded
-	 */
-	public function __construct() {
+    /**
+     * constructor
+     * This is what is called when the class is loaded
+     */
+    public function __construct() {
 
-		// Rien a faire
+        // Rien a faire
 
-	} // constructor
+    } // constructor
 
-	/**
-	 * observe
-	 * This returns a string with the correct and full ajax 'observe' stuff
-	 * from prototype
-	 */
-	public static function observe($source,$method,$action,$post='') {
+    /**
+     * observe
+     * This returns a string with the correct and full ajax 'observe' stuff
+     * from prototype
+     */
+    public static function observe($source,$method,$action,$post='') {
 
-		$non_quoted = array('document','window');
+        $non_quoted = array('document','window');
 
-		if (in_array($source,$non_quoted)) {
-			$source_txt = $source;
-		}
-		else {
-			$source_txt = "'$source'";
-		}
+        if (in_array($source,$non_quoted)) {
+            $source_txt = $source;
+        }
+        else {
+            $source_txt = "'$source'";
+        }
 
-		// If it's a post then we need to stop events
-		if ($post) {
-			$action  = 'Event.stop(e); ' . $action;
-		}
+        // If it's a post then we need to stop events
+        if ($post) {
+            $action  = 'Event.stop(e); ' . $action;
+        }
 
-		$observe	= "<script type=\"text/javascript\">";
-		$observe	.= "Event.observe($source_txt,'$method',function(e){" . $action . ";});";
-		$observe	.= "</script>";
+        $observe    = "<script type=\"text/javascript\">";
+        $observe    .= "Event.observe($source_txt,'$method',function(e){" . $action . ";});";
+        $observe    .= "</script>";
 
-		return $observe;
+        return $observe;
 
-	} // observe
+    } // observe
 
-	/**
-	 * action
-	 * This takes the action, the source and the post (if passed) and
-	 * generates the full ajax link
-	 */
-	public static function action($action,$source,$post='') {
+    /**
+     * url
+     * This takes a string and makes an URL
+     */
+    public static function url($action) {
+        return Config::get('ajax_url') . $action;
+    }
 
-		$url = Config::get('ajax_url') . $action;
+    /**
+     * action
+     * This takes the action, the source and the post (if passed) and
+     * generates the full ajax link
+     */
+    public static function action($action,$source,$post='') {
 
-		$non_quoted = array('document','window');
+        $url = self::url($action);
 
-		if (in_array($source,$non_quoted)) {
-			$source_txt = $source;
-		}
-		else {
-			$source_txt = "'$source'";
-		}
+        $non_quoted = array('document','window');
 
-		if ($post) {
-			$ajax_string = "ajaxPost('$url','$post',$source_txt)";
-		}
-		else {
-			$ajax_string = "ajaxPut('$url',$source_txt)";
-		}
-		
-		return $ajax_string;
+        if (in_array($source,$non_quoted)) {
+            $source_txt = $source;
+        }
+        else {
+            $source_txt = "'$source'";
+        }
 
-	} // action
+        if ($post) {
+            $ajax_string = "ajaxPost('$url','$post',$source_txt)";
+        }
+        else {
+            $ajax_string = "ajaxPut('$url',$source_txt)";
+        }
+        
+        return $ajax_string;
 
-	/**
-	 * button
-	 * This prints out an img of the specified icon with the specified alt
-	 * text and then sets up the required ajax for it.
-	 */
-	public static function button($action,$icon,$alt,$source='',$post='',$class='') {
+    } // action
 
-		// Get the correct action
-		$ajax_string = self::action($action,$source,$post);
+    /**
+     * button
+     * This prints out an img of the specified icon with the specified alt
+     * text and then sets up the required ajax for it.
+     */
+    public static function button($action,$icon,$alt,$source='',$post='',$class='') {
 
-		// If they passed a span class
-		if ($class) {
-			$class = ' class="' . $class . '"';
-		}
+        // Get the correct action
+        $ajax_string = self::action($action,$source,$post);
 
-		$string = get_user_icon($icon,$alt);
+        // If they passed a span class
+        if ($class) {
+            $class = ' class="' . $class . '"';
+        }
 
-		// Generate an <a> so that it's more compliant with older
-		// browsers (ie :hover actions) and also to unify linkbuttons
-		// (w/o ajax) display
-		$string = "<a href=\"javascript:void(0);\" id=\"$source\" $class>".$string."</a>\n";
+        $string = UI::get_icon($icon,$alt);
 
-		$string .= self::observe($source,'click',$ajax_string);
+        // Generate an <a> so that it's more compliant with older
+        // browsers (ie :hover actions) and also to unify linkbuttons
+        // (w/o ajax) display
+        $string = "<a href=\"javascript:void(0);\" id=\"$source\" $class>".$string."</a>\n";
 
-		return $string;
+        $string .= self::observe($source,'click',$ajax_string);
 
-	} // button
+        return $string;
 
-	/**
-	 * text
-	 * This prints out the specified text as a link and sets up the required
-	 * ajax for the link so it works correctly
-	 */
-	public static function text($action,$text,$source,$post='',$class='') {
+    } // button
 
-		// Format the string we wanna use
-		$ajax_string = self::action($action,$source,$post);
+    /**
+     * text
+     * This prints out the specified text as a link and sets up the required
+     * ajax for the link so it works correctly
+     */
+    public static function text($action,$text,$source,$post='',$class='') {
 
-		// If they passed a span class
-		if ($class) {
-			$class = ' class="' . $class . '"';
-		}
+        // Format the string we wanna use
+        $ajax_string = self::action($action,$source,$post);
 
-		// If we pass a source put it in the ID
-		$string = "<a href=\"javascript:void(0);\" id=\"$source\" $class>$text</a>\n";
+        // If they passed a span class
+        if ($class) {
+            $class = ' class="' . $class . '"';
+        }
 
-		$string .= self::observe($source,'click',$ajax_string);
+        // If we pass a source put it in the ID
+        $string = "<a href=\"javascript:void(0);\" id=\"$source\" $class>$text</a>\n";
 
-		return $string;
+        $string .= self::observe($source,'click',$ajax_string);
 
-	} // text
+        return $string;
 
-	/**
-	 * run
-	 * This runs the specified action no questions asked
-	 */
-	public static function run($action) {
+    } // text
 
-		echo "<script type=\"text/javascript\"><!--\n";
-		echo "$action";
-		echo "\n--></script>";
+    /**
+     * run
+     * This runs the specified action no questions asked
+     */
+    public static function run($action) {
 
-	} // run
+        echo "<script type=\"text/javascript\"><!--\n";
+        echo "$action";
+        echo "\n--></script>";
 
-	/**
- 	 * set_include_override
-	 * This sets the including div override, used only one place. Kind of a
-	 * hack.
-	 */
-	public static function set_include_override($value) {
+    } // run
 
-		self::$include_override = make_bool($value);
+    /**
+      * set_include_override
+     * This sets the including div override, used only one place. Kind of a
+     * hack.
+     */
+    public static function set_include_override($value) {
 
-	} // set_include_override
+        self::$include_override = make_bool($value);
 
-	/**
- 	 * start_container
-	 * This checks to see if we're AJAXin'. If we aren't then it echoes out
-	 * the html needed to start a container that can be replaced by Ajax.
-	 */
-	public static function start_container($name) {
+    } // set_include_override
 
-		if (defined('AJAX_INCLUDE') && !self::$include_override) { return true; }
+    /**
+      * start_container
+     * This checks to see if we're AJAXin'. If we aren't then it echoes out
+     * the html needed to start a container that can be replaced by Ajax.
+     */
+    public static function start_container($name) {
 
-		echo '<div id="' . scrub_out($name) . '">';
+        if (defined('AJAX_INCLUDE') && !self::$include_override) { return true; }
 
-	} // start_container
+        echo '<div id="' . scrub_out($name) . '">';
 
-	/**
-	 * end_container
-	 * This ends the container if we're not doing the AJAX thing
-	 */
-	public static function end_container() {
+    } // start_container
 
-		if (defined('AJAX_INCLUDE') && !self::$include_override) { return true; }
+    /**
+     * end_container
+     * This ends the container if we're not doing the AJAX thing
+     */
+    public static function end_container() {
 
-		echo "</div>";
+        if (defined('AJAX_INCLUDE') && !self::$include_override) { return true; }
 
-		self::$include_override = false;
+        echo "</div>";
 
-	} // end_container
+        self::$include_override = false;
+
+    } // end_container
 
 } // end Ajax class
 ?>

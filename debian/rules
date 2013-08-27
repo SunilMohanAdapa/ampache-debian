@@ -1,42 +1,55 @@
 #!/usr/bin/make -f
 
+USAW=/usr/share/ampache/www
+EA=/etc/ampache
+US=/usr/share
 DEB_UPSTREAM_VERSION=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
 
 %:
-	dh $@
+	dh $@ --with apache2,linktree
 
+override_dh_installdirs:
+	dh_installdirs -pampache-common $(USAW)/modules/prototype
+
+override_dh_install:
+	dh_install -XCOPYING -XLICENSE
+
+override_dh_link:
+	dh_link -pampache \
+		$(EA)/ampache.cfg.php $(USAW)/config/ampache.cfg.php \
+		$(USAW)/config/ampache.conf $(EA)/ampache.conf \
+		$(EA)/ampache.conf /etc/apache2/conf-available/ampache.conf \
+		$(USAW)/docs/CHANGELOG.gz $(US)/doc/ampache/changelog.gz;
+
+override_dh_linktree:
+	dh_linktree -pampache-common \
+		-Xlicence.txt -Xlicense-commerical.txt -XCOPYING -XLICENSE -XCOPYING.lib \
+		embed $(US)/javascript/prototype $(USAW)/modules/prototype \
+		embed $(US)/php/libphp-snoopy $(USAW)/modules/snoopy \
+		embed $(US)/php/libphp-phpmailer $(USAW)/modules/phpmailer \
+		embed $(US)/php/php-gettext $(USAW)/modules/php-gettext \
+		embed $(US)/php/getid3 $(USAW)/modules/getid3 \
+		embed $(US)/fonts/truetype/freefont/FreeMono.ttf $(USAW)/modules/captcha/FreeMono.ttf;
+
+#Grab the source branch from bzr and remove all courtousy copies of code.
 get-orig-source:
-	git clone git://gitorious.org/ampache/ampache.git
-	cd ampache; git checkout 408e71344ade84685c181cd326e2ec5e79c9157b; cd ../;
-	mv ampache ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/docs/INSTALL
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/locale/base/gather-messages.sh
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/flash/LICENSE
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/flash/xspf_jukebox.swf
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/flash/xspf_jukebox.fla
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/getid3/docs/license.txt
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/getid3/docs/license.commercial.txt
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/php-gettext/COPYING
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/php-gettext/streams.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/nusoap/nusoap.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/nusoap/nusoapmime.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/nusoap/class.wsdlcache.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/php_musicbrainz/COPYING
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/phpmailer/LICENSE
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/phpmailer/class.phpmailer.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/phpmailer/class.smtp.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/twitter/LICENSE
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/prototype/prototype.js
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/infotools/Snoopy.class.php
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/captcha/MyUnderwood.ttf
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/modules/captcha/MyUnderwood.txt
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/config/.gitignore
-	rm ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/.gitignore
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/.git
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg/themes/fresh
-	find ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg -type d -exec chmod 755 {} \;
-	find ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg -type f -exec chmod 644 {} \;
-	GZIP=--best tar -cz --owner root --group root --mode a+rX -f \
-		ampache_$(DEB_UPSTREAM_VERSION)-git408e713+dfsg.orig.tar.gz \
-		ampache-$(DEB_UPSTREAM_VERSION)-git408e713+dfsg
+	bzr branch -r 2752 lp:ampache
+	cd ampache
+	mv ampache ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg
+	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/locale/base/gather-messages.sh
+	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/captcha/MyUnderwood.ttf
+	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/captcha/MyUnderwood.txt
+	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/config/.gitignore
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/getid3/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/php-gettext/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/phpmailer/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/prototype
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/snoopy/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/.bzr
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/themes/fresh
+	find ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg -type d -exec chmod 755 {} \;
+	find ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg -type f -exec chmod 644 {} \;
+	tar -c --xz --owner root --group root --mode a+rX -f \
+		ampache_$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg.orig.tar.xz \
+		ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg
 

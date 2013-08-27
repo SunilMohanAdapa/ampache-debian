@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Song
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,34 +18,30 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $icon = $song->enabled ? 'disable' : 'enable';
 $button_flip_state_id = 'button_flip_state_' . $song->id;
 ?>
-<?php show_box_top($song->title . ' ' . T_('Details'), 'box box_song_details'); ?>
+<?php UI::show_box_top($song->title . ' ' . T_('Details'), 'box box_song_details'); ?>
 <dl class="song_details">
 <?php if (Config::get('ratings')) { ?>
-<dt class="<?php echo flip_class(); ?>"><?php echo T_('Rating'); ?></dt>
+<dt class="<?php echo UI::flip_class(); ?>"><?php echo T_('Rating'); ?></dt>
 <dd><div id="rating_<?php echo $song->id; ?>_song"><?php Rating::show($song->id,'song'); ?></div></dd>
 <?php } ?>
 <dt class="<?php echo $rowparity; ?>"><?php echo T_('Action'); ?></dt>
-	<dd class="<?php echo flip_class(); ?>">
-		<?php echo Ajax::button('?action=basket&type=song&id=' . $song->id,'add', T_('Add'),'add_song_' . $song->id); ?>
-		<?php if (Access::check_function('download')) { ?>
-			<a href="<?php echo Song::play_url($song->id); ?>"><?php echo get_user_icon('link', T_('Link')); ?></a>
-			<a href="<?php echo Config::get('web_path'); ?>/stream.php?action=download&amp;song_id=<?php echo $song->id; ?>"><?php echo get_user_icon('download', T_('Download')); ?></a>
-		<?php } ?>
-		<?php if (Access::check('interface','75')) { ?>
-			<span id="<?php echo($button_flip_state_id); ?>">
-			<?php echo Ajax::button('?page=song&action=flip_state&song_id=' . $song->id,$icon, T_(ucfirst($icon)),'flip_song_' . $song->id); ?>
-			</span>
-		<?php } ?>
-	</dd>
+    <dd class="<?php echo UI::flip_class(); ?>">
+        <?php echo Ajax::button('?action=basket&type=song&id=' . $song->id,'add', T_('Add'),'add_song_' . $song->id); ?>
+        <?php if (Access::check_function('download')) { ?>
+            <a href="<?php echo Song::play_url($song->id); ?>"><?php echo UI::get_icon('link', T_('Link')); ?></a>
+            <a href="<?php echo Config::get('web_path'); ?>/stream.php?action=download&amp;song_id=<?php echo $song->id; ?>"><?php echo UI::get_icon('download', T_('Download')); ?></a>
+        <?php } ?>
+        <?php if (Access::check('interface','75')) { ?>
+            <span id="<?php echo($button_flip_state_id); ?>">
+            <?php echo Ajax::button('?page=song&action=flip_state&song_id=' . $song->id,$icon, T_(ucfirst($icon)),'flip_song_' . $song->id); ?>
+            </span>
+        <?php } ?>
+    </dd>
 <?php
   $songprops[gettext_noop('Title')]   = scrub_out($song->title);
   $songprops[gettext_noop('Artist')]  = $song->f_artist_link;
@@ -71,10 +65,10 @@ $button_flip_state_id = 'button_flip_state_' . $song->id;
   {
     if(trim($value))
     {
-      $rowparity = flip_class();
+      $rowparity = UI::flip_class();
       echo "<dt class=\"".$rowparity."\">" . T_($key) . "</dt><dd class=\"".$rowparity."\">" . $value . "</dd>";
     }
   }
 ?>
 </dl>
-<?php show_box_bottom(); ?>
+<?php UI::show_box_bottom(); ?>

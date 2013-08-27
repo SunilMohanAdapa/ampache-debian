@@ -7,7 +7,7 @@
 ; if this config file is up to date 
 ; this is compared against a value hard-coded
 ; into the init script
-config_version = 11
+config_version = 12
 
 ;###################
 ; Path Vars        #
@@ -26,9 +26,13 @@ config_version = 11
 ; Session and Login Variables #
 ;##############################
 
-; Hostname of your Database
+; Hostname of your database
 ; DEFAULT: localhost
 database_hostname = localhost
+
+; Port to use when connecting to your database
+; DEFAULT: none
+;database_port = 3306
 
 ; Name of your ampache database
 ; DEFAULT: ampache
@@ -78,12 +82,17 @@ session_cookielife = 0
 session_cookiesecure       = 0
 
 ; Auth Methods 
-; This defines which auth methods vauth will attempt
-; to use and in which order, if auto_create isn't enabled
-; The user must exist locally. Local method uses PHP's PAM Auth module
+; This defines which auth methods Auth will attempt to use and in which order.
+; If auto_create isn't enabled the user must exist locally.
 ; DEFAULT: mysql
-; VALUES: mysql,ldap,http,local
+; VALUES: mysql,ldap,http,pam,external
 auth_methods = "mysql"
+
+; External authentication
+; This sets the helper used for external authentication.  It should conform to
+; the interface used by mod_authnz_external
+; DEFAULT: none
+;external_authenticator = "/usr/sbin/pwauth"
 
 ; Automatic local password updating
 ; Determines whether successful authentication against an external source
@@ -210,12 +219,11 @@ require_localnet_session = "true"
 
 ; This determines the tag order for all cataloged
 ; music. If none of the listed tags are found then
-; ampache will default to the first tag format
-; that was found. 
-; POSSIBLE VALUES: ape asf avi id3v1 id3v2 lyrics3 mpeg quicktime riff
+; ampache will randomly use whatever was found.
+; POSSIBLE VALUES: ape asf avi id3v1 id3v2 lyrics3 matroska mpeg quicktime riff
 ;     vorbiscomment
-; DEFAULT: id3v2 id3v1 vorbiscomment quicktime ape asf avi mpeg riff
-getid3_tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf,avi,mpeg,riff"
+; DEFAULT: id3v2 id3v1 vorbiscomment quicktime matroska ape asf avi mpeg riff
+getid3_tag_order = "id3v2,id3v1,vorbiscomment,quicktime,matroska,ape,asf,avi,mpeg,riff"
 
 ; Determines whether we try to autodetect the encoding for id3v2 tags.
 ; May break valid tags.
@@ -493,67 +501,82 @@ refresh_limit = "60"
 ;user_agreement = "false"
 
 ;########################################################
-; These options control the dynamic down-sampling based #
+; These options control the dynamic downsampling based  #
 ; on current usage                                      #
-; *Note* Down-sampling must be enabled and working      #
+; *Note* Transcoding must be enabled and working        #
 ;########################################################
 
-; Attempt to optimize bandwidth by dynamically down-sampling
-; all connections from users to fit within a maximum bandwidth.   
-; The benefit is that it won't downsample more than it needs to.  As it only 
-; adjusts the sample rate at the beginning of a song, it may take a few 
-; minutes to reset all connections to a lower rate. This won't never go higher
-; than a user's sample rate and only applies to users who are set to 
-; the Downsample playback method
-; DEFAULT: 576
+; Attempt to optimize bandwidth by dynamically lowering the bit rate of new
+; streams. Since the bit rate is only adjusted at the beginning of a song, the
+; actual cumulative bitrate for concurrent streams can be up to around
+; double the configured value. It also only applies to streams that are
+; transcoded.
+; DEFAULT: none
 ;max_bit_rate = 576
 
-; If min_bit_rate is set then new streams will be denied if it would
-; cause all streams to be down-sampled below this rate.
-; DEFAULT: 48
+; New dynamically downsampled streams will be denied if they are forced below
+; this value.
+; DEFAULT: 8
 ;min_bit_rate = 48
 
 ;######################################################
 ; These are commands used to transcode non-streaming
 ; formats to the target file type for streaming. 
 ; This can be useful in re-encoding file types that don't stream
-; very well, or if your player doesn't support some file types. 
-; This is also the string used when 'downsampling' is selected
-; as some people have complained its not bloody obvious, any programs
-; referenced in the downsample commands must be installed manually and in
-; the web server path, and executable by the web server
-; REQUIRED variables
-; transcode_TYPE	= true/false ## True to force transcode regardless of prefs
-; transcode_TYPE_target	= TARGET_FILE_TYPE
-; transcode_cmd_TYPE	= TRANSCODE_COMMAND
-; %FILE%	= filename
-; %OFFSET%	= offset
-; %SAMPLE%	= sample rate
-; %EOF%		= end of file in min.sec
+; very well, or if your player doesn't support some file types.
+;
+; 'Downsampling' will also use these commands.
+;
+; To state the bleeding obvious, any programs referenced in the transcode
+; commands must be installed, in the web server's search path (or referenced
+; by their full path), and executable by the web server.
 
-; List of filetypes to transcode
-transcode_m4a 		= true
-transcode_m4a_target 	= mp3 
-;transcode_flac 	= true
-transcode_flac_target	= mp3
-;transcode_mp3  	= false
-transcode_mp3_target	= mp3
-;transcode_ogg 		= false
-transcode_ogg_target	= mp3
+; Input type selection
+; TYPE is the extension. 'allowed' certifies that transcoding works properly for
+; this input format. 'required' further forbids the direct streaming of a format
+; (e.g. if you store everything in FLAC, but don't want to ever stream that.)
+; transcode_TYPE         = {allowed|required|false}
+; DEFAULT: false
+;transcode_m4a      = allowed
+;transcode_flac     = required
+;transcode_mp3      = allowed
 
-; These are the commands that will be run to transcode the file
-transcode_cmd_flac 	= "flac -dc %FILE% | lame -b %SAMPLE% -S - - "
-transcode_cmd_m4a 	= "faad -f 2 -w %FILE% | lame -r -b %SAMPLE% -S - -"
-transcode_cmd_mp3	= "mp3splt -qnf %FILE% %OFFSET% %EOF% -o - | lame --mp3input -q 3 -b %SAMPLE% -S - -"
-transcode_cmd_ogg   	= "oggsplt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
+; Default output format
+; DEFAULT: none
+;encode_target = mp3
 
-; Alternative command works better for some people
-;transcode_cmd_m4a       =  "alac %FILE% | lame -h -b %SAMPLE% -S - -"
-;transcode_cmd_ogg   	= "mp3splt -qn %FILE% %OFFSET% %EOF% -o - | oggdec -Q -o - - | lame -S -q 3 -b %SAMPLE% -S - -"
-;transcode_cmd_flac	= "flac -dc %FILE% | lame -rb %SAMPLE% -S - -"
+; Override the default output format on a per-type basis
+; encode_target_TYPE = TYPE
+; DEFAULT: none
+;encode_target_flac = ogg
 
-; This line seems to work better for windows, switch if needed
-;transcode_cmd_mp3	= "lame -q 3 -b %SAMPLE% -S %FILE% - -" 
+; Command configuration. Substitutions will be made as follows:
+; %FILE% => filename
+; %SAMPLE% => target sample rate
+; You can do fancy things like VBR, but consider whether the consequences are
+; acceptable in your environment.
+
+; Master transcode command
+; transcode_cmd should be a single command that supports multiple file types,
+; such as ffmpeg or avconv. It's still possible to make a configuration that's
+; equivalent to the old default, but if you find that necessary you should be
+; clever enough to figure out how on your own.
+; DEFAULT: none
+;transcode_cmd = "ffmpeg -i %FILE%"
+;transcode_cmd = "avconv -i %FILE%"
+;transocde_cmd = "/usr/bin/neatokeen %FILE%"
+
+; Specific transcode commands
+; It shouldn't be necessary in most cases, but you can override the transcode
+; command for specific source formats.  It still needs to accept the 
+; encoding arguments, so the easiest approach is to use your normal command as
+; a clearing-house.
+; transcode_cmd_TYPE = TRANSCODE_CMD
+;transcode_cmd_mid = "timidity -Or -o – %FILE% | ffmpeg -f s16le -i pipe:0"
+
+; encode_args_TYPE = TRANSCODE_CMD_ARGS
+;encode_args_mp3 = "-vn -b:a %SAMPLE%K -c:a libmp3lame -f mp3 pipe:1"
+;encode_args_ogg = "-vn -b:a %SAMPLE%K -c:a libvorbis -f ogg pipe:1"
 
 ;######################################################
 ; these options allow you to configure your rss-feed
@@ -649,12 +672,8 @@ use_rss = true
 ;#############################
 ;   Multibyte Settings       #
 ;#############################
-; Use Iconv or not
-; DEFAULT: false
-;use_iconv = false
-
-; mb_detect_order
-; comma separated, available encodings are listed on php.net.
-; see http://php.net/manual/mbstring.supported-encodings.php
+; See http://php.net/manual/mbstring.supported-encodings.php
+; If you want ID3v1 encoding detection to work, you should uncomment this line
+; so that the ordering is sane.
 ; DEFAULT: auto
-;mb_detect_order = "EUC-JP, SJIS, eucJP-win, SJIS-win, JIS, ISO-2022-JP, ASCII, UTF-8, UTF-7"
+;mb_detect_order = "ASCII,UTF-8,EUC-JP,ISO-2022-JP,SJIS,JIS"

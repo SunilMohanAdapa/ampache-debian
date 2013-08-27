@@ -1,13 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Stats
- *
- * Show us the stats for the server and this user
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -22,48 +18,44 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 require_once 'lib/init.php';
 
-show_header();
+UI::show_header();
 
 /* Switch on the action to be performed */
 switch ($_REQUEST['action']) {
-	// Show a Users "Profile" page
-	case 'show_user':
-		$client = new User($_REQUEST['user_id']);
-		require_once Config::get('prefix') . '/templates/show_user.inc.php';
-	break;
-	case 'user_stats':
-		/* Get em! */
-		$working_user = new User($_REQUEST['user_id']);
+    // Show a Users "Profile" page
+    case 'show_user':
+        $client = new User($_REQUEST['user_id']);
+        require_once Config::get('prefix') . '/templates/show_user.inc.php';
+    break;
+    case 'user_stats':
+        /* Get em! */
+        $working_user = new User($_REQUEST['user_id']);
 
-		/* Pull favs */
-		$favorite_artists       = $working_user->get_favorites('artist');
-		$favorite_albums        = $working_user->get_favorites('album');
-		$favorite_songs         = $working_user->get_favorites('song');
+        /* Pull favs */
+        $favorite_artists       = $working_user->get_favorites('artist');
+        $favorite_albums        = $working_user->get_favorites('album');
+        $favorite_songs         = $working_user->get_favorites('song');
 
-		require_once Config::get('prefix') . '/templates/show_user_stats.inc.php';
+        require_once Config::get('prefix') . '/templates/show_user_stats.inc.php';
 
-	break;
-	// Show stats
-	case 'newest':
-		require_once Config::get('prefix') . '/templates/show_newest.inc.php';
-	break;
-	case 'popular':
-		require_once Config::get('prefix') . '/templates/show_popular.inc.php';
-	break;
-	case 'show':
-	default:
-		require_once Config::get('prefix') . '/templates/show_stats.inc.php';
-	break;
+    break;
+    // Show stats
+    case 'newest':
+        require_once Config::get('prefix') . '/templates/show_newest.inc.php';
+    break;
+    case 'popular':
+        require_once Config::get('prefix') . '/templates/show_popular.inc.php';
+    break;
+    case 'show':
+    default:
+        require_once Config::get('prefix') . '/templates/show_stats.inc.php';
+    break;
 } // end switch on action
 
-show_footer();
+UI::show_footer();
 
 ?>

@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * media Interface
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -19,11 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -32,53 +25,47 @@
  * This defines how the media file classes should
  * work, this lists all required functions and the expected
  * input
- *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
- * @see	Video
- * @see	Radio
- * @see	Random
- * @see	Song
  */
 interface media {
 
-	/**
-	 * format
-	 * 
-	 * @return
-	 */
-	public function format();
+    /**
+     * format
+     * 
+     * Creates the gussied-up member variables for output 
+     */
+    public function format();
 
-	/**
-	 * native_stream
-	 *
-	 * @return	mixed
-	 */
-	public function native_stream();
+    /**
+     * get_stream_types
+     *
+     * Returns an array of strings; current types are 'native'
+     * and 'transcode'
+     */
+    public function get_stream_types();
 
-	/**
-	 * play_url
-	 *
-	 * @param	int $oid	ID
-	 * @return	mixed
-	 */
-	public static function play_url($oid);
+    /**
+     * play_url
+     *
+     * Returns the url to stream the specified object
+     * 
+     */
+    public static function play_url($oid);
 
-	/**
-	 * stream_cmd
-	 *
-	 * @return	mixed
-	 */
-	public function stream_cmd();
+    /**
+     * get_transcode_settings
+     *
+     * Should only be called if 'transcode' was returned by get_stream_types
+     * Returns a raw transcode command for this item; the optional target
+     * parameter can be used to request a specific format instead of the
+     * default from the configuration file.
+     */
+    public function get_transcode_settings($target = null);
 
-	/**
-	 * has_flag
-	 *
-	 * @return	mixed
-	 */
-	public function has_flag();
+    /**
+     * has_flag
+     *
+     */
+    public function has_flag();
 
 } // end interface
 ?>

@@ -13,6 +13,4 @@ themes      usr/share/ampache/www
 *php        usr/share/ampache/www
 *ico        usr/share/ampache/www
 
-docs/README                 usr/share/doc/ampache
-docs/MIGRATION              usr/share/doc/ampache
-debian/scripts/grab_xspf.sh usr/share/ampache/www/bin
+

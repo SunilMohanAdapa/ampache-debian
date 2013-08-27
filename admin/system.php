@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Access System
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,48 +18,44 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 require_once '../lib/init.php';
 
 if (!Access::check('interface',100) OR Config::get('demo_mode')) {
-	access_denied();
-	exit();
+    UI::access_denied();
+    exit();
 }
 
-show_header();
+UI::show_header();
 
 /* Switch on action boys */
 switch ($_REQUEST['action']) {
-	/* This re-generates the config file comparing
-	 * /config/ampache.cfg to .cfg.dist
-	 */
-	case 'generate_config':
-		ob_end_clean();
-		$current = parse_ini_file(Config::get('prefix') . '/config/ampache.cfg.php');
-		$final = generate_config($current);
-		$browser = new Horde_Browser();
-		$browser->downloadHeaders('ampache.cfg.php','text/plain',false,filesize(Config::get('prefix') . '/config/ampache.cfg.php.dist'));
-		echo $final;
-		exit;
-	break;
-	case 'reset_db_charset':
-		Dba::reset_db_charset();
-		show_confirmation(T_('Database Charset Updated'), T_('Your Database and associated tables have been updated to match your currently configured charset'), Config::get('web_path').'/admin/system.php?action=show_debug');
-	break;
-	case 'show_debug':
-		$configuration = Config::get_all();
-		require_once Config::get('prefix') . '/templates/show_debug.inc.php';
-	break;
-	default:
-		// Rien a faire
-	break;
+    /* This re-generates the config file comparing
+     * /config/ampache.cfg to .cfg.dist
+     */
+    case 'generate_config':
+        ob_end_clean();
+        $current = parse_ini_file(Config::get('prefix') . '/config/ampache.cfg.php');
+        $final = generate_config($current);
+        $browser = new Horde_Browser();
+        $browser->downloadHeaders('ampache.cfg.php','text/plain',false,filesize(Config::get('prefix') . '/config/ampache.cfg.php.dist'));
+        echo $final;
+        exit;
+    break;
+    case 'reset_db_charset':
+        Dba::reset_db_charset();
+        show_confirmation(T_('Database Charset Updated'), T_('Your Database and associated tables have been updated to match your currently configured charset'), Config::get('web_path').'/admin/system.php?action=show_debug');
+    break;
+    case 'show_debug':
+        $configuration = Config::get_all();
+        require_once Config::get('prefix') . '/templates/show_debug.inc.php';
+    break;
+    default:
+        // Rien a faire
+    break;
 } // end switch
 
-show_footer();
+UI::show_footer();
 
 ?>

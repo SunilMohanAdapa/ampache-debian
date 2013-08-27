@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Now Playing Row
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,21 +18,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
-/* Prepare the variables */
-$title = scrub_out(truncate_with_ellipsis($media->title));
-$album = scrub_out(truncate_with_ellipsis($media->f_album_full));
-$artist = scrub_out(truncate_with_ellipsis($media->f_artist_full));
 ?>
 <div class="np_group" id="np_group_1">
   <div class="np_cell cel_username">
     <label><?php echo T_('Username'); ?></label>
-  	<a title="<?php echo scrub_out($agent); ?>" href="<?php echo $web_path; ?>/stats.php?action=show_user&amp;user_id=<?php echo $np_user->id; ?>">
+      <a title="<?php echo scrub_out($agent); ?>" href="<?php echo $web_path; ?>/stats.php?action=show_user&amp;user_id=<?php echo $np_user->id; ?>">
       <?php echo scrub_out($np_user->fullname); ?>
     </a>
   </div>
@@ -48,34 +37,28 @@ $artist = scrub_out(truncate_with_ellipsis($media->f_artist_full));
 
   <?php if (Config::get('show_lyrics')) {?>
   <div class="np_cell cel_lyrics">
-  	<label>&nbsp;</label>
-  	<a title="<?php echo scrub_out($media->title); ?>" href="<?php echo $web_path; ?>/song.php?action=show_lyrics&amp;song_id=<?php echo $media->id; ?>">
+      <label>&nbsp;</label>
+      <a title="<?php echo scrub_out($media->title); ?>" href="<?php echo $web_path; ?>/song.php?action=show_lyrics&amp;song_id=<?php echo $media->id; ?>">
       <?php echo T_('Show Lyrics');?>
-  	</a>
+      </a>
   </div>
   <?php } ?>
 </div>
 
 <div class="np_group" id="np_group_2">
   <div class="np_cell cel_song">
-  	<label><?php echo T_('Song'); ?></label>
-  	<a title="<?php echo scrub_out($media->title); ?>" href="<?php echo $web_path; ?>/stream.php?action=single_song&amp;song_id=<?php echo $media->id; ?>">
-          <?php echo $title; ?>
-  	</a>
+      <label><?php echo T_('Song'); ?></label>
+    <?php echo $media->f_link; ?>
   </div>
 
   <div class="np_cell cel_album">
-  	<label><?php echo T_('Album'); ?></label>
-  	<a title="<?php echo scrub_out($media->f_album_full); ?>" href="<?php echo $web_path; ?>/albums.php?action=show&amp;album=<?php echo $media->album; ?>">
-          	<?php echo $album; ?>
-  	</a>
+      <label><?php echo T_('Album'); ?></label>
+    <?php echo $media->f_album_link; ?>
   </div>
 
   <div class="np_cell cel_artist">
-  	<label><?php echo T_('Artist'); ?></label>
-  	<a title="<?php echo scrub_out($media->f_artist_full); ?>" href="<?php echo $web_path; ?>/artists.php?action=show&amp;artist=<?php echo $media->artist; ?>">
-  	        <?php echo $artist; ?>
-  	</a>
+      <label><?php echo T_('Artist'); ?></label>
+    <?php echo $media->f_artist_link; ?>
   </div>
 </div>
 
@@ -92,37 +75,37 @@ $artist = scrub_out(truncate_with_ellipsis($media->f_artist_full));
 <?php if (Config::get('show_similar')) { ?>
 <div class="np_group">
 <?php if ($artists = Recommendation::get_artists_like($media->artist, 3, false)) { ?>
-	<div class="np_cel cel_similar">
-		<label><?php echo T_('Similar Artists'); ?></label>
-		<?php	foreach ($artists as $a) { ?>
-			<div class="np_cel cel_similar_artist">
-			<?php
-			if (is_null($a['id'])) {
-				echo scrub_out(truncate_with_ellipsis($a['name']), Config::get('ellipse_threshold_artist'));
-			}
-			else {
-				$artist = new Artist($a['id']);
-				$artist->format();
-				echo $artist->f_name_link;
-			}
-			?>
-			</div>
-		<?php } // end foreach ?> 
-	</div>
+    <div class="np_cel cel_similar">
+        <label><?php echo T_('Similar Artists'); ?></label>
+        <?php    foreach ($artists as $a) { ?>
+            <div class="np_cel cel_similar_artist">
+            <?php
+            if (is_null($a['id'])) {
+                echo scrub_out(UI::truncate($a['name']), Config::get('ellipse_threshold_artist'));
+            }
+            else {
+                $artist = new Artist($a['id']);
+                $artist->format();
+                echo $artist->f_name_link;
+            }
+            ?>
+            </div>
+        <?php } // end foreach ?> 
+    </div>
 <?php } // end show similar artists ?>
 <?php if ($songs = Recommendation::get_songs_like($media->id, 3)) { ?>
-	<div class="np_cel cel_similar">
-		<label><?php echo T_('Similar Songs'); ?></label>
-		<?php	foreach ($songs as $s) { ?>
-			<div class="np_cel cel_similar_song">
-			<?php
-			$song = new Song($s['id']);
-			$song->format();
-			echo $song->f_link;
-			?>
-			</div>
-		<?php } // end foreach ?>
-	</div>
+    <div class="np_cel cel_similar">
+        <label><?php echo T_('Similar Songs'); ?></label>
+        <?php    foreach ($songs as $s) { ?>
+            <div class="np_cel cel_similar_song">
+            <?php
+            $song = new Song($s['id']);
+            $song->format();
+            echo $song->f_link;
+            ?>
+            </div>
+        <?php } // end foreach ?>
+    </div>
 <?php } // end show similar songs ?>
 </div>
 <?php } // end show similar things ?>

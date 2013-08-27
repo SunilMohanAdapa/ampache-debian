@@ -1,2 +1,2 @@
-debian/conf/ampache.conf           etc/apache2/conf.d
+debian/conf/ampache.conf /usr/share/ampache/www/config
 

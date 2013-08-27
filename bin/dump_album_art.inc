@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Dump Album Art
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 define('NO_SESSION','1');
@@ -38,13 +32,14 @@ $meta = 'linux';
 
 // Take input from the command line, two options linux or windows
 if (count($_SERVER['argv']) > 1) { 
-	$meta = ($_SERVER['argv']['1'] == 'windows') ? 'windows' : 'linux';  
+    $meta = ($_SERVER['argv']['1'] == 'windows') ? 'windows' : 'linux';  
 }
 
 $catalogs = Catalog::get_catalogs();
 
-foreach ($catalogs as $catalog_id) { 
-	Catalog::dump_album_art($catalog_id,array('metadata'=>$meta));
+foreach ($catalogs as $catalog_id) {
+    $catalog = new Catalog($catalog_id);
+    $catalog->dump_album_art(array('metadata' => $meta));
 }
 
 

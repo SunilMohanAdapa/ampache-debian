@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Edit Artist Row
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,24 +18,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
 ?>
 <td colspan="5">
 <form method="post" id="edit_artist_<?php echo $artist->id; ?>">
 <table class="inline-edit" cellpadding="3" cellspacing="0">
 <tr>
 <td>
-	<input type="text" name="name" value="<?php echo scrub_out($artist->f_full_name); ?>" />
+    <input type="text" name="name" value="<?php echo scrub_out($artist->f_full_name); ?>" />
 </td>
 <td>
-	<input type="hidden" name="id" value="<?php echo $artist->id; ?>" />
-	<input type="hidden" name="type" value="artist_row" />
-	<?php echo Ajax::button('?action=edit_object&id=' . $artist->id . '&type=artist_row','download', T_('Save Changes'),'save_artist_' . $artist->id,'edit_artist_' . $artist->id); ?>
+    <input type="hidden" name="id" value="<?php echo $artist->id; ?>" />
+    <input type="hidden" name="type" value="artist_row" />
+    <?php echo Ajax::button('?action=edit_object&id=' . $artist->id . '&type=artist_row','download', T_('Save Changes'),'save_artist_' . $artist->id,'edit_artist_' . $artist->id); ?>
 
 </tr>
 </table>

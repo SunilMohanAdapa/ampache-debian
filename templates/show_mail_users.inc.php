@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Mail Users
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,15 +18,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
 ?>
 
-<?php show_box_top(T_('Send E-mail to Users'), 'box box_mail_users'); ?>
+<?php UI::show_box_top(T_('Send E-mail to Users'), 'box box_mail_users'); ?>
 <form name="mail" method="post" action="<?php echo Config::get('web_path'); ?>/admin/mail.php?action=send_mail" enctype="multipart/form-data">
 <table>
   <tr>
@@ -38,66 +31,66 @@
                 <option value="all" title="Mail Everyone"><?php echo T_('All'); ?></option>
                 <option value="users" title="Mail Users"><?php echo T_('User'); ?></option>
                 <option value="admins" title="Mail Admins"><?php echo T_('Admin'); ?></option>
-		<option value="inactive" title="Mail Inactive Users"><?php echo T_('Inactive Users'); ?>&nbsp;</option>
+        <option value="inactive" title="Mail Inactive Users"><?php echo T_('Inactive Users'); ?>&nbsp;</option>
         </select>
     </td>
   </tr>
 <!--
   <tr>
     <td colspan="2">
- 	 <table>
- 		 <tr>
-		    <td><?php echo T_('Catalog Statistics'); ?>:</td>
-		    <td>
-			<input type="checkbox" name="cat_stats" value="yes" />
-		    </td>
-		    <td><?php echo T_('Most Popular Albums'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="pop_albums" value="yes" />
-		    </td>
-		  </tr>
+      <table>
+          <tr>
+            <td><?php echo T_('Catalog Statistics'); ?>:</td>
+            <td>
+            <input type="checkbox" name="cat_stats" value="yes" />
+            </td>
+            <td><?php echo T_('Most Popular Albums'); ?>:</td>
+            <td>
+                <input type="checkbox" name="pop_albums" value="yes" />
+            </td>
+          </tr>
 
-		  <tr>
-		    <td><?php echo T_('Latest Artist Additions'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="new_artists" value="yes" />
-		    </td>
-		    <td><?php echo T_('Most Popular Artists'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="pop_artists" value="yes" />
-		    </td>
-		  </tr>
+          <tr>
+            <td><?php echo T_('Latest Artist Additions'); ?>:</td>
+            <td>
+                <input type="checkbox" name="new_artists" value="yes" />
+            </td>
+            <td><?php echo T_('Most Popular Artists'); ?>:</td>
+            <td>
+                <input type="checkbox" name="pop_artists" value="yes" />
+            </td>
+          </tr>
 
-		  <tr>
-		    <td><?php echo T_('Latest Album Additions'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="new_albums" value="yes" />
-		    </td>
-		    <td><?php echo T_('Most Popular Songs'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="pop_songs" value="yes" />
-		    </td>
-		</tr>
-		  <tr>
-		    <td><?php echo T_('Flagged Songs'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="flagged" value="yes" />
-		    </td>
-		    <td><?php echo T_('Disabled Songs'); ?>:</td>
-		    <td>
-		        <input type="checkbox" name="disabled" value="yes" />
-		    </td>
+          <tr>
+            <td><?php echo T_('Latest Album Additions'); ?>:</td>
+            <td>
+                <input type="checkbox" name="new_albums" value="yes" />
+            </td>
+            <td><?php echo T_('Most Popular Songs'); ?>:</td>
+            <td>
+                <input type="checkbox" name="pop_songs" value="yes" />
+            </td>
+        </tr>
+          <tr>
+            <td><?php echo T_('Flagged Songs'); ?>:</td>
+            <td>
+                <input type="checkbox" name="flagged" value="yes" />
+            </td>
+            <td><?php echo T_('Disabled Songs'); ?>:</td>
+            <td>
+                <input type="checkbox" name="disabled" value="yes" />
+            </td>
 
-		</tr>
+        </tr>
 
-		  <tr>
-		    <td colspan = "2"><?php echo T_('Most Popular Threshold in days'); ?>:</td>
-		    <td>
-		        <input type="text" name="threshold" size="3" value="<?php echo Config::get('popular_threshold'); ?>" />
-		    </td>
-		</tr>
+          <tr>
+            <td colspan = "2"><?php echo T_('Most Popular Threshold in days'); ?>:</td>
+            <td>
+                <input type="text" name="threshold" size="3" value="<?php echo Config::get('popular_threshold'); ?>" />
+            </td>
+        </tr>
 
-	</table>
+    </table>
     </td>
   </tr>
 -->
@@ -106,7 +99,7 @@
     <td>
       <select name="from">
         <option value="self" title="Self"><?php echo T_('Yourself'); ?></option>
-	<option value="system" title="System"><?php echo T_('Ampache'); ?></option>
+    <option value="system" title="System"><?php echo T_('Ampache'); ?></option>
       </select>
     </td>
   </tr>
@@ -129,5 +122,5 @@
         <input class="button" type="submit" value="<?php echo T_('Send Mail'); ?>" />
 </div>
 </form>
-<?php show_box_bottom(); ?>
+<?php UI::show_box_bottom(); ?>
 

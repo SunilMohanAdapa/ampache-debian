@@ -4,32 +4,25 @@ set -e
 
 . /usr/share/debconf/confmodule
 
-create_link(){
-	if [ -e /etc/apache2/conf.d/ampache.conf ] && [ ! -e /etc/ampache/ampache.conf ]; then
-		ln -s /etc/apache2/conf.d/ampache.conf /etc/ampache/ampache.conf
-		printf "ampache.conf sym link created\n"
-	else
-		printf "Unable to make the ampache.cfg.php symlink, please create it manually\n"
-	fi
-}
-
-restart_server(){
-	if [ -e /var/run/apache2.pid ]; then
-		service apache2 reload
-	fi
-}
-
 if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 
+	if [ -e /usr/bin/ucf ]; then
+		ucf --debconf-ok --three-way \
+			/usr/share/ampache/www/config/ampache.conf /etc/ampache/ampache.conf
+		ucfr ampache /etc/ampache/ampache.conf
+	fi
+
+	#ask to restart web server
 	db_get ampache/restart_webserver || true
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
-		create_link
+		printf "postinst: Users answered false, nothing to do"
 	elif [ "$re_start" = "true" ]; then
-		create_link
-		restart_server
+		if [ -e /var/run/apache2.pid ]; then
+			service apache2 reload
+		fi
 	else
-		printf "Something weird has happened, unable to configure ampache.\n"
+		printf "postinst: Something weird has happened, unable to configure ampache.\n"
 	fi
 fi
 

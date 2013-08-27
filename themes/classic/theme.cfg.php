@@ -1,8 +1,7 @@
 ;;;;;;;;;;;;;;;;;;
 ;<?php exit(); ?>;
 ;;;;;;;;;;;;;;;;;;
-; Copyright (c) 2001 - 2007 Ampache.org
-; All rights reserved.
+; Copyright (c) 2001 - 2013 Ampache.org
 ;
 ; This program is free software; you can redistribute it and/or
 ; modify it under the terms of the GNU General Public License v2
@@ -35,7 +34,7 @@ author = "Ros"
 
 ; Theme Maintainer
 ; This is just a way of listing who is responsible for
-; maintaining this theme incase it's not working right
+; maintaining this theme in case it's not working right
 ; please include an e-mail address so you can be contacted
 ; DEFAULT: N/A
 maintainer = "Spocky"

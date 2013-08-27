@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Stats
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,16 +18,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $stats = Catalog::get_stats();
 $catalogs = Catalog::get_catalogs();
 ?>
-<?php show_box_top(T_('Statistics'), 'box box_stats'); ?>
+<?php UI::show_box_top(T_('Statistics'), 'box box_stats'); ?>
 <em><?php echo T_('Catalogs'); ?></em>
 <table class="tabledata" cellpadding="3" cellspacing="1">
 <tr class="th-top">
@@ -38,7 +32,7 @@ $catalogs = Catalog::get_catalogs();
         <th><?php echo T_('Albums'); ?></th>
         <th><?php echo T_('Artists'); ?></th>
         <th><?php echo T_('Songs'); ?></th>
-	<th><?php echo T_('Videos'); ?></th>
+    <th><?php echo T_('Videos'); ?></th>
         <th><?php echo T_('Tags'); ?></th>
         <th><?php echo T_('Catalog Size'); ?></th>
         <th><?php echo T_('Catalog Time'); ?></th>
@@ -49,7 +43,7 @@ $catalogs = Catalog::get_catalogs();
         <td><?php echo $stats['albums']; ?></td>
         <td><?php echo $stats['artists']; ?></td>
         <td><?php echo $stats['songs']; ?></td>
-	<td><?php echo $stats['videos']; ?></td>
+    <td><?php echo $stats['videos']; ?></td>
         <td><?php echo $stats['tags']; ?></td>
         <td><?php echo $stats['formatted_size']; ?></td>
         <td><?php echo $stats['time_text']; ?></td>
@@ -73,26 +67,26 @@ $catalogs = Catalog::get_catalogs();
         <th class="cel_lastverify"><?php echo T_('Last Verify'); ?></th>
         <th class="cel_lastadd"><?php echo T_('Last Add'); ?></th>
         <th class="cel_lastclean"><?php echo T_('Last Clean'); ?></th>
-	<th class="cel_songs"><?php echo T_('Songs'); ?></th>
-	<th class="cel_video"><?php echo T_('Videos'); ?></th>
-	<th class="cel_total"><?php echo T_('Catalog Size'); ?></th>
+    <th class="cel_songs"><?php echo T_('Songs'); ?></th>
+    <th class="cel_video"><?php echo T_('Videos'); ?></th>
+    <th class="cel_total"><?php echo T_('Catalog Size'); ?></th>
 </tr>
 <?php foreach ($catalogs as $catalog_id) {
-		$catalog = new Catalog($catalog_id);
-		$catalog->format();
-		$stats = Catalog::get_stats($catalog_id);
+        $catalog = new Catalog($catalog_id);
+        $catalog->format();
+        $stats = Catalog::get_stats($catalog_id);
 ?>
 <tr>
-	<td class="cel_catalog"><?php echo $catalog->name; ?></td>
-	<td class="cel_path"><?php echo scrub_out($catalog->f_path); ?></td>
-	<td class="cel_lastverify"><?php echo scrub_out($catalog->f_update); ?></td>
-	<td class="cel_lastadd"><?php echo scrub_out($catalog->f_add); ?></td>
-	<td class="cel_lastclean"><?php echo scrub_out($catalog->f_clean); ?></td>
-	<td class="cel_songs"><?php echo scrub_out($stats['songs']); ?></td>
-	<td class="cel_video"><?php echo scrub_out($stats['videos']); ?></td>
-	<td class="cel_total"><?php echo scrub_out($stats['formatted_size']); ?></td>
+    <td class="cel_catalog"><?php echo $catalog->name; ?></td>
+    <td class="cel_path"><?php echo scrub_out($catalog->f_path); ?></td>
+    <td class="cel_lastverify"><?php echo scrub_out($catalog->f_update); ?></td>
+    <td class="cel_lastadd"><?php echo scrub_out($catalog->f_add); ?></td>
+    <td class="cel_lastclean"><?php echo scrub_out($catalog->f_clean); ?></td>
+    <td class="cel_songs"><?php echo scrub_out($stats['songs']); ?></td>
+    <td class="cel_video"><?php echo scrub_out($stats['videos']); ?></td>
+    <td class="cel_total"><?php echo scrub_out($stats['formatted_size']); ?></td>
 </tr>
 <?php } ?>
 
 </table>
-<?php show_box_bottom(); ?>
+<?php UI::show_box_bottom(); ?>

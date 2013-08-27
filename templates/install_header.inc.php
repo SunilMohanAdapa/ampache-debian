@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Install Header
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,13 +18,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
-$prefix = realpath(dirname(__FILE__). "/../");
 ?>
 <?php if (!defined('INSTALL')) { exit; } ?>
 <?php $results = 0; ?>
@@ -45,16 +38,16 @@ $prefix = realpath(dirname(__FILE__). "/../");
 <p>For the love of Music</p>
 </div>
 <div id="text-box">
-	<div class="notify">
-		<h3><?php echo T_('Requirements'); ?></h3>
-		<p>
-		<?php echo T_('This page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following prerequisites:'); ?>
-		</p>
-		<ul>
-			<li><?php echo T_('A MySQL server with a username and password that can create/modify databases'); ?></li>
+    <div class="notify">
+        <h3><?php echo T_('Requirements'); ?></h3>
+        <p>
+        <?php echo T_('This page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following prerequisites:'); ?>
+        </p>
+        <ul>
+            <li><?php echo T_('A MySQL server with a username and password that can create/modify databases'); ?></li>
                         <li><?php echo sprintf(T_('Your webserver has read access to the files %s and %s'),$prefix . '/sql/ampache.sql',$prefix . '/config/ampache.cfg.php.dist'); ?></li>
-		</ul>
-		<p>
+        </ul>
+        <p>
 <?php echo sprintf(T_("Once you have ensured that the above requirements are met please fill out the information below. You will only be asked for the required config values. If you would like to make changes to your Ampache install at a later date simply edit %s"), $prefix . '/config/ampache.cfg.php'); ?>
-		</p>
+        </p>
 </div>

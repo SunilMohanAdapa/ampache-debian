@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Rating Library
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -32,20 +26,11 @@
  */
 function show_rating($object_id,$type) {
 
-	$rating = new Rating($object_id,$type);
-
-	require Config::get('prefix') . '/templates/show_object_rating.inc.php';
-
-} // show_rating
-
-//  andy90s rating patch added
-function show_rating_static($object_id,$type) {
-
     $rating = new Rating($object_id,$type);
 
-    require Config::get('prefix') . '/templates/show_object_rating_static.inc.php';
+    require Config::get('prefix') . '/templates/show_object_rating.inc.php';
 
-} // show_rating_static
+} // show_rating
 
 /**
  * get_rating_name
@@ -53,32 +38,32 @@ function show_rating_static($object_id,$type) {
  */
 function get_rating_name($score) {
 
-	switch ($score) {
-		case '0':
-			return T_("Don't Play");
-		break;
-		case '1':
-			return T_("It's Pretty Bad");
-		break;
-		case '2':
-			return T_("It's Ok");
-		break;
-		case '3':
-			return T_("It's Pretty Good");
-		break;
-		case '4':
-			return T_("I Love It!");
-		break;
-		case '5':
-			return T_("It's Insane");
-		break;
-		// I'm fired
-		default:
-			return T_("Off the Charts!");
-		break;
-	} // end switch
+    switch ($score) {
+        case '0':
+            return T_("Don't Play");
+        break;
+        case '1':
+            return T_("It's Pretty Bad");
+        break;
+        case '2':
+            return T_("It's Ok");
+        break;
+        case '3':
+            return T_("It's Pretty Good");
+        break;
+        case '4':
+            return T_("I Love It!");
+        break;
+        case '5':
+            return T_("It's Insane");
+        break;
+        // I'm fired
+        default:
+            return T_("Off the Charts!");
+        break;
+    } // end switch
 
-	return true;
+    return true;
 
 } // get_rating_name
 

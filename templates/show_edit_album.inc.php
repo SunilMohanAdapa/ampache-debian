@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Edit Album
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,39 +18,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
 ?>
 
-<?php show_box_top(T_('Edit Album')); ?>
-<form name="edit_album" method="post" enctype="multipart/form-data" action="<?php echo conf('web_path'); ?>/admin/flag.php?action=edit_album">
+<?php UI::show_box_top(T_('Edit Album')); ?>
+<form name="edit_album" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/admin/flag.php?action=edit_album">
 <table class="tabledata">
-<tr class="<?php echo flip_class(); ?>">
-	<td><?php echo T_('Name'); ?></td>
-	<td>
-		<input type="text" name="name" value="<?php echo scrub_out($album->full_name); ?>">
-	</td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td><?php echo T_('Name'); ?></td>
+    <td>
+        <input type="text" name="name" value="<?php echo scrub_out($album->full_name); ?>">
+    </td>
 </tr>
-<tr class="<?php echo flip_class(); ?>">
-	<td><?php echo T_('Year'); ?></td>
-	<td>
-		<input type="text" name="year" value="<?php echo scrub_out($album->year); ?>">
-	</td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td><?php echo T_('Year'); ?></td>
+    <td>
+        <input type="text" name="year" value="<?php echo scrub_out($album->year); ?>">
+    </td>
 </tr>
-<tr class="<?php echo flip_class(); ?>">
-	<td>&nbsp;</td>
-	<td>
-		<input type="checkbox" name="flag" value="1" checked="checked" /> <?php echo T_('Flag for Retagging'); ?>
-	</td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td>&nbsp;</td>
+    <td>
+        <input type="checkbox" name="flag" value="1" checked="checked" /> <?php echo T_('Flag for Retagging'); ?>
+    </td>
 </tr>
 </table>
 <div class="formValidation">
-		<input type="hidden" name="album_id" value="<?php echo $album->id; ?>" />
-		<input type="submit" value="<?php echo T_('Update Album'); ?>" />
+        <input type="hidden" name="album_id" value="<?php echo $album->id; ?>" />
+        <input type="submit" value="<?php echo T_('Update Album'); ?>" />
 </div>
 </form>
-<?php show_box_bottom(); ?>
+<?php UI::show_box_bottom(); ?>

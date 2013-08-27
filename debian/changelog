@@ -1,18 +1,21 @@
-ampache (3.6-git408e713+dfsg-4) unstable; urgency=low
+ampache (3.6-rzb2752+dfsg-1) unstable; urgency=low
 
-  * Acknowledge non-maintainer upload and included changes.
-  * Removed debian/ampache.logrotate and debian/ampache.cron.daily.
-  * Added ampache.maintscript to gracefully remove /etc/logrotate.d/ampache
-    and /etc/cron.daily/ampache as these are now obsolete conffiles.
-    Closes: #691433
-  * Removed log file creation from ampache.postinst.
-  * Removed sym link creation from ampache.links.
-  * Pre-Depends on dpkg so dpkg-maintscript-helper can be used.
-  * Create /etc/ampache in ampache.dirs dh_links was doing this for use.
-  * Increased debhelper to >=8.1.0 to use dpkg-maintscript-helper.
-  * Increased debian/compat to 8.
+  * New upsteam snapshot.  Contains important bug fixes to the installer.
+  * Correct typo in ampache-common.postrm.
+  * Remove courtousy copy of php-getid3, during repack.  Closes: #701526
+  * Update package to use dh_linktree to make the needed sym links to the
+    needed system libs that were removed during repack.
+  * Update debian/rules to reflect upstreams removing/moving of modules.
+  * Update debian/ampache-common.install to reflect upstreams removal of files.
+  * Updated to use new apache2.4 API. Closes: #669756
+  * Updated /debian/po/de.po thx David Prévot for the patch.  Closes:  #691963
+  * M3U import is now ordered, fixed upstream.  Closes: #684984
+  * Text input area has been resized so IPv6 addresses will now fit, fixed
+    upstream.  Closes:  #716230
+  * Added ampache-common.preinst to make sure that the courtousy copies of code
+    dirs are empty so dh_linktree can do it's magic on upgrades.
 
- -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 12 July 2013 20:24:28 -0500
+ -- Charlie Smotherman <cjsmo@cableone.net>  Tue, 27 Aug 2013 13:19:48 -0500
 
 ampache (3.6-git408e713+dfsg-3.1) unstable; urgency=low
 

@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Flag Class
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,10 +19,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -32,394 +26,399 @@
  *
  * This handles flagging of songs, albums and artists
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 class Flag extends database_object {
 
-	public $id;
-	public $user;
-	public $object_id;
-	public $object_type;
-	public $comment;
-	public $flag;
-	public $date;
-	public $approved=0;
+    public $id;
+    public $user;
+    public $object_id;
+    public $object_type;
+    public $comment;
+    public $flag;
+    public $date;
+    public $approved=0;
 
-	/* Generated Values */
-	public $name; // Blank
-	public $title; // Blank
+    /* Generated Values */
+    public $name; // Blank
+    public $title; // Blank
 
-	/**
-	 * Constructor
-	 * This takes a flagged.id and then pulls in the information for said flag entry
-	 */
-	public function __construct($flag_id) {
+    /**
+     * Constructor
+     * This takes a flagged.id and then pulls in the information for said flag entry
+     */
+    public function __construct($flag_id) {
 
-		$info = $this->get_info($flag_id,'flagged');
+        $info = $this->get_info($flag_id,'flagged');
 
-		foreach ($info as $key=>$value) {
-			$this->$key = $value;
-		}
+        foreach ($info as $key=>$value) {
+            $this->$key = $value;
+        }
 
-		return true;
+        return true;
 
-	} // Constructor
+    } // Constructor
 
-	/**
-	 * build_cache
-	 * This takes an array of ids and builds up a nice little cache
-	 * for us
-	 */
-	public static function build_cache($ids) {
+    /**
+     * gc
+     *
+     * This cleans out unused flagged items
+     */
+    public static function gc() {
+        Dba::write("DELETE FROM `flagged` USING `flagged` LEFT JOIN `song` ON `song`.`id` = `flagged`.`object_id` WHERE `song`.`id` IS NULL AND `object_type` = 'song'");
+    }
 
-		if (!is_array($ids) OR !count($ids)) { return false; }
+    /**
+     * build_cache
+     * This takes an array of ids and builds up a nice little cache
+     * for us
+     */
+    public static function build_cache($ids) {
 
-		$idlist = '(' . implode(',',$ids) . ')';
+        if (!is_array($ids) OR !count($ids)) { return false; }
 
-		$sql = "SELECT * FROM `flagged` WHERE `id` IN $idlist";
-		$db_results = Dba::read($sql);
+        $idlist = '(' . implode(',',$ids) . ')';
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			parent::add_to_cache('flagged',$row['id'],$row);
-		}
+        $sql = "SELECT * FROM `flagged` WHERE `id` IN $idlist";
+        $db_results = Dba::read($sql);
 
-	} // build_cache
+        while ($row = Dba::fetch_assoc($db_results)) {
+            parent::add_to_cache('flagged',$row['id'],$row);
+        }
 
-	/**
-	 * build_map_cache
-	 * This takes an array of ids and builds a map cache to avoid some of the object_type calls
-	 * we would normally have to make
-	 */
-	public static function build_map_cache($ids,$type) {
+    } // build_cache
 
-		if (!is_array($ids) OR !count($ids)) { return false; }
+    /**
+     * build_map_cache
+     * This takes an array of ids and builds a map cache to avoid some of the object_type calls
+     * we would normally have to make
+     */
+    public static function build_map_cache($ids,$type) {
 
-		$idlist = '(' . implode(',',$ids) . ')';
-		$type = Dba::escape($type);
+        if (!is_array($ids) OR !count($ids)) { return false; }
 
-		$sql = "SELECT * FROM `flagged` " .
-			"WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id` IN $idlist";
-		$db_results = Dba::read($sql);
+        $idlist = '(' . implode(',',$ids) . ')';
+        $type = Dba::escape($type);
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[$row['object_id']] = $row;
-		}
+        $sql = "SELECT * FROM `flagged` " .
+            "WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id` IN $idlist";
+        $db_results = Dba::read($sql);
 
-		// Itterate through the passed ids as we need to cache 'nulls'
-		foreach ($ids as $id) {
-			parent::add_to_cache('flagged_' . $type,$id,$results[$id]);
-		}
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[$row['object_id']] = $row;
+        }
 
-		return true;
+        // Iterate through the passed ids as we need to cache 'nulls'
+        foreach ($ids as $id) {
+            parent::add_to_cache('flagged_' . $type,$id,$results[$id]);
+        }
 
-	} // build_map_cache
+        return true;
 
-	/**
-	 * has_flag
-	 * Static function, tries to check the cache, but falls back on a query
-	 */
-	public static function has_flag($id,$type) {
+    } // build_map_cache
 
-		if (parent::is_cached('flagged_' . $type,$id)) {
-			$data = parent::get_from_cache('flagged_' . $type,$id);
-			return $data['date'];
-		}
+    /**
+     * has_flag
+     * Static function, tries to check the cache, but falls back on a query
+     */
+    public static function has_flag($id,$type) {
 
-		// Ok we have to query this
-		$type = Dba::escape($type);
+        if (parent::is_cached('flagged_' . $type,$id)) {
+            $data = parent::get_from_cache('flagged_' . $type,$id);
+            return $data['date'];
+        }
 
-		$sql = "SELECT * FROM `flagged` WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id`='$id'";
-		$db_results = Dba::read($sql);
+        // Ok we have to query this
+        $type = Dba::escape($type);
 
-		$row = Dba::fetch_assoc($db_results);
-		parent::add_to_cache('flagged_' . $type,$row['object_id'],$row);
+        $sql = "SELECT * FROM `flagged` WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id`='$id'";
+        $db_results = Dba::read($sql);
 
-		return $row['date'];
+        $row = Dba::fetch_assoc($db_results);
+        parent::add_to_cache('flagged_' . $type,$row['object_id'],$row);
 
-	} // has_flag
+        return $row['date'];
 
-	/**
-	 * get_recent
-	 * This returns the id's of the most recently flagged songs, it takes an int
-	 * as an argument which is the count of the object you want to return
-	 */
-	public static function get_recent($count=0) {
+    } // has_flag
 
-		if ($count) { $limit = " LIMIT " . intval($count);  }
+    /**
+     * get_recent
+     * This returns the id's of the most recently flagged songs, it takes an int
+     * as an argument which is the count of the object you want to return
+     */
+    public static function get_recent($count=0) {
 
-		$results = array();
+        if ($count) { $limit = " LIMIT " . intval($count);  }
 
-		$sql = "SELECT id FROM flagged ORDER BY date " . $limit;
-		$db_results = Dba::read($sql);
+        $results = array();
 
-		while ($r = Dba::fetch_assoc($db_results)) {
-			$results[] = $r['id'];
-		}
+        $sql = "SELECT id FROM flagged ORDER BY date " . $limit;
+        $db_results = Dba::read($sql);
 
-		return $results;
+        while ($r = Dba::fetch_assoc($db_results)) {
+            $results[] = $r['id'];
+        }
 
-	} // get_recent
+        return $results;
 
-	/**
-	 * get_disabled
-	 * This returns all of the songs that have been disabled, this is
-	 * a form of being flagged
-	 */
-	public static function get_disabled() {
+    } // get_recent
 
-		$sql = "SELECT `id` FROM `song` WHERE `enabled`='0'";
-		$db_results = Dba::read($sql);
+    /**
+     * get_disabled
+     * This returns all of the songs that have been disabled, this is
+     * a form of being flagged
+     */
+    public static function get_disabled() {
 
-		$results = array();
+        $sql = "SELECT `id` FROM `song` WHERE `enabled`='0'";
+        $db_results = Dba::read($sql);
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[] = $row['id'];
-		}
+        $results = array();
 
-		return $results;
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[] = $row['id'];
+        }
 
-	} // get_disabled
+        return $results;
 
-	/**
-	 * get_all
-	 * This returns an array of ids of flagged songs if no limit is passed
-	 * it gets everything
-	 */
-	public static function get_all($count=0) {
+    } // get_disabled
 
-		if ($count) { $limit_clause = "LIMIT " . intval($count); }
+    /**
+     * get_all
+     * This returns an array of ids of flagged songs if no limit is passed
+     * it gets everything
+     */
+    public static function get_all($count=0) {
 
-		$sql = "SELECT `id` FROM `flagged` $limit_clause";
-		$db_results = Dba::read($sql);
+        if ($count) { $limit_clause = "LIMIT " . intval($count); }
 
-		/* Default it to an array */
-		$results = array();
+        $sql = "SELECT `id` FROM `flagged` $limit_clause";
+        $db_results = Dba::read($sql);
 
-		/* While the query */
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[] = $row['id'];
-		}
+        /* Default it to an array */
+        $results = array();
 
-		return $results;
+        /* While the query */
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[] = $row['id'];
+        }
 
-	} // get_all
+        return $results;
 
-	/**
-	 * get_approved
-	 * This returns an array of approved flagged songs
-	 */
-	public static function get_approved() {
+    } // get_all
 
-		$sql = "SELECT `id` FROM `flagged` WHERE `approved`='1'";
-		$db_results = Dba::read($sql);
+    /**
+     * get_approved
+     * This returns an array of approved flagged songs
+     */
+    public static function get_approved() {
 
+        $sql = "SELECT `id` FROM `flagged` WHERE `approved`='1'";
+        $db_results = Dba::read($sql);
 
-		/* Default the results array */
-		$results = array();
 
-		/* While it */
-		while ($r = Dba::fetch_assoc($db_results)) {
-			$results[] = $r['id'];
-		}
+        /* Default the results array */
+        $results = array();
 
-		return $results;
+        /* While it */
+        while ($r = Dba::fetch_assoc($db_results)) {
+            $results[] = $r['id'];
+        }
 
-	} // get_approved
+        return $results;
 
-	/**
-	 * add
-	 * This adds a flag entry for an item, it takes an id, a type, the flag type
-	 * and a comment and then inserts the mofo
-	 */
-	public static function add($id,$type,$flag,$comment) {
+    } // get_approved
 
-		$id 		= Dba::escape($id);
-		$type		= Dba::escape($type);
-		$flag		= self::validate_flag($flag);
-		$user		= Dba::escape($GLOBALS['user']->id);
-		$comment	= Dba::escape($comment);
-		$time		= time();
-		$approved	= '0';
+    /**
+     * add
+     * This adds a flag entry for an item, it takes an id, a type, the flag type
+     * and a comment and then inserts the mofo
+     */
+    public static function add($id,$type,$flag,$comment) {
 
-		/* If they are an content manager or higher, it's auto approved */
-		if (Access::check('interface','75')) { $approved = '1'; }
+        $id         = Dba::escape($id);
+        $type        = Dba::escape($type);
+        $flag        = self::validate_flag($flag);
+        $user        = Dba::escape($GLOBALS['user']->id);
+        $comment    = Dba::escape($comment);
+        $time        = time();
+        $approved    = '0';
 
-		$sql = "INSERT INTO `flagged` (`object_id`,`object_type`,`flag`,`comment`,`date`,`approved`,`user`) VALUES " .
-			" ('$id','$type','$flag','$comment','$time','$approved','$user')";
-		$db_results = Dba::write($sql);
+        /* If they are an content manager or higher, it's auto approved */
+        if (Access::check('interface','75')) { $approved = '1'; }
 
-		return true;
+        $sql = "INSERT INTO `flagged` (`object_id`,`object_type`,`flag`,`comment`,`date`,`approved`,`user`) VALUES " .
+            " ('$id','$type','$flag','$comment','$time','$approved','$user')";
+        $db_results = Dba::write($sql);
 
-	} // add
+        return true;
 
-	/**
-	 * delete
-	 * This deletes the flagged entry and rescans the file to revert to the origional
-	 * state, in a perfect world, I could just roll the changes back... not until 3.4
-	 * or.. haha 3.5!
-	 */
-	public function delete() {
+    } // add
 
-		// Re-scan the file
-		$song = new Song($this->object_id);
-		$info = Catalog::update_media_from_tags($song);
+    /**
+     * delete
+     * This deletes the flagged entry and rescans the file to revert to the origional
+     * state, in a perfect world, I could just roll the changes back... not until 3.4
+     * or.. haha 3.5!
+     */
+    public function delete() {
 
-		// Delete the row
-		$sql = "DELETE FROM `flagged` WHERE `id`='$this->id'";
-		$db_results = Dba::write($sql);
-
-		// Reset the Last-Updated date so that it'll get re-scaned
-		$song->update_utime($song->id,1);
-
-		return true;
-
-	} // delete
-
-	/**
-	 * approve
-	 * This approves the current flag object ($this->id) by setting approved to
-	 * 1
-	 */
-	 public function approve() {
-
-		$sql = "UPDATE `flagged` SET `approved`='1' WHERE `id`='$this->id'";
-		$db_results = Dba::write($sql);
-
-		$this->approved = 1;
-
-		return true;
-
-	} // approve
-
-	/**
-	 * format
-	 * This function figures out what kind of object we've got and sets up all the
-	 * vars all nice and fuzzy like
-	 */
-	public function format() {
-
-		switch ($this->object_type) {
-			case 'song':
-				$song = new Song($this->object_id);
-				$song->format();
-				$this->f_name 	= $song->f_link;
-			break;
-		} // end switch on type
-
-		$client = new User($this->user);
-		$client->format();
-		$this->f_user = $client->f_link;
-
-	} // format
-
-	/**
-	 * print_status
-	 * This prints out a userfriendly version of the current status for this flagged
-	 * object
-	 */
-	public function print_status() {
-
-		if ($this->approved) { echo T_('Approved'); }
-		else { echo T_('Pending'); }
-
-	} // print_status
-
-	/**
-	 * print_flag
-	 * This prints out a userfriendly version of the current flag type
-	 */
-	public function print_flag() {
-
-		switch ($this->flag) {
-			case 'delete':
-				$name = T_('Delete');
-			break;
-			case 'retag':
-				$name = T_('Re-Tag');
-			break;
-			case 'reencode':
-				$name = T_('Re-encode');
-			break;
-			case 'other':
-				$name = T_('Other');
-			break;
-			default:
-				$name = T_('Unknown');
-			break;
-		} // end switch
-
-		echo $name;
-
-	} // print_flag
-
-	/**
-	 * validate_flag
-	 * This takes a flag input and makes sure it's one of the reigstered
-	 * and valid 'flag' values
-	 */
-	public static function validate_flag($flag) {
-
-		switch ($flag) {
-			case 'delete':
-			case 'retag':
-			case 'reencode':
-			case 'other':
-				return $flag;
-			break;
-			default:
-				return 'other';
-			break;
-		} // end switch
-
-	} // validate_flag
-
-	/**
-	 * fill_tags
-	 * This is used by the write_tags script.
-	 */
-	public static function fill_tags( $tagWriter, $song, $type = 'comment' ) {
-
-		// Set all of the attributes for the tag to be written(All pulled from the song object)
-		// Use a function since ID3v1, ID3v2, and vorbis/flac/ape are different
-		switch ($type) {
-			case 'comment':
-				$tagWriter->comments['title'] = $song->title;
-				$tagWriter->comments['date'] = $song->year;
-				$tagWriter->comments['year'] = $song->year;
-				$tagWriter->comments['comment'] = $song->comment;
-				$tagWriter->comments['size'] = $song->size;
-				$tagWriter->comments['time'] = $song->time;
-				$tagWriter->comments['album'] = $song->get_album_name();
-				$tagWriter->comments['artist'] = $song->get_artist_name();
-				$tagWriter->comments['genre'] = $song->get_genre_name();
-				$tagWriter->comments['track'] = $song->track;
-			break;
-			case 'id3v1':
-				$tagWriter->title = $song->title;
-				$tagWriter->year = $song->year;
-				$tagWriter->comment = $song->comment;
-				$tagWriter->artist = $song->get_artist_name();
-				$tagWriter->album = $song->get_album_name();
-				$tagWriter->genre = $song->get_genre_name();
-				$tagWriter->track = $song->track;
-				unset($tagWriter->genre_id);
-			break;
-			case 'id3v2':
-				$tagWriter->title = $song->title;
-				$tagWriter->year = $song->year;
-				$tagWriter->comment = $song->comment;
-				$tagWriter->artist = $song->get_artist_name();
-				$tagWriter->album = $song->get_album_name();
-				$tagWriter->genre = $song->get_genre_name();
-				$tagWriter->track = $song->track;
-				unset($tagWriter->genre_id);
-			break;
-		} // end switch on type
-
-	} // fill_tags
+        // Re-scan the file
+        $song = new Song($this->object_id);
+        $info = Catalog::update_media_from_tags($song);
+
+        // Delete the row
+        $sql = "DELETE FROM `flagged` WHERE `id`='$this->id'";
+        $db_results = Dba::write($sql);
+
+        // Reset the Last-Updated date so that it'll get re-scaned
+        $song->update_utime($song->id,1);
+
+        return true;
+
+    } // delete
+
+    /**
+     * approve
+     * This approves the current flag object ($this->id) by setting approved to
+     * 1
+     */
+     public function approve() {
+
+        $sql = "UPDATE `flagged` SET `approved`='1' WHERE `id`='$this->id'";
+        $db_results = Dba::write($sql);
+
+        $this->approved = 1;
+
+        return true;
+
+    } // approve
+
+    /**
+     * format
+     * This function figures out what kind of object we've got and sets up all the
+     * vars all nice and fuzzy like
+     */
+    public function format() {
+
+        switch ($this->object_type) {
+            case 'song':
+                $song = new Song($this->object_id);
+                $song->format();
+                $this->f_name     = $song->f_link;
+            break;
+        } // end switch on type
+
+        $client = new User($this->user);
+        $client->format();
+        $this->f_user = $client->f_link;
+
+    } // format
+
+    /**
+     * print_status
+     * This prints out a userfriendly version of the current status for this flagged
+     * object
+     */
+    public function print_status() {
+
+        if ($this->approved) { echo T_('Approved'); }
+        else { echo T_('Pending'); }
+
+    } // print_status
+
+    /**
+     * print_flag
+     * This prints out a userfriendly version of the current flag type
+     */
+    public function print_flag() {
+
+        switch ($this->flag) {
+            case 'delete':
+                $name = T_('Delete');
+            break;
+            case 'retag':
+                $name = T_('Re-Tag');
+            break;
+            case 'reencode':
+                $name = T_('Re-encode');
+            break;
+            case 'other':
+                $name = T_('Other');
+            break;
+            default:
+                $name = T_('Unknown');
+            break;
+        } // end switch
+
+        echo $name;
+
+    } // print_flag
+
+    /**
+     * validate_flag
+     * This takes a flag input and makes sure it's one of the reigstered
+     * and valid 'flag' values
+     */
+    public static function validate_flag($flag) {
+
+        switch ($flag) {
+            case 'delete':
+            case 'retag':
+            case 'reencode':
+            case 'other':
+                return $flag;
+            break;
+            default:
+                return 'other';
+            break;
+        } // end switch
+
+    } // validate_flag
+
+    /**
+     * fill_tags
+     * This is used by the write_tags script.
+     */
+    public static function fill_tags( $tagWriter, $song, $type = 'comment' ) {
+
+        // Set all of the attributes for the tag to be written(All pulled from the song object)
+        // Use a function since ID3v1, ID3v2, and vorbis/flac/ape are different
+        switch ($type) {
+            case 'comment':
+                $tagWriter->comments['title'] = $song->title;
+                $tagWriter->comments['date'] = $song->year;
+                $tagWriter->comments['year'] = $song->year;
+                $tagWriter->comments['comment'] = $song->comment;
+                $tagWriter->comments['size'] = $song->size;
+                $tagWriter->comments['time'] = $song->time;
+                $tagWriter->comments['album'] = $song->get_album_name();
+                $tagWriter->comments['artist'] = $song->get_artist_name();
+                $tagWriter->comments['genre'] = $song->get_genre_name();
+                $tagWriter->comments['track'] = $song->track;
+            break;
+            case 'id3v1':
+                $tagWriter->title = $song->title;
+                $tagWriter->year = $song->year;
+                $tagWriter->comment = $song->comment;
+                $tagWriter->artist = $song->get_artist_name();
+                $tagWriter->album = $song->get_album_name();
+                $tagWriter->genre = $song->get_genre_name();
+                $tagWriter->track = $song->track;
+                unset($tagWriter->genre_id);
+            break;
+            case 'id3v2':
+                $tagWriter->title = $song->title;
+                $tagWriter->year = $song->year;
+                $tagWriter->comment = $song->comment;
+                $tagWriter->artist = $song->get_artist_name();
+                $tagWriter->album = $song->get_album_name();
+                $tagWriter->genre = $song->get_genre_name();
+                $tagWriter->track = $song->track;
+                unset($tagWriter->genre_id);
+            break;
+        } // end switch on type
+
+    } // fill_tags
 
 
 } //end of flag class

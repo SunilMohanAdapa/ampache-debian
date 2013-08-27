@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show User Registration
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $htmllang = str_replace("_","-",Config::get('lang'));
@@ -62,43 +56,43 @@ if (Config::get('user_agreement')) { ?>
 <h3><?php echo T_('User Agreement'); ?></h3>
 <div class="registrationAgreement">
     <div class="agreementContent">
-		<?php Registration::show_agreement(); ?>
+        <?php Registration::show_agreement(); ?>
     </div>
     
     <div class="agreementCheckbox">
-		<input type='checkbox' name='accept_agreement' /> <?php echo T_('I Accept'); ?>
-		<?php Error::display('user_agreement'); ?>
-	</div>
+        <input type='checkbox' name='accept_agreement' /> <?php echo T_('I Accept'); ?>
+        <?php Error::display('user_agreement'); ?>
+    </div>
 </div>
-<?php } // end if(conf('user_agreement')) ?>
+<?php } // end if user_agreement ?>
 <h3><?php echo T_('User Information'); ?></h3>
 <div class="registerfield require">
     <label for="username"><?php echo T_('Username'); ?>: <span class="asterix">*</span></label>
     <input type='text' name='username' id='username' value='<?php echo scrub_out($username); ?>' />
-	<?php Error::display('username'); ?>
-	<?php Error::display('duplicate_user'); ?>
+    <?php Error::display('username'); ?>
+    <?php Error::display('duplicate_user'); ?>
 </div>
 <div class="registerfield require">
-	<label for="fullname"><?php echo T_('Full Name'); ?>: <span class="asterix">*</span></label>
+    <label for="fullname"><?php echo T_('Full Name'); ?>: <span class="asterix">*</span></label>
     <input type='text' name='fullname' id='fullname' value='<?php echo scrub_out($fullname); ?>' />
-	<?php Error::display('fullname'); ?>
+    <?php Error::display('fullname'); ?>
 </div>
 
 <div class="registerfield require">
     <label for="email"><?php echo T_('E-mail'); ?>: <span class="asterix">*</span></label>
-	<input type='text' name='email' id='email' value='<?php echo scrub_out($email); ?>' />
-	<?php Error::display('email'); ?>
+    <input type='text' name='email' id='email' value='<?php echo scrub_out($email); ?>' />
+    <?php Error::display('email'); ?>
 </div>
 
 <div class="registerfield require">
-	<label for="password"><?php echo T_('Password'); ?>: <span class="asterix">*</span></label>
-	<input type='password' name='password_1' id='password_1' />
-	<?php Error::display('password'); ?>
+    <label for="password"><?php echo T_('Password'); ?>: <span class="asterix">*</span></label>
+    <input type='password' name='password_1' id='password_1' />
+    <?php Error::display('password'); ?>
 </div>
 
 <div class="registerfield require">
-	<label for="confirm_passord"><?php echo T_('Confirm Password'); ?>: <span class="asterix">*</span></label>
-	<input type='password' name='password_2' id='password_2' />
+    <label for="confirm_passord"><?php echo T_('Confirm Password'); ?>: <span class="asterix">*</span></label>
+    <input type='password' name='password_2' id='password_2' />
 </div>
 
 <div class="registerInformation">
@@ -106,21 +100,15 @@ if (Config::get('user_agreement')) { ?>
 </div>
 
 <?php if (Config::get('captcha_public_reg')) { ?>
-			<?php  echo captcha::form("&rarr;&nbsp;"); ?>
-			<?php Error::display('captcha'); ?>
+            <?php  echo captcha::form("&rarr;&nbsp;"); ?>
+            <?php Error::display('captcha'); ?>
 <?php } ?>
 
 <div class="registerButtons">
-	<input type="hidden" name="action" value="add_user" />
-	<input type='submit' name='submit_registration' id='submit_registration' value='<?php echo T_('Register User'); ?>' />
+    <input type="hidden" name="action" value="add_user" />
+    <input type='submit' name='submit_registration' id='submit_registration' value='<?php echo T_('Register User'); ?>' />
 </div>
 </form>
-</div><!-- end <div id="registerbox-->
-</div><!--end <div>id="maincontainer-->
-<div id="footer">
-    <a href="http://www.ampache.org/index.php">Ampache v.<?php echo Config::get('version'); ?></a><br />
-    Copyright (c) 2001 - 2010 Ampache.org
-    <?php echo T_('Queries:'); ?><?php echo Dba::$stats['query']; ?> <?php echo T_('Cache Hits:'); ?><?php echo database_object::$cache_hit; ?>
-</div>
-</body>
-</html>
+<?php
+UI::show_footer();
+?>

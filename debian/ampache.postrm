@@ -24,7 +24,7 @@ if [ "$1" = "purge" ]; then
 
 	if [ -e /usr/bin/ucf ]; then
 		ucf --debconf-ok --purge /etc/ampache/ampache.conf
-		ucfr --purge ampache /etc/ampache/ampache.conf
+		ucfr --force --purge ampache /etc/ampache/ampache.conf
 	fi
 
 	#Take out the trash, remove old files/symlinks if they exist.

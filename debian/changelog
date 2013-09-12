@@ -1,3 +1,13 @@
+ampache (3.6-rzb2752+dfsg-2) unstable; urgency=low
+
+  * Neglected to update ampache-common Replace and Breaks fields. 
+    Closes: #722561
+  * Updated ampache.postrm ucf call to use the --force --purge options so the
+    new package in ampache-common Replace/Breaks field can claim the new
+    conf file on upgrades.  Closes: #722548 
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Thu, 12 Sep 2013 12:45:12 -0500
+
 ampache (3.6-rzb2752+dfsg-1) unstable; urgency=low
 
   * New upsteam snapshot.  Contains important bug fixes to the installer.

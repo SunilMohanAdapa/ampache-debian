@@ -1,3 +1,14 @@
+ampache (3.6-rzb2752+dfsg-3) unstable; urgency=low
+
+  * Added php5-json to ampache depends.
+  * Updated ampache, ampache-common Replace and Breaks fields with new 
+    version.
+  * Have ucf actually track the amapche.conf file and not the symlink.
+    Closes: #722548
+  * Rebuild package against php-getid3-1.9.7.  Closes: #728601
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Wed, 06 Nov 2013 04:22:02 -0500
+
 ampache (3.6-rzb2752+dfsg-2) unstable; urgency=low
 
   * Neglected to update ampache-common Replace and Breaks fields. 

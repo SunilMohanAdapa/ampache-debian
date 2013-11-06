@@ -9,7 +9,7 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 	if [ -e /usr/bin/ucf ]; then
 		ucf --debconf-ok --three-way \
 			/usr/share/ampache/www/config/ampache.conf /etc/ampache/ampache.conf
-		ucfr ampache /etc/ampache/ampache.conf
+		ucfr ampache /usr/share/ampache/www/config/ampache.conf
 	fi
 
 	#ask to restart web server

@@ -23,13 +23,14 @@ Pre-Depends: dpkg (>= 1.15.7.2)
 Depends: ${misc:Depends},
  debconf (>= 0.5) | debconf-2.0,
  libapache2-mod-php5 | php5,
- ampache-common (>= 3.6-rzb2704+dfsg-0ubuntu1),
+ ampache-common (>= 3.6-rzb2704+dfsg-3),
  php5-cli,
  php5-mysql,
  php5-xmlrpc,
+ php5-json,
  ucf
-Replaces: ampache (<< 3.6-git408e713+dfsg-1)
-Breaks: ampache (<< 3.6-git408e713+dfsg-1)
+Replaces: ampache (<< 3.6-rzb2752+dfsg-2)
+Breaks: ampache (<< 3.6-rzb2752+dfsg-2)
 Recommends: ${misc:Recommends}, ampache-themes (>= 3.6.1-2), apache2 | httpd,
 Suggests: php5-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
 Description: web-based audio file management system
@@ -51,8 +52,8 @@ Depends: ${misc:Depends},
  libphp-snoopy,
  ttf-freefont,
  php-getid3 (>= 1.9.5)
-Replaces: ampache (<< 3.6-rzb2752+dfsg-1)
-Breaks: ampache (<< 3.6-rzb2752+dfsg-1)
+Replaces: ampache (<< 3.6-rzb2752+dfsg-3)
+Breaks: ampache (<< 3.6-rzb2752+dfsg-3)
 Suggests: ampache, php5-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
 Description: web-based audio file management system common files
  This package provides common files for Ampache. This package is server

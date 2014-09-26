@@ -1,13 +1,13 @@
 # Translation of ampache debconf templates to German
-# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2007.
+# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2007, 2014.
 # This file is distributed under the same license as the ampache package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ampache \n"
+"Project-Id-Version: ampache 3.6-rzb2752+dfsg-3\n"
 "Report-Msgid-Bugs-To: ampache@packages.debian.org\n"
 "POT-Creation-Date: 2012-05-24 09:56-0500\n"
-"PO-Revision-Date: 2007-10-09 21:06+0200\n"
+"PO-Revision-Date: 2014-01-12 19:27+0100\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -18,27 +18,20 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../ampache.templates:2001
-#, fuzzy
-#| msgid "Restart Apache2 web server?"
 msgid "Configure and restart the web server?"
-msgstr "Webserver Apache 2 neu starten?"
+msgstr "Webserver konfigurieren und neu starten?"
 
 #. Type: boolean
 #. Description
 #: ../ampache.templates:2001
-#, fuzzy
-#| msgid ""
-#| "The Apache 2 web server needs to be restarted to enable Ampache. Please "
-#| "choose whether you want to restart it automatically now or do it yourself "
-#| "later."
 msgid ""
 "The web server needs to be reconfigured and restarted to enable Ampache. "
 "Please choose whether you want to restart it automatically now or do it "
 "yourself later."
 msgstr ""
-"Der Apache 2 Webserver muss neu gestartet werden, um Ampache zu aktivieren. "
-"Bitte wählen Sie aus, ob Sie ihn jetzt automatisch neu starten lassen wollen "
-"oder es selbst später durchführen möchten."
+"Der Webserver muss konfiguriert und neu gestartet werden, um Ampache zu "
+"aktivieren. Bitte wählen Sie aus, ob Sie ihn jetzt automatisch neu starten "
+"lassen wollen oder es selbst später durchführen möchten."
 
 #. Type: boolean
 #. Description
@@ -47,6 +40,8 @@ msgid ""
 "To manually restart the web server, use one of the following commands: \"/"
 "etc/init.d/apache2 restart\" or \"/etc/init.d/lighttpd restart\""
 msgstr ""
+"Um den Webserver manuell neu zu starten, verwenden Sie einen der folgenden "
+"Befehle: »/etc/init.d/apache2 restart« oder »/etc/init.d/lighttpd restart«."
 
 #~ msgid "Configure Apache 2 web server for use with Ampache? "
 #~ msgstr "Konfiguriere Apache 2 Webserver für die Verwendung mit Ampache?"

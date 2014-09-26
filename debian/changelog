@@ -1,3 +1,11 @@
+ampache (3.6-rzb2752+dfsg-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add German Debconf translation. Closes: #735101
+  * Rebuilt version is installable again in sid. Closes: #749237
+
+ -- Helge Kreutzmann <debian@helgefjell.de>  Fri, 26 Sep 2014 19:49:38 +0200
+
 ampache (3.6-rzb2752+dfsg-3) unstable; urgency=low
 
   * Added php5-json to ampache depends.

@@ -1,7 +1,7 @@
 Source: ampache
 Section: web
 Priority: optional
-Maintainer: Charlie Smotherman <cjsmo@cableone.net>
+Maintainer: Debian QA Group <packages@qa.debian.org>
 Homepage: http://www.ampache.org
 Build-Depends: debhelper (>= 8.1.0),
  xz-utils,

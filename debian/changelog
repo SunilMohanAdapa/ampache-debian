@@ -1,3 +1,11 @@
+ampache (3.6-rzb2752+dfsg-4) unstable; urgency=medium
+
+  * QA upload.
+  * Orphan package, maintainer address bounces.
+    Thanks to Ansgar Burchardt <ansgar@debian.org> (Closes: #765913)
+
+ -- Tobias Quathamer <toddy@debian.org>  Thu, 23 Oct 2014 09:36:29 +0200
+
 ampache (3.6-rzb2752+dfsg-3.1) unstable; urgency=medium
 
   * Non-maintainer upload.

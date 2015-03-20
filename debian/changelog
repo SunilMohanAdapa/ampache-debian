@@ -1,3 +1,10 @@
+ampache (3.6-rzb2752+dfsg-5) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Rebuild package against libphp-snoopy 2.0.0
+
+ -- Marcelo Jorge Vieira <metal@debian.org>  Thu, 19 Mar 2015 23:06:42 -0200
+
 ampache (3.6-rzb2752+dfsg-4) unstable; urgency=medium
 
   * QA upload.

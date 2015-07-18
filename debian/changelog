@@ -1,6 +1,21 @@
+ampache (3.6-rzb2752+dfsg-6) unstable; urgency=medium
+
+  * QA upload.
+  * Rebuild against current versions of php-getid3, libphp-phpmailer.
+    (Closes: #784859)
+  * d/copyright: Fix syntax issues, drop obsolete sections.
+  * Switch (Build-)Depends from ttf-freefont to fonts-freefont-ttf.
+    (Closes: #738217)
+  * Add alternative Suggests: virtual-mysql-server.  (Closes: #781981)
+  * Add lintian overrides for package-contains-broken-symlink caused by
+    dh_linktree usage.
+  * Update watch file.
+
+ -- Andreas Beckmann <anbe@debian.org>  Sat, 18 Jul 2015 23:05:29 +0200
+
 ampache (3.6-rzb2752+dfsg-5) unstable; urgency=high
 
-  * Non-maintainer upload.
+  * QA upload.
   * Rebuild package against libphp-snoopy 2.0.0
 
  -- Marcelo Jorge Vieira <metal@debian.org>  Thu, 19 Mar 2015 23:06:42 -0200

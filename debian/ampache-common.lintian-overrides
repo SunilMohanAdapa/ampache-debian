@@ -1,0 +1,5 @@
+# these are created by dh_linktree
+package-contains-broken-symlink usr/share/ampache/www/modules/getid3/*
+package-contains-broken-symlink usr/share/ampache/www/modules/php-gettext/*
+package-contains-broken-symlink usr/share/ampache/www/modules/phpmailer/*
+package-contains-broken-symlink usr/share/ampache/www/modules/snoopy/*

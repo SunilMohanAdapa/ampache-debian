@@ -13,8 +13,8 @@ Build-Depends: debhelper (>= 8.1.0),
  php-gettext,
  libphp-phpmailer,
  libphp-snoopy,
- ttf-freefont,
- php-getid3, 
+ fonts-freefont-ttf,
+ php-getid3,
 Standards-Version: 3.9.4
 
 Package: ampache
@@ -29,8 +29,6 @@ Depends: ${misc:Depends},
  php5-xmlrpc,
  php5-json,
  ucf
-Replaces: ampache (<< 3.6-rzb2752+dfsg-2)
-Breaks: ampache (<< 3.6-rzb2752+dfsg-2)
 Recommends: ${misc:Recommends}, ampache-themes (>= 3.6.1-2), apache2 | httpd,
 Suggests: php5-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
 Description: web-based audio file management system
@@ -50,16 +48,23 @@ Depends: ${misc:Depends},
  libjs-prototype,
  libphp-phpmailer,
  libphp-snoopy,
- ttf-freefont,
+ fonts-freefont-ttf,
  php-getid3 (>= 1.9.5)
 Replaces: ampache (<< 3.6-rzb2752+dfsg-3)
 Breaks: ampache (<< 3.6-rzb2752+dfsg-3)
-Suggests: ampache, php5-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
+Suggests:
+ ampache,
+ php5-gd,
+ phpmyadmin,
+ mysql-server | virtual-mysql-server,
+ eyed3,
+ faad,
+ vorbis-tools,
 Description: web-based audio file management system common files
  This package provides common files for Ampache. This package is server
- independent and is intended for users who wish to use other web servers, 
+ independent and is intended for users who wish to use other web servers,
  virtual enviroments, or LXC's to deploy Ampache.
- .  
+ .
  Ampache is a web-based audio file manager implemented with PHP and
  MySQL which allows viewing, editing, and playing audio files via the
  web. It has support for playlists, artist and album views, album art,

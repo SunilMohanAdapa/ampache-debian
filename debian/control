@@ -22,15 +22,15 @@ Architecture: all
 Pre-Depends: dpkg (>= 1.15.7.2)
 Depends: ${misc:Depends},
  debconf (>= 0.5) | debconf-2.0,
- libapache2-mod-php5 | php5,
+ libapache2-mod-php | php,
  ampache-common (>= 3.6-rzb2704+dfsg-3),
- php5-cli,
- php5-mysql,
- php5-xmlrpc,
- php5-json,
+ php-cli,
+ php-mysql,
+ php-xmlrpc,
+ php-json,
  ucf
 Recommends: ${misc:Recommends}, ampache-themes (>= 3.6.1-2), apache2 | httpd,
-Suggests: php5-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
+Suggests: php-gd, phpmyadmin, mysql-server, eyed3, faad, vorbis-tools
 Description: web-based audio file management system
  Ampache is a web-based audio file manager implemented with PHP and
  MySQL which allows viewing, editing, and playing audio files via the
@@ -54,7 +54,7 @@ Replaces: ampache (<< 3.6-rzb2752+dfsg-3)
 Breaks: ampache (<< 3.6-rzb2752+dfsg-3)
 Suggests:
  ampache,
- php5-gd,
+ php-gd,
  phpmyadmin,
  mysql-server | virtual-mysql-server,
  eyed3,

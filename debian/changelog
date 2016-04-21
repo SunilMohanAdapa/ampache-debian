@@ -1,3 +1,12 @@
+ampache (3.6-rzb2752+dfsg-8) unstable; urgency=medium
+
+  * QA upload.
+  * Rebuild against current versions of php-getid3, libphp-phpmailer.
+  * PHP 7.0 Transition: Replace all package relationships against *php5*
+    with *php*.  (Closes: #821470)
+
+ -- Andreas Beckmann <anbe@debian.org>  Thu, 21 Apr 2016 15:30:55 +0200
+
 ampache (3.6-rzb2752+dfsg-7) unstable; urgency=medium
 
   * QA upload.

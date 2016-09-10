@@ -1,3 +1,9 @@
+ampache (3.8.2-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Sunil Mohan Adapa <sunil@medhas.org>  Sat, 10 Sep 2016 15:57:02 +0530
+
 ampache (3.6-rzb2752+dfsg-9) unstable; urgency=medium
 
   * QA upload.

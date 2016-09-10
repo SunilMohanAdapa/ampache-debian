@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 8.1.0),
  libphp-snoopy,
  fonts-freefont-ttf,
  php-getid3,
-Standards-Version: 3.9.4
+Standards-Version: 3.9.8
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/ampache.git
 Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ampache.git
 

@@ -29,7 +29,6 @@ override_dh_linktree:
 		embed $(US)/php/libphp-phpmailer $(USAW)/modules/phpmailer \
 		embed $(US)/php/php-gettext $(USAW)/modules/php-gettext \
 		embed $(US)/php/getid3 $(USAW)/modules/getid3 \
-		embed $(US)/fonts/truetype/freefont/FreeMono.ttf $(USAW)/modules/captcha/FreeMono.ttf;
 
 #Grab the source branch from bzr and remove all courtousy copies of code.
 get-orig-source:

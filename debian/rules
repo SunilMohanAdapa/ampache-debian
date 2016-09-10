@@ -33,23 +33,19 @@ override_dh_linktree:
 
 #Grab the source branch from bzr and remove all courtousy copies of code.
 get-orig-source:
-	bzr branch -r 2752 lp:ampache
-	cd ampache
-	mv ampache ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg
-	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/locale/base/gather-messages.sh
-	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/captcha/MyUnderwood.ttf
-	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/captcha/MyUnderwood.txt
-	rm ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/config/.gitignore
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/getid3/*
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/php-gettext/*
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/phpmailer/*
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/prototype
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/modules/snoopy/*
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/.bzr
-	rm -rf ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg/themes/fresh
-	find ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg -type d -exec chmod 755 {} \;
-	find ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg -type f -exec chmod 644 {} \;
+	wget -O ampache_$(DEB_UPSTREAM_VERSION).tar.gz https://github.com/ampache/ampache/archive/$(DEB_UPSTREAM_VERSION).tar.gz
+	tar -xf ampache_$(DEB_UPSTREAM_VERSION).tar.gz
+	mv ampache-$(DEB_UPSTREAM_VERSION) ampache-$(DEB_UPSTREAM_VERSION)+dfsg
+	rm ampache-$(DEB_UPSTREAM_VERSION)+dfsg/locale/base/gather-messages.sh
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/modules/getid3/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/modules/php-gettext/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/modules/phpmailer/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/modules/prototype
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/modules/snoopy/*
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/.bzr
+	rm -rf ampache-$(DEB_UPSTREAM_VERSION)+dfsg/themes/fresh
+	find ampache-$(DEB_UPSTREAM_VERSION)+dfsg -type d -exec chmod 755 {} \;
+	find ampache-$(DEB_UPSTREAM_VERSION)+dfsg -type f -exec chmod 644 {} \;
 	tar -c --xz --owner root --group root --mode a+rX -f \
-		ampache_$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg.orig.tar.xz \
-		ampache-$(DEB_UPSTREAM_VERSION)-rzb2752+dfsg
-
+		ampache_$(DEB_UPSTREAM_VERSION)+dfsg.orig.tar.xz \
+		ampache-$(DEB_UPSTREAM_VERSION)+dfsg

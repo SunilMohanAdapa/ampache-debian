@@ -1,67 +1,41 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Install
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
-if (INSTALL != '1') { exit; } 
-
-// Set defaults for the form, if they've already submited something 
-$local_db = $_POST['local_db'] ? scrub_in($_POST['local_db']) : 'ampache'; 
-$local_host = $_POST['local_host'] ? scrub_in($_POST['local_host']) : 'localhost'; 
-$local_username = $_POST['local_username'] ? scrub_in($_POST['local_username']) : 'root'; 
-
+$prefix = realpath(dirname(__FILE__). "/../");
+require $prefix . '/templates/install_header.inc.php';
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $htmllang; ?>" lang="<?php echo $htmllang; ?>">
-<head>
-<title>Ampache :: For The Love Of Music - Install</title>
-<link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
-<meta http-equiv="Content-Type" content="text/html; Charset=<?php echo $charset; ?>" />
-</head>
-<body>
-<script src="lib/javascript-base.js" language="javascript" type="text/javascript"></script>
-<div id="header"> 
-<h1><?php echo _("Ampache Installation"); ?></h1>
-<p>Pour l'Amour de la Musique</p>
-</div>
-<div id="text-box">
-
-	<div class="notify">
-		<h3><?php echo _('Requirements'); ?></h3>
-		<p>
-		<?php echo _("This Page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following pre-requisites"); ?>
-		</p>
-		<ul>
-			<li><?php echo _("A MySQL Server with a username and password that can create/modify databases"); ?></li>
-			<li><?php echo _("Your webserver has read access to the /sql/ampache.sql file and the /config/ampache.cfg.php.dist file"); ?></li>
-		</ul>
-		<p>
-<?php echo _("Once you have ensured that you have the above requirements please fill out the information below. You will only be asked for the required config values. If you would like to make changes to your ampache install at a later date simply edit /config/ampache.cfg.php"); ?>
-		</p>
-	</div>
-	
 	<div class="content">
-		<strong><?php echo _("Step 1 - Creating and Inserting the Ampache Database"); ?></strong><br />
+		<strong><?php echo _('Step 1 - Create the Ampache database'); ?></strong><br />
 		<dl>
-			<dd><?php echo _("This step creates and inserts the Ampache database, as such please provide a mysql account with database creation rights. This step may take a while depending upon the speed of your computer"); ?></dd>
+			<dd><?php echo _('This step creates and inserts the Ampache database, so please provide a MySQL account with database creation rights. This step may take some time on slower computers.'); ?></dd>
 		</dl>
-		<?php echo _("Step 2 - Creating the Ampache.cfg.php file"); ?><br />
-		<?php echo _("Step 3 - Setup Initial Account"); ?><br />
+		<?php echo _('Step 2 - Create ampache.cfg.php'); ?><br />
+		<?php echo _('Step 3 - Set up the initial account'); ?><br />
 		<br />
 		<?php Error::display('general'); ?>
 		<br />
@@ -70,15 +44,15 @@ $local_username = $_POST['local_username'] ? scrub_in($_POST['local_username']) 
 <table>
 <tr>
 	<td class="align"><?php echo _("Desired Database Name"); ?></td>
-	<td><input type="text" name="local_db" value="<?php echo scrub_out($local_db); ?>" /></td>
+	<td><input type="text" name="local_db" value="ampache" /></td>
 </tr>
 <tr>
 	<td class="align"><?php echo _("MySQL Hostname"); ?></td>
-	<td><input type="text" name="local_host" value="<?php echo scrub_out($local_host); ?>" /></td>
+	<td><input type="text" name="local_host" value="localhost" /></td>
 </tr>
 <tr>
 	<td class="align"><?php echo _("MySQL Administrative Username"); ?></td>
-	<td><input type="text" name="local_username" value="<?php echo scrub_out($local_username); ?>" /></td>
+	<td><input type="text" name="local_username" value="root" /></td>
 </tr>
 <tr>
 	<td class="align"><?php echo _("MySQL Administrative Password"); ?></td>
@@ -108,10 +82,8 @@ $local_username = $_POST['local_username'] ? scrub_in($_POST['local_username']) 
 	<td>&nbsp;</td>
 	<td><input type="submit" value="<?php echo _("Insert Database"); ?>" /></td>
 </tr>
-	
-		</table>
-		</form>
-		
+</table>
+</form>
 	</div>
 	<div id="bottom">
     	<p><strong>Ampache Installation.</strong><br />

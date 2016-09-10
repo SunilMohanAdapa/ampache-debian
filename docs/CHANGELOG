@@ -3,74 +3,107 @@
 --------------------------------------------------------------------------
 
 --------------------------------------------------------------------------
-  v.3.5.4 02/02/2010 
-	- Added default RPC ACLs for new installations 
-	- Fix catalog size math for catalogs up to 4TB (Thx Joost.t.Hart@planet.nl)
+  v.3.6-Alpha1 04/26/2011
+        - Fixed display during catalog updates (reported by Demonic)
+        - Fixed duplicate searching (patch from Demonic)
+        - byterange handling for ranges starting with 0 (patch from uberbrady)
+        - Fixed issue with updating ACLs under Windows (reported by Citlali)
+	- Add function that check ampache and php version from each website.
+	- Updated each ampache header comment based on phpdocumentor.
+	- Fixed only admin can browse phpinfo() for security reasons on /info.php
+	- Added a few translation words.
+	- Updated version 3.6 on docs/*
+	- Implemented ldap_require group (patch from eliasp)
+	- Fix \ in web path under Apache + Windows Bug #135
+	- Partial MusicBrainz metadata gathering via plugin
+	- Metadata code cleanup, support for plugins as metadata sources
+	- New plugin architecture
+	- Fixed display charset issue with catalog add/update
+	- Fixed handling of temporary playlists with >100 items
+	- Changed Browse from a singleton to multiple instances
+	- Fixed setting access levels for plugin passwords
+	- Fixed handling of unusual characters in passwords
+	- Fixed support for requesting different thumbnail sizes
+	- Added ability to rate Albums of the Moment
+	- Added ability to edit/delete playlists while they are displayed
+	- Fix track numbers not being 0 padded when downloading or renaming.
+	- Rating search now allows specification of operator (>=, <=, or =)
+		and uses the same ratings as normal display.
+	- Add -t to catalog_update.inc for generating thumbnails
+	- Generate Thumbnails during catalog art operations
+	- Fixed transcode seeking of Flacs by switching to MM:SS format for
+		flacs being transcoded
+	- Change album_art_order to art_order to reflect general nature of
+		config option
+	- Fix PHP warning with IP History if no data is found.
+	- Add -g flag to catalog update to allow for art gathering via cmdline
+	- Change Update frequency of catalog display to 1 second rather then
+		%10 reduces cpu load due to javascript excution (Thx Dmole)
+	- Add bmp to the list of allowed / supported album art types
+	- Strip extranious whitespace from cmdline catalog update (Thx ascheel)
+	- Fix catalog size math for catalogs up to 4TB (Thx Joost.t.Hart@planet.nl) 
 	- Fix httpq not correctly skipping to new song 
 	- Fix refreshing of localplay playlist when an item is skipped to
 	- Fix missing Content-Disposition filename= on non-transcoded songs
-	- Fix refreshing of localplay playlist when an item is removed
-	- Correct issue with some mp3s bitrates not being detected, which
-		in turn breaks length calculations
-	- Removed unused/dead files
+	- Fix refresh of localplay playlist when you delete a track from it
+	- Added ability to add Ampache as a search descriptor (Thx Vlet)
 	- Correct issue with single song downloads
-
---------------------------------------------------------------------------
-  v.3.5.3 20/12/2009 
-	- Added local authtype which uses PHP's PAM module
+	- Removed old useless files
+	- Added local auth method that uses PHP's PAM module
 	- Correct potential security issues due to misuse of REQUEST for write
-		operations rather then POST
-		(Thx Raphael Geissert <geissert@debian.org>)
-
---------------------------------------------------------------------------
-  v.3.5.2 19/11/2009
+		operations rather then POST 
+		(Thx Raphael Geissert <geissert@debian.org>) 
+	- Finished switching to Dba::read() Dba::write() for database calls
+		(Thx dipsol)
+	- Improved File pattern matching (Thx october.rust)
+	- Updated Amazon Album art search to current Amazone API specs 
+		(Thx Vlet)
 	- Fix typo that caused song count to not be set on tag xml response
 	- Fix tag methods so that alpha_match and exact_match work
 	- Fix limit and offset not working on search_songs API method
 	- Fix import m3u on catalog build so it does something
-	- Fix inconsistent view during catalog operations
+	- Fix inconsistent view during catalog operations        
 	- Sort malformed files into "Unknown (Broken)" rather then leaving
-		them in "Unknown (Orphaned)"
+	        them in "Unknown (Orphaned)"
 	- Fix API democratic voting methods (Thx kindachris)
-	- Add server version information to API ping command
+	- Add server version to API ping response
 	- Fix Localplay API methods (Thx thomasa) 
 	- Improve bin/catalog_update.inc to allow only verify, clean or add
-		(Thx ascheel)
-	- Fix issue with batch download and UNC paths (Thx greengeek)
+	        (Thx ascheel)
+	- Fix issue with batch download and UNC paths (Thx greengeek) 
 	- Added config option to turn caching on/off, Default is off
-	- Fix issue where file tag pattern was ignored if files have no tag
-		structure
+	- Fix issue where file tag pattern was ignore if files have no tag
+	        structur
 	- Add TDRC to list of parsed id3v2 tags
-	- Fix issue where rating could get cached and not update the
+	- Added the rating to a single song view
+	- Fix caching issue when updating ratings where they would not
 		display correctly until a page reload
-	- Fix User Stats having a formating issue and not listing the
-		active playlist correctly
-	- Fix incorrect default ogg transcode target format in the default
-		config file
-	- Fix issue where the user preferences were not respected by
-		the streaming code due to caching 
-	- Fix issue where prevent multiple logins would prevent all logins
-
---------------------------------------------------------------------------
-  v.3.5.1 24/06/2009
-	- Make the PHP error a little clearer for windows users by indicating
-		that their version of PHP is < 5.3 (required for windows)
-	- Fix random methods not working for Localplay
-	- Fix extra space on prefixed albums (Thx ibizaman)
+	- Altered the behavior of adding to playlists so that it maintains
+		playlist order rather then using track order
+	- Strip excessive \n's from catalog_update (Thx ascheel)
+	- Fix incorrect default ogg transcode target in base config file
+	- Fix stream user preferences using cached system preferences 
+		rather then their own 
+	- Fixed prevent_multiple_logins preventing all logins (Thx Hugh)
+	- Added additional information to installation process 
+	- Fix PHP 5.3 errors (Thx momo-i)
+	- Fix random methods not working for localplay
+	- Fixed extra space on prefixed albums (Thx ibizaman)
 	- Add missing operator on tag and rating searches so they will
-		work with other methods (Thx kiehnet@netscape.net)
-	- Fix get_art_url() so it returns something... 
-	- Fix problem with creating new playlists where it doesn't work
-		but appending to an existing did. 
-	- Fixed issue with url_to_song, also cleaned up the code a bit
-	- Fixed issue with Random All Catalogs
-	- Fixed issues with API and Tag methods not working as advertised
-	- Fix endless loop in getid3() with malformed genre tags in mp3s
-	- Fixed show test page always returning false on web path
-	- Update Man page to adhear to newer Debian rules
-	- Fixed issue with Videos being incorrectly registered with stats
-		and now playing as songs. 
-	- Fixed missing > in HTML for song row
+	        work with other methods (Thx kiehnet@netscape.net)
+	- Add MusicBrainz MBID support to uniqly identify albums and
+		also get more album art (Thx flowerysong)
+	- Fix the url to song function
+	- Add full path to the files needed by the installation just to 
+		make it a little clearer
+	- Fixed potential endless loop with malformed genre tags in mp3s
+		(Thx Bernhard Weyrauch)
+	- Fixed web path always returning false on /test.php
+	- Updated Man Page to fix litian problems for Debian packaging
+	- Fixed bug where video was registering as songs for now playing
+		and stats
+	- Add phpmailer and change ampache.cfg.php.dist
+	- Fixed manpage (Thx Porthose)
 
 --------------------------------------------------------------------------
   v.3.5 05/05/2009
@@ -138,7 +171,7 @@
 	- Added lyricswiki link Ticket #70
 	- Updated README language
 	- Updated getid3 library 2.0.0b4 to 2.0.0b5
-	- Make the Democratic playlist be assoicated with the user
+	- Make the Democratic playlist be associated with the user
 		who sends it to a 'player' 
 	- Fixed missing page headers on democratic playlist
 	- Show who voted for the sogns on democratic playlist
@@ -233,11 +266,11 @@
 	- Fixed iconv() returns an empty strings (Thx abs0)
 	- Updated getid3 for multi-byte characters, but some wrong id3tags
 		have occurred exception error.
-        - Fixed use_auth = false not correctly re-creating the session if
-                you had just switched from use_auth = true
+	- Fixed use_auth = false not correctly re-creating the session if
+	        you had just switched from use_auth = true
 	- Add links to RSS feeds and set default to TRUE in config.dist
-        - Fixed Dynamic Random/Related URLs with players that always send
-                a byte offset (MPD)
+	- Fixed Dynamic Random/Related URLs with players that always send
+	        a byte offset (MPD)
 	- Added Checkbox to use existing Database
 	- Updated language code and Fixed catalan language code
 	- Added Emulate gettext() from upgradephp-15
@@ -274,7 +307,7 @@
 	- Fixed logic error with duplicate login setting which caused it
 		to only work if mysql auth was used
 	- Changed Passwords to SHA1 will prompt to reset password
-        - Corrected some translation strings and added jp_JP (Thx momo-i)
+	- Corrected some translation strings and added jp_JP (Thx momo-i)
 	- Ignore filenames that start with . (hidden) solves an issue
 		with mac filesystems
 	- Fix tracking of stats for downloaded songs 
@@ -286,8 +319,8 @@
 	- Fix an error if you try to add a shoutbox for an invalid object
 		(Thx atrophic)
 	- Fixed issue with art dump on jpeg files (Thx atrophic)
-        - Fixed issue with force http play and port not correctly specifying
-                non-standard http port (Thx Deathcrow)
+	- Fixed issue with force http play and port not correctly specifying
+	        non-standard http port (Thx Deathcrow)
 	- Remember Starts With value even if you switch tabs
 	- Fixed rating caching so it actually completely works now
 	- Removed redundent UPDATE on session table due to /util.php
@@ -943,7 +976,7 @@
 
 --------------------------------------------------------------------------
   v.3.3.3-Alpha2 11/12/2006
-        - Added Export to Itunes DB function (Thx PB1DFT)
+	- Added Export to Itunes DB function (Thx PB1DFT)
 	- Fixed some Ajax Issues, added Now Playing to TV page
 	- Fixed album art search on every Catalog Add
 	- Added exception to MPD controller, forces HTTP play regardless
@@ -989,7 +1022,7 @@
 
 --------------------------------------------------------------------------
   v.3.3.3-Alpha1 10/28/2006
-        - Added IP History to admin->users (Thx pb1dft)
+	- Added IP History to admin->users (Thx pb1dft)
 	- Added HTTP auth method, auto-creates a 'user' if the auth user
 		doesn't exist in the database. 
 	- Fixed Mail statistics. It broke down after earlier updates.
@@ -1529,10 +1562,10 @@
 		(Thx Andy Morgan)
   	- Fixed playback problem with Windows Media Player caused by a 
 		misplaced Partial-Content header entry. 
-        - Renamed ampache.cfg --> ampache.cfg.php and added <?php exit(); ?>
-                to prevent display of config file in web interface. this is
-                the first step towards moving away from the /docs style
-                (Thx s1amson)
+	- Renamed ampache.cfg --> ampache.cfg.php and added <?php exit(); ?>
+	        to prevent display of config file in web interface. this is
+	        the first step towards moving away from the /docs style
+	        (Thx s1amson)
 
 --------------------------------------------------------------------------
   v.3.3 04/17/2005:
@@ -1692,7 +1725,7 @@
 		true/false value of preference
 	- Added Patch from Shine with a _ton_ of gettext updates and an almost
 		complete German translation!
-        - Fixed automatic detection of server port (Thx Corsin)
+	- Fixed automatic detection of server port (Thx Corsin)
 	- Fixed missing prefix on Albums by Artist page (Thx ianneub)
 	- Removed a large chunk of unneeded code from Main page
 	- Fixed some preferences problems which were allowing users to define

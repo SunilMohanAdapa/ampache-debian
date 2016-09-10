@@ -1,26 +1,33 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Recently Played
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 /* Define the time places starting at 0 */
-$time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago')); 
+$time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago'));
 $link = Config::get('use_rss') ? ' ' . AmpacheRSS::get_display('recently_played') :  '';
 show_box_top(_('Recently Played') . $link);
 ?>
@@ -41,15 +48,15 @@ show_box_top(_('Recently Played') . $link);
 	<th class="cel_username"><?php echo _('Username'); ?></th>
 	<th class="cel_lastplayed"><?php echo _('Last Played'); ?></th>
 </tr>
-<?php foreach ($data as $row) { 
+<?php foreach ($data as $row) {
 	$row_user = new User($row['user']);
-	$song = new Song($row['object_id']); 
-	$amount = intval(time() - $row['date']+2); 
+	$song = new Song($row['object_id']);
+	$amount = intval(time() - $row['date']+2);
 	$time_place = '0';
 
-	while ($amount >= 1) { 
-		$final = $amount; 
-		$time_place++; 
+	while ($amount >= 1) {
+		$final = $amount;
+		$time_place++;
                 if ($time_place <= 2) {
                         $amount = floor($amount/60);
                 }
@@ -65,15 +72,15 @@ show_box_top(_('Recently Played') . $link);
                 if ($time_place == '6') {
                         $amount = floor ($amount/12);
                 }
-		if ($time_place > '6') { 
-			$final = $amount . '+'; 
-			break; 
-		} 
+		if ($time_place > '6') {
+			$final = $amount . '+';
+			break;
+		}
 	}
 
 	$time_string = $final . ' ' . $time_unit[$time_place];
 
-	$song->format(); 
+	$song->format();
 ?>
 <tr class="<?php echo flip_class(); ?>">
 	<td class="cel_add">

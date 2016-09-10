@@ -1,25 +1,33 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Stats
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 $stats = Catalog::get_stats();
-$catalogs = Catalog::get_catalogs(); 
+$catalogs = Catalog::get_catalogs();
 ?>
 <?php show_box_top(_('Statistics')); ?>
 <em><?php echo _('Catalogs'); ?></em>
@@ -43,7 +51,7 @@ $catalogs = Catalog::get_catalogs();
         <td><?php echo $stats['songs']; ?></td>
 	<td><?php echo $stats['video']; ?></td>
         <td><?php echo $stats['tags']; ?></td>
-        <td><?php echo $stats['total_size']; ?> <?php echo $stats['size_unit']; ?></td>
+        <td><?php echo $stats['formatted_size']; ?></td>
         <td><?php echo $stats['time_text']; ?></td>
 </tr>
 </table>
@@ -69,10 +77,10 @@ $catalogs = Catalog::get_catalogs();
 	<th class="cel_video"><?php echo _('Video'); ?></th>
 	<th class="cel_total"><?php echo _('Catalog Size'); ?></th>
 </tr>
-<?php foreach ($catalogs as $catalog_id) { 
-		$catalog = new Catalog($catalog_id); 
-		$catalog->format(); 
-		$stats = Catalog::get_stats($catalog_id); 
+<?php foreach ($catalogs as $catalog_id) {
+		$catalog = new Catalog($catalog_id);
+		$catalog->format();
+		$stats = Catalog::get_stats($catalog_id);
 ?>
 <tr>
 	<td class="cel_catalog"><?php echo $catalog->name; ?></td>
@@ -82,7 +90,7 @@ $catalogs = Catalog::get_catalogs();
 	<td class="cel_lastclean"><?php echo scrub_out($catalog->f_clean); ?></td>
 	<td class="cel_songs"><?php echo scrub_out($stats['songs']); ?></td>
 	<td class="cel_video"><?php echo scrub_out($stats['video']); ?></td>
-	<td class="cel_total"><?php echo scrub_out($stats['total_size'] . ' ' . $stats['size_unit']); ?></td>
+	<td class="cel_total"><?php echo scrub_out($stats['formatted_size']); ?></td>
 </tr>
 <?php } ?>
 

@@ -1,34 +1,43 @@
 <?php
-/*
- Copyright (c) Ampache.org
- All Rights Reserved
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Login Form
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 /* Check and see if their remember me is the same or lower then local
- * if so disable the checkbox 
+ * if so disable the checkbox
  */
-if (Config::get('session_length') >= Config::get('remember_length')) { 
+if (Config::get('session_length') >= Config::get('remember_length')) {
 	$remember_disabled = 'disabled="disabled"';
 }
 $htmllang = str_replace("_","-",Config::get('lang'));
+is_rtl(Config::get('lang')) ? $dir = 'rtl' : $dir = 'ltr';
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $htmllang; ?>" lang="<?php echo $htmllang; ?>">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $htmllang; ?>" lang="<?php echo $htmllang; ?>" dir="<?php echo $dir; ?>">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=<?php echo Config::get('site_charset'); ?>" />
 <link rel="shortcut icon" href="<?php echo Config::get('web_path'); ?>/favicon.ico" />
@@ -44,7 +53,7 @@ function focus(){ document.login.username.focus(); }
 <div id="maincontainer">
 	<div id="header"><!-- This is the header -->
 		<h1 id="headerlogo">
-		  <a href="<?php echo Config::get('web_path'); ?>/login.php">
+		  <a href="<?php echo Config::get('web_path'); ?>">
 		    <img src="<?php echo Config::get('web_path'); ?><?php echo Config::get('theme_path'); ?>/images/ampache.png" title="<?php echo Config::get('site_title'); ?>" alt="<?php echo Config::get('site_title'); ?>" />
 		  </a>
     </h1>
@@ -54,11 +63,11 @@ function focus(){ document.login.username.focus(); }
 		<form name="login" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/login.php">
 
 			<div class="loginfield" id="usernamefield">
-        <label for="username"><?php echo  _('Username'); ?>:</label> 
+        <label for="username"><?php echo  _('Username'); ?>:</label>
 			  <input class="text_input" type="text" id="username" name="username" value="<?php echo  $_REQUEST['username']; ; ?>" />
       </div>
 			<div class="loginfield" id="passwordfield">
-        <label for="password"><?php echo  _('Password'); ?>:</label> 
+        <label for="password"><?php echo  _('Password'); ?>:</label>
   			<input class="text_input" type="password" id="password" name="password" value="" />
       </div>
 			<div class="loginfield" id="remembermefield"><label for="rememberme">
@@ -69,15 +78,16 @@ function focus(){ document.login.username.focus(); }
 			<?php Error::display('general'); ?>
 
 	    <div class="formValidation">
+    		<a class="button" id="lostpasswordbutton" href="<?php echo Config::get('web_path'); ?>/lostpassword.php"><?php echo _('Lost password'); ?></a>
     		<input class="button" id="loginbutton" type="submit" value="<?php echo _('Login'); ?>" />
   			<input type="hidden" name="referrer" value="<?php echo scrub_out($_SERVER['HTTP_REFERRER']); ?>" />
   			<input type="hidden" name="action" value="login" />
-  
+
     		<?php if (Config::get('allow_public_registration')) { ?>
     			<a class="button" id="registerbutton" href="<?php echo Config::get('web_path'); ?>/register.php"><?php echo _('Register'); ?></a>
     		<?php } // end if (conf('allow_public_registration')) ?>
       </div>
-  
+
 		</form>
 	</div>
 </div>
@@ -92,3 +102,11 @@ if (@is_readable(Config::get('prefix') . '/config/motd.php')) {
 	?>
 	</div>
 <?php } ?>
+<div id="footer">
+    <a href="http://www.ampache.org/index.php">Ampache v.<?php echo Config::get('version'); ?></a><br />
+    Copyright (c) 2001 - 2010 Ampache.org
+    <?php echo _('Queries:'); ?><?php echo Dba::$stats['query']; ?> <?php echo _('Cache Hits:'); ?><?php echo database_object::$cache_hit; ?>
+</div>
+</body>
+</html>
+

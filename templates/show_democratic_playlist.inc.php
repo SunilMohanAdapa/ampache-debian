@@ -1,23 +1,31 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Democratic Playlist
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
 $web_path = Config::get('web_path');
 ?>
 <?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
@@ -34,12 +42,12 @@ $web_path = Config::get('web_path');
   <?php } ?>
 </colgroup>
 <?php
-if (!count($object_ids)) { 
+if (!count($object_ids)) {
 	$playlist = new Playlist($democratic->base_playlist);
 ?>
 <tr>
 <td>
-	<?php echo _('Playing from base Playlist'); ?>: 
+	<?php echo _('Playing from base Playlist'); ?>:
 	<a href="<?php echo $web_path; ?>/playlist.php?action=show_playlist&amp;playlist_id=<?php echo $playlist->id; ?>">
 	<?php echo scrub_out($playlist->name); ?>
 	</a>
@@ -61,10 +69,10 @@ else {
 	<th class="cel_admin"><?php echo _('Admin'); ?></th>
 	<?php } ?>
 </tr>
-<?php 
-$democratic = Democratic::get_current_playlist(); 
-$democratic->set_parent(); 
-foreach($object_ids as $row_id=>$data) { 
+<?php
+$democratic = Democratic::get_current_playlist();
+$democratic->set_parent();
+foreach($object_ids as $row_id=>$data) {
 	$media = new $data['object_type']($data['object_id']);
 	$media->format();
 ?>
@@ -87,9 +95,9 @@ foreach($object_ids as $row_id=>$data) {
 	</td>
 	<?php } ?>
 </tr>
-<?php 
+<?php
 	} // end foreach
-?> 
+?>
 <tr class="th-bottom">
 	<th class="cel_action"><?php echo _('Action'); ?></th>
 	<th class="cel_votes"><?php echo _('Votes'); ?></th>

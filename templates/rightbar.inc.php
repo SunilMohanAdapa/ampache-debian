@@ -1,23 +1,30 @@
 <?php
-/*
-
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License v2
- as published by the Free Software Foundation.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Right Bar
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
 ?>
 <ul id="rb_action">
@@ -30,12 +37,12 @@
 		  <li>
 		    <?php echo Ajax::text('?page=playlist&action=create',_('Add to New Playlist'),'rb_create_playlist'); ?>
 		  </li>
-		<?php 
-			$playlists = Playlist::get_users($GLOBALS['user']->id); 
-			Playlist::build_cache($playlists); 
-			foreach ($playlists as $playlist_id) { 
+		<?php
+			$playlists = Playlist::get_users($GLOBALS['user']->id);
+			Playlist::build_cache($playlists);
+			foreach ($playlists as $playlist_id) {
 				$playlist = new Playlist($playlist_id);
-				$playlist->format(); 
+				$playlist->format();
 		?>
 		  <li>
 		    <?php echo Ajax::text('?page=playlist&action=append&playlist_id=' .  $playlist->id,$playlist->f_name,'rb_append_playlist_' . $playlist->id); ?>
@@ -71,34 +78,34 @@
 	  </ul>
 	</li>
 </ul>
-<?php if (Config::get('play_type') == 'localplay') { require_once Config::get('prefix') . '/templates/show_localplay_control.inc.php'; } ?> 
+<?php if (Config::get('play_type') == 'localplay') { require_once Config::get('prefix') . '/templates/show_localplay_control.inc.php'; } ?>
 <ul id="rb_current_playlist">
-<?php 
+<?php
 
-	$objects = array(); 
+	$objects = array();
 
 	//FIXME :: this is kludgy
-	if (NO_SONGS != '1') { 	
-		$objects = $GLOBALS['user']->playlist->get_items(); 
-	} 
+	if (!defined('NO_SONGS')) {
+		$objects = $GLOBALS['user']->playlist->get_items();
+	}
 
 	// Limit the number of objects we show here
-	if (count($objects) > 100) { 
-		$truncated = (count($objects) - 100); 
-		$objects = array_slice($objects,0,100); 
-	} 
+	if (count($objects) > 100) {
+		$truncated = (count($objects) - 100);
+		$objects = array_slice($objects, 0, 100, true);
+	}
 
-	$normal_array = array('radio','song','video','random'); 
+	$normal_array = array('radio','song','video','random');
 
-	foreach ($objects as $uid=>$object_data) { 
+	foreach ($objects as $uid=>$object_data) {
 		$type = array_shift($object_data);
-		if (in_array($type,$normal_array)) { 
-			$object = new $type(array_shift($object_data)); 
-			$object->format(); 
-		} 
-		if ($type == 'random') { 
-			$object->f_link = Random::get_type_name($type); 	
-		} 
+		if (in_array($type,$normal_array)) {
+			$object = new $type(array_shift($object_data));
+			$object->format();
+		}
+		if ($type == 'random') {
+			$object->f_link = Random::get_type_name($type);
+		}
 ?>
 <li class="<?php echo flip_class(); ?>" >
   <?php echo $object->f_link; ?>
@@ -107,7 +114,7 @@
 <?php } if (!count($objects)) { ?>
 	<li class="error"><?php echo _('Not Enough Data'); ?></li>
 <?php } ?>
-<?php if ($truncated) { ?>
+<?php if (isset($truncated)) { ?>
 	<li class="<?php echo flip_class(); ?>">
 		<?php echo $truncated . ' ' . _('More'); ?>...
 	</li>
@@ -115,12 +122,12 @@
 </ul>
 
 
-<?php 
+<?php
 
 // We do a little magic here to force a iframe reload depending on preference
 // We do this last because we want it to load, and we want to know if there is anything
 // to even pass
-if (count($objects)) { 
-	Stream::run_playlist_method(); 
-} 
+if (count($objects)) {
+	Stream::run_playlist_method();
+}
 ?>

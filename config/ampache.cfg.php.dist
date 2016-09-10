@@ -7,7 +7,7 @@
 ; if this config file is up to date 
 ; this is compared against a value hard-coded
 ; into the init script
-config_version = 10
+config_version = 11
 
 ;###################
 ; Path Vars        #
@@ -44,10 +44,10 @@ database_username = username
 ; DEFAULT: ""
 database_password = password
 
-; Length that a session will last, the default is very restrictive
-; at 15min
-; DEFAULT: 1800
-session_length = 1800
+; Length that a session will last expressed in seconds. Default is
+; one hour. 
+; DEFAULT: 3600
+session_length = 3600
 
 ; Length that the session for a single streaming instance will last
 ; the default is two hours. With some clients, and long songs this can 
@@ -59,8 +59,8 @@ stream_length = 7200
 ; last, the default is 7200, same as length. It is up to the administrator
 ; of the box to increase this, for reference 86400 = 1 day 
 ; 604800 = 1 week and 2419200 = 1 month
-; DEAFULT: 7200
-remember_length = 7200
+; DEFAULT: 86400
+remember_length = 86400
 
 ; Name of the Session/Cookie that will sent to the browser
 ; default should be fine
@@ -68,20 +68,27 @@ remember_length = 7200
 session_name = ampache
 
 ; Lifetime of the Cookie, 0 == Forever (until browser close) , otherwise in terms of seconds
+; If you want cookies to last past a browser close set this to a value in seconds. 
 ; DEFAULT: 0
 session_cookielife = 0
 
-; Is the cookie a "secure" cookie?
+; Is the cookie a "secure" cookie? This should only be set to 1 (true) if you are
+; running a secure site (HTTPS). 
 ; DEFAULT: 0
 session_cookiesecure       = 0
 
 ; Auth Methods 
 ; This defines which auth methods vauth will attempt
 ; to use and in which order, if auto_create isn't enabled
-; The user must exist locally as well. Local method uses PHP's PAM Auth module
+; The user must exist locally. Local method uses PHP's PAM Auth module
 ; DEFAULT: mysql
 ; VALUES: mysql,ldap,http,local
 auth_methods = "mysql"
+
+; Logout redirection target
+; Defaults to our own login.php, but we can override it here if, for instance, 
+; we want to redirect to an SSO provider instead.
+; logout_redirect = "http://sso.example.com/logout"
 
 ;#####################
 ;  Program Settings  #
@@ -118,7 +125,8 @@ access_control	= "true"
 ; Require Session
 ; If this is set to true ampache will make sure that the URL passed when
 ; attempting to retrieve a song contains a valid Session ID This prevents
-; others from guessing URL's
+; others from guessing URL's. This setting is ignored if you have use_auth
+; disabled. 
 ; DEFAULT: true
 require_session = "true"
 
@@ -156,12 +164,6 @@ require_localnet_session = "true"
 ; clear it every now and then. 
 ; DEFAULT: 42 days
 ;user_ip_cardinality = "42"
-
-; Use XML-RPC
-; Allow XML-RPC connections, if you don't want _any_ possibility of your
-; catalog being streamed from another location comment this out
-; DEFAULT: false
-;xml_rpc 	= "false"
 
 ; Allow Zip Download
 ; This setting allows/disallows using zlib to zip up an entire
@@ -203,11 +205,22 @@ require_localnet_session = "true"
 ; music. If none of the listed tags are found then
 ; ampache will default to the first tag format
 ; that was found. 
-; POSSIBLE VALUES: id3v1 id3v2 file vorbiscomment 
-;                  quicktime ape asf 
-; DEFAULT: id3v2,id3v1 vorbiscomment quicktime ape
-; 		asf file
-tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf,file"
+; POSSIBLE VALUES: ape asf avi id3v1 id3v2 lyrics3 mpeg quicktime riff
+;     vorbiscomment
+; DEFAULT: id3v2 id3v1 vorbiscomment quicktime ape asf avi mpeg riff
+getid3_tag_order = "id3v2,id3v1,vorbiscomment,quicktime,ape,asf,avi,mpeg,riff"
+
+; Determines whether we try to autodetect the encoding for id3v2 tags.
+; May break valid tags.
+; DEFAULT: false
+;getid3_detect_id3v2_encoding = "false"
+
+; This determines the order in which metadata sources are used (and in the
+; case of plugins, checked)
+; POSSIBLE VALUES (builtins): filename and getID3
+; POSSIBLE VALUES (plugins): MusicBrainz, plus any others you've installed.
+; DEFAULT: getID3 filename
+metadata_order = "getID3,filename"
 
 ; Un comment if don't want ampache to follow symlinks
 ; DEFAULT: false
@@ -236,13 +249,12 @@ default_auth_level = "admin"
 ; DEFAULT: true
 ratings = "true"
 
-; ShoutBox
-; Enabling this will allow any user to 'tag' an item and post
-; a comment about it which will then be put on the main pages 
-; shoutbox. Admins are allowed to create 'sticky' shoutbox items
-; POSSIBLE VALUES: false true
-; DEFAULT: false
-;shoutbox = "false" 
+; Sociable
+; This turns on / off all of the "social" features of ampache
+; default is on, but if you don't care and just want music
+; turn this off to disable all social features. 
+; DEFAULT: true
+sociable = "true"
 
 ; This options will turn on/off Demo Mode
 ; If Demo mode is on you can not play songs or update your catalog
@@ -251,13 +263,13 @@ ratings = "true"
 ;demo_mode = "false"
 
 ; Caching
-; This turns the caching mechanisms on or off, due to a large number of 
+; This turns the caching mechanisms on or off, due to a large number of
 ; problems with people with very large catalogs and low memory settings
 ; this is off by default as it does significantly increase the memory
 ; requirments on larger catalogs. If you have the memory this can create
-; a 2-3x speed improvement. 
+; a 2-3x speed improvement.
 ; DEFAULT: false
-;memory_cache = false 
+;memory_cache = false
 
 ; Memory Limit
 ; This defines the "Min" memory limit for PHP if your php.ini
@@ -282,25 +294,28 @@ ratings = "true"
 ; DEFAULT: false
 ;resize_images = "false"
 
-; Album Art Gather Order
+; Art Gather Order
 ; Simply arrange the following in the order you would like
-; ampache to search if you want to disable one of the search
-; method simply comment it out valid values are
-; POSSIBLE VALUES: db id3 folder amazon lastfm
-; DEFAULT: db,id3,folder,lastfm
-album_art_order = "db,id3,folder,lastfm"
-
-; Album Art 
-; Set this to true if you want album art displayed on pages besides the
-; Single Album view, if you have a slow machine, or limited bandwidth
-; turning this off can vastly improve performance
-; DEFAULT: true
-show_album_art = "true"
+; ampache to search. If you want to disable one of the search
+; methods simply leave it out. DB should be left as the first
+; method unless you want it to overwrite what's already in the
+; database
+; POSSIBLE VALUES: db tags folder amazon lastfm musicbrainz google
+; DEFAULT: db,tags,folder,musicbrainz,lastfm,google
+art_order = "db,tags,folder,musicbrainz,lastfm,google"
 
 ; Amazon Developer Key
-; This is needed in order to actually use the amazon album art
+; These are needed in order to actually use the amazon album art
+; Your public key is your 'Access Key ID'
+; Your private key is your 'Secret Access Key'
 ; DEFAULT: false
-;amazon_developer_key = ""
+;amazon_developer_public_key = ""
+;amazon_developer_private_key = ""
+
+; Last.FM API Key
+; Set this to your Last.FM api key to actually use Last.FM for
+; recommendations.
+;lastfm_api_key = ""
 
 ; Amazon base urls
 ; An array of Amazon sites to search.
@@ -329,10 +344,7 @@ amazon_base_urls = "http://webservices.amazon.com"
 max_amazon_results_pages = 1
 
 ; Debug
-; If this is enabled Ampache will get really chatty
-; warning this can crash browser during catalog builds due to 
-; the amount of text that is dumped out this will also cause 
-; ampache to write to the log file
+; If this is enabled Ampache will write debugging information to the log file
 ; DEFAULT: false
 ;debug = "false"
 
@@ -352,7 +364,8 @@ debug_level = 5
 ; This defines where you want ampache to log events to
 ; this will only happen if debug is turned on. Do not
 ; include trailing slash. You will need to make sure that
-; your HTTP server has write access to the specified directory
+; the specified directory exists and your HTTP server has
+; write access.
 ; DEFAULT: NULL
 ;log_path = "/var/log/ampache"
 
@@ -388,44 +401,39 @@ refresh_limit = "60"
 ; DEFAULT: false
 ;auto_create = "false"
 
-; LDAP filter string to use
+; LDAP filter string to use (required)
 ; For OpenLDAP use "uid" 
 ; For Microsoft Active Directory (MAD) use "sAMAccountName"
 ; DEFAULT: null
 ; ldap_filter = "sAMAccountName"
 
-; LDAP objectclass it's required so if you don't know use *
+; LDAP objectclass (required)
 ; OpanLDAP objectclass = "*"
 ; MAD objectclass = "organizationalPerson"
 ; DEFAULT null
 ;ldap_objectclass = "organizationalPerson"
 
-; if this is the case, fill these in here:
+; Initial credentials to bind with for searching (optional)
 ; DEFAULT: null
 ;ldap_username = ""
 ;ldap_password = ""
 
-; NOT YET IMPLEMENTED!!
-; This option checks to see if the specified user is in
-; a specific ldap group, allowing you to give access based
-; on group membership
+; Require that the user is in a specific group (optional)
 ; DEFAULT: null
 ;ldap_require_group = "cn=yourgroup,ou=yourorg,dc=yoursubdomain,dc=yourdomain,dc=yourtld"
 
-; This is the search dn used to find your user, uid=username is added on to 
-; This string 
+; This is the search dn used to find users (required)
 ; DEFAULT: null
 ;ldap_search_dn = "ou=People,dc=yoursubdomain,dc=yourdomain,dc=yourtld"
 
-; This is the address of your ldap server
+; This is the address of your ldap server (required)
 ; DEFAULT: null
 ;ldap_url = ""
 
-; Specify where in your ldap db the following fields are stored:
-; (comment out if you don't have them)
-; OpenLDAP: ldap_name_field = "cn"
+; Attributes where additional user information is stored (optional)
+; OpenLDAP ldap_name_field = "cn"
 ; MAD ldap_name_field = "displayname"
-; DEFAULT: [none]
+; DEFAULT: null
 ;ldap_email_field = "mail"
 ;ldap_name_field  = "cn"
 
@@ -448,24 +456,7 @@ refresh_limit = "60"
 ; DEFAULT: false
 ;captcha_public_reg = "false"
 
-; This setting defines the mail domain your in.
-; It tries to deliver a test mail before the user can register and uses
-; the from address info@"domain.tld". No mail is send from this address it's
-; only used to test the existence of a mailbox before accepting user registration.
-; DEFAULT: domain.tld
-;mail_domain = "domain.tld"
-
-; This setting will be used as mail from address.
-; It will also be used to notify if a registration occurred.
-; You need to change this when you activate public_registration.
-;mail_from = "info@domain.tld"
-
-; It defines whether this setup checks a mail address strictly.
-; You can select "strict" or "easy" or "none".
-; DEFAULT: strict
-;mail_check = "strict"
-
-; This setting turns on/off admin notify off registration.
+; This setting turns on/off admin notification of registration.
 ; DEFAULT: false
 ;admin_notify_reg = "false"
 
@@ -564,3 +555,87 @@ use_rss = true
 ;proxy_port = "8080"
 ;proxy_user = ""
 ;proxy_pass = ""
+
+; If Ampache is behind an https reverse proxy, force use HTTPS protocol.
+;Default: false
+;force_ssl = true
+
+;#############################
+;   Mail Settings            #
+;#############################
+
+;Method used to send mail
+;POSSIBLE VALUES: smtp sendmail php
+;DEFAULT: php
+;mail_type = "php"
+
+;Mail domain.
+;DEFAULT: example.com 
+;mail_domain = "example.com"
+
+;This will be combined with mail_domain and used as the source address for
+;emails generated by Ampache.  For example, setting this to 'me' will set the
+;sender to 'me@example.com'.
+;DEFAULT: info
+;mail_user = "info"
+
+;A name to go with the email address.
+;DEFAULT: Ampache
+;mail_name = "Ampache"
+
+;How strictly email addresses should be checked.
+;easy does a regex match, strict actually performs some SMTP transactions
+;to see if we can send to this address.
+;POSSIBLE VALUES: strict easy none
+; DEFAULT: strict
+;mail_check = "strict"
+
+
+;############################
+;   sendmail Settings       #
+;############################
+
+;DEFAULT: /usr/sbin/sendmail
+;sendmail_path = "/usr/sbin/sendmail"
+
+;#############################
+;   SMTP Settings            #
+;#############################
+
+;Mail server (hostname or IP address)
+;DEFAULT: localhost
+;mail_host = "localhost"
+
+; SMTP port
+;DEFAULT: 25
+;mail_port = 25
+
+;Secure SMTP
+;POSSIBLE VALUES: ssl tls
+;DEFAULT: none
+;mail_secure_smtp = tls
+
+;Enable SMTP authentication
+;DEFAULT: false
+;mail_auth = true
+
+;SMTP Username
+;your mail auth username.
+;mail_auth_user = ""
+
+; SMTP Password
+; your mail auth password.
+;mail_auth_pass = ""
+
+;#############################
+;   Multibyte Settings       #
+;#############################
+; Use Iconv or not
+; DEFAULT: false
+;use_iconv = false
+
+; mb_detect_order
+; comma separated, available encodings are listed on php.net.
+; see http://php.net/manual/mbstring.supported-encodings.php
+; DEFAULT: auto
+;mb_detect_order = "EUC-JP, SJIS, eucJP-win, SJIS-win, JIS, ISO-2022-JP, ASCII, UTF-8, UTF-7"

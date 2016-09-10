@@ -1,56 +1,40 @@
 <?php
-/*
+/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/**
+ * Show Install Account
+ *
+ *
+ * LICENSE: GNU General Public License, version 2 (GPLv2)
+ * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License v2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * @package	Ampache
+ * @copyright	2001 - 2011 Ampache.org
+ * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
+ * @link	http://www.ampache.org/
+ */
 
- Copyright (c) Ampache.org
- All rights reserved.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-if (INSTALL != '1') { exit; }
+$prefix = realpath(dirname(__FILE__). "/../");
+require $prefix . '/templates/install_header.inc.php';
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $htmllang; ?>" lang="<?php echo $htmllang; ?>">
-<head>
-<title>Ampache :: For The Love Of Music - Install</title>
-<link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
-<meta http-equiv="Content-Type" content="text/html; Charset=<?php echo $charset; ?>" />
-</head>
-<body>
-<div id="header"> 
-<h1><?php echo _("Ampache Installation"); ?></h1>
-<p>For the love of Music</p>
-</div>
-
-<div id="text-box">
-
-	<div class="notify">
-	<?php echo _("This Page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following pre-requisites"); ?>
-	<br />
-	<ul>
-        <li><?php echo _("A MySQL Server with a username and password that can create/modify databases"); ?></li>
-        <li><?php echo _("Your webserver has read access to the /sql/ampache.sql file and the /config/ampache.cfg.dist.php file"); ?></li>
-	</ul>
-<?php echo _("Once you have ensured that you have the above requirements please fill out the information below. You will only be asked for the required config values. If you would like to make changes to your ampache install at a later date simply edit /config/ampache.cfg.php"); ?>
-	</div>
 	<div class="content">
-	<?php echo _("Step 1 - Creating and Inserting the Ampache Database"); ?><br />
-	<?php echo _("Step 2 - Creating the ampache.cfg.php file"); ?><br />
-	<strong><?php echo _("Step 3 - Setup Initial Account"); ?></strong><br />
+	<?php echo _('Step 1 - Create the Ampache database'); ?><br />
+	<?php echo _('Step 2 - Create ampache.cfg.php'); ?><br />
+	<strong><?php echo _('Step 3 - Set up the initial account'); ?></strong><br />
 	<dl>
-	<dd><?php echo _("This step creates your initial Ampache admin account. Once your admin account has been created you will be directed to the login page"); ?></dd>
+	<dd><?php echo _('This step creates your initial Ampache admin account. Once your admin account has been created you will be redirected to the login page.'); ?></dd>
 	</dl>
 	<?php Error::display('general'); ?>
 	<br />

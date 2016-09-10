@@ -34,7 +34,7 @@ Preference::init();
  * page if they aren't in the ACL
  */
 if (Config::get('access_control')) { 
-        if (!Access::check_network('interface',$_SERVER['REMOTE_ADDR'],'','5')) {
+        if (!Access::check_network('interface','','5')) {
                 debug_event('access_denied','Access Denied:' . $_SERVER['REMOTE_ADDR'] . ' is not in the Interface Access list','3');
                 access_denied();
 		exit(); 
@@ -54,7 +54,7 @@ if ($_POST['username'] && $_POST['password']) {
 	/* If we are in demo mode let's force auth success */
 	if (Config::get('demo_mode')) {
 		$auth['success'] = 1;
-		$auth['info']['username'] = "Admin- DEMO";
+		$auth['info']['username'] = "Admin - DEMO";
 		$auth['info']['fullname'] = "Administrative User";
 		$auth['info']['offset_limit']	= 25;
 	}
@@ -64,26 +64,27 @@ if ($_POST['username'] && $_POST['password']) {
 		$auth = vauth::authenticate($username, $password);
                 $user = User::get_from_username($username);
 		
-		if ($user->disabled == '1') { 	
-                                $auth['success'] = false;
-				Error::add('general',_('User Disabled please contact Admin')); 
-				debug_event('Login','Disabled User ' . scrub_out($username) . ' attempted to login, but is disabled','1'); 
-                } // if user disabled
-
 		if (!$auth['success']) { 
-			debug_event('Login','Login Username / Password Failure:' . scrub_out($username),'5'); 
-		}
+			debug_event('Login',scrub_out($username) . ' attempted to login and failed','1'); 
+		} 
+	
+		if ($user->disabled == '1') { 	
+                	$auth['success'] = false;
+			Error::add('general',_('User Disabled please contact Admin')); 
+			debug_event('Login',scrub_out($username) . ' is disabled and attempted to login','1'); 
+                } // if user disabled
+			
                 
 		elseif (!$user->username AND $auth['success']) { 
 			/* This is run if we want to auto_create users who don't exist (usefull for non mysql auth) */                
 			if (Config::get('auto_create')) {
-				if (!$access = Config::get('auto_user')) { $access = '5'; } 
-				
+
+				$access = Config::get('auto_user') ? User::access_name_to_level(Config::get('auto_user')) : '5'; 
                         	$name = $auth['name'];
                         	$email = $auth['email'];
                         
 				/* Attempt to create the user */	
-				if (!$user->create($username, $name, $email,md5(mt_rand()), $access)) {
+				if (!$user->create($username, $name, $email,hash('sha256',mt_rand()), $access)) {
                                 	$auth['success'] = false;
 					Error::add('general',_('Unable to create new account')); 
                             	}
@@ -104,13 +105,23 @@ if ($_POST['username'] && $_POST['password']) {
 
 /* If the authentication was a success */
 if ($auth['success']) {
+
+	// Generate the user we need for a few things
+	$user = User::get_from_username($username);
+
+	if (Config::get('prevent_multiple_logins')) {
+		$current_ip = $user->is_logged_in();
+		if ($current_ip != inet_pton($_SERVER['REMOTE_ADDR'])) {
+			Error::add('general',_('User Already Logged in'));
+			require Config::get('prefix') . '/templates/show_login_form.inc.php';
+			exit; 
+        	}
+	} // if prevent_multiple_logins
+
 	// $auth->info are the fields specified in the config file
 	//   to retrieve for each user
 	vauth::session_create($auth);
 	
-	// Generate the user we need for a few things
-	$user = User::get_from_username($username);
-
 	//
 	// Not sure if it was me or php tripping out,
 	//   but naming this 'user' didn't work at all
@@ -145,5 +156,3 @@ if ($auth['success']) {
 require Config::get('prefix') . '/templates/show_login_form.inc.php';
 
 ?>
-</body>
-</html>

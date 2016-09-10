@@ -24,7 +24,11 @@ error_reporting(E_ALL ^ E_NOTICE);
 
 require_once 'lib/general.lib.php';
 require_once 'lib/class/config.class.php';
+require_once 'lib/class/error.class.php'; 
 require_once 'lib/class/vauth.class.php';
+require_once 'lib/class/database_object.abstract.php';
+require_once 'lib/class/preference.class.php'; 
+require_once 'lib/class/access.class.php'; 
 require_once 'lib/ui.lib.php';
 require_once 'lib/log.lib.php'; 
 require_once 'modules/horde/Browser.php';
@@ -61,26 +65,43 @@ $hostname = scrub_in($_REQUEST['local_host']);
 $database = scrub_in($_REQUEST['local_db']);
 if ($_SERVER['HTTPS'] == 'on') { $http_type = "https://"; }
 else { $http_type = "http://"; }
-define('WEB_PATH',$http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . basename($_SERVER['PHP_SELF']));  
+
+define('WEB_PATH',$http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . basename($_SERVER['PHP_SELF']));
 define('WEB_ROOT',$http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF'])); 
 
 /* Catch the Current Action */
 switch ($_REQUEST['action']) { 
 	case 'create_db':
-		if (!install_insert_db($username,$password,$hostname,$database)) { 
+		/* Get the variables for the language */
+		$htmllang = $_REQUEST['htmllang'];
+		$charset  = $_REQUEST['charset'];
+
+		// Set the lang in the conf array
+		Config::set('lang', $htmllang,'1');
+		Config::set('site_charset', $charset, '1');
+		load_gettext();
+
+		if (!install_insert_db($username,$password,$hostname,$database)) {
 			require_once 'templates/show_install.inc.php';
 			break;
 		}
 
-		/* Get the variables for the language */
-		$htmllang = $_REQUEST['htmllang'];
-		$charset  = $_REQUEST['charset'];
+		// Now that it's inserted save the lang preference
+		Preference::update('lang','-1',$htmllang);
 		
 		header ("Location: " . WEB_PATH . "?action=show_create_config&local_db=$database&local_host=$hostname&htmllang=$htmllang&charset=$charset");
 		
 	break;
 	case 'create_config':
-		$created_config = install_create_config($web_path,$username,$password,$hostname,$database);
+
+		// Test and make sure that the values they give us actually work
+		if (!check_database($hostname,$username,$password)) { 
+			Error::add('config',_('Error: Unable to make Database Connection') . mysql_error());
+		} 
+
+		if (!Error::occurred()) { 
+			$created_config = install_create_config($web_path,$username,$password,$hostname,$database);
+		} 
 
 		require_once 'templates/show_install_config.inc.php';
 	break;
@@ -125,6 +146,15 @@ switch ($_REQUEST['action']) {
 		$results = parse_ini_file($configfile);
 		Config::set_by_array($results,'1');
 
+		/* Get the variables for the language */
+		$htmllang = $_REQUEST['htmllang'];
+		$charset  = $_REQUEST['charset'];
+
+		// Set the lang in the conf array
+		Config::set('lang', $htmllang,'1');
+		Config::set('site_charset', $charset, '1');
+		load_gettext();
+
 		$password2 = scrub_in($_REQUEST['local_pass2']); 
 
 		if (!install_create_account($username,$password,$password2)) { 
@@ -137,6 +167,15 @@ switch ($_REQUEST['action']) {
 	case 'show_create_account':
 	
 		$results = parse_ini_file($configfile);
+
+		/* Get the variables for the language */
+		$htmllang = $_REQUEST['htmllang'];
+		$charset  = $_REQUEST['charset'];
+
+		// Set the lang in the conf array
+		Config::set('lang', $htmllang,'1');
+		Config::set('site_charset', $charset, '1');
+		load_gettext();
 
 		/* Make sure we've got a valid config file */
 		if (!check_config_values($results)) { 
@@ -185,6 +224,7 @@ switch ($_REQUEST['action']) {
 		// We need the charset for the different languages
 		$charsets = array('de_DE' => 'ISO-8859-15',
 				  'en_US' => 'iso-8859-1',
+				  'cs_CZ' => 'UTF-8',
 				  'ja_JP' => 'UTF-8',
 				  'en_GB' => 'UTF-8',
 				  'es_ES' => 'iso-8859-1',
@@ -206,12 +246,23 @@ switch ($_REQUEST['action']) {
 		require_once 'templates/show_install.inc.php';
 	break;
         default:
-		/* Do some basic tests here... most common error, no mysql */
-		if (!function_exists('mysql_query')) { 
-			header ("Location: " . WEB_PATH . "/test.php");
+		if ($_ENV['LANG']) {
+			$lang = $_ENV['LANG'];
+		} else {
+			$lang = "en_US";
 		}
-		$htmllang = "en_US";
-		header ("Content-Type: text/html; charset=UTF-8");
+		if(strpos($lang, ".")) {
+			$langtmp = split("\.", $lang);
+			$htmllang = $langtmp[0];
+			$charset = $langtmp[1];
+		} else {
+			$htmllang = $lang;
+			$charset = "UTF-8";
+		}
+		Config::set('lang',$htmllang,'1');
+		Config::set('site_charset', $charset, '1');
+		load_gettext();
+
 		/* Show the language options first */
 		require_once 'templates/show_install_lang.inc.php';
 	break;

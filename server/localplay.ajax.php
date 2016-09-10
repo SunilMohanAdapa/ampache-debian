@@ -38,9 +38,6 @@ switch ($_REQUEST['action']) {
 		$localplay->set_active_instance($_REQUEST['instance']); 
 		Preference::update('play_type',$GLOBALS['user']->id,$type); 
 
-		// Now reload the preferences into the user object
-		$GLOBALS['user']->set_preferences(); 
-
 		// We should also refesh the sidebar
 		ob_start(); 
 		require_once Config::get('prefix') . '/templates/sidebar.inc.php'; 
@@ -81,10 +78,10 @@ switch ($_REQUEST['action']) {
 			break;
 			case 'delete_all': 
 				$localplay->delete_all(); 
-				
+				Browse::save_objects(array()); 	
 				ob_start(); 
-				require_once Config::get('prefix') . '/templates/show_localplay_playlist.inc.php'; 
-				$results['localplay_playlist'] = ob_get_contents(); 
+				Browse::show_objects(); 
+				$results['browse_content'] = ob_get_contents(); 
 				ob_end_clean(); 
 			break;
 			case 'skip': 

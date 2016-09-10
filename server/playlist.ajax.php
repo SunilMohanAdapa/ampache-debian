@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -73,6 +73,11 @@ switch ($_REQUEST['action']) {
 		$results['track_' . $track['id']] = ob_get_clean(); 
 	break;	
 	case 'create':
+		if (!Access::check('interface','25')) { 
+			debug_event('DENIED','Error:' . $GLOBALS['user']->username . ' does not have user access, unable to create playlist','1'); 
+			break; 
+		} 
+
 		// Pull the current active playlist items
 		$objects = $GLOBALS['user']->playlist->get_items(); 
 
@@ -84,16 +89,18 @@ switch ($_REQUEST['action']) {
 		$playlist = new Playlist($playlist_id); 
 
 		// Itterate through and add them to our new playlist
-		foreach ($objects as $uid=>$object_data) { 
+		foreach ($objects as $object_data) { 
 			// For now only allow songs on here, we'll change this later
-			if ($object_data['1'] == 'song') { 
-				$songs[] = $object_data['0']; 
+			$type = array_shift($object_data);
+			if ($type == 'song') { 
+				$songs[] = array_shift($object_data);  
 			} 
 		} // object_data
 	
 		// Add our new songs
 		$playlist->add_songs($songs); 
 		$playlist->format(); 
+		$object_ids = $playlist->get_items(); 
 		ob_start(); 
 		require_once Config::get('prefix') . '/templates/show_playlist.inc.php'; 
 		$results['content'] = ob_get_clean(); 
@@ -110,17 +117,25 @@ switch ($_REQUEST['action']) {
 			break; 
 		} 
 
+		$songs = array(); 
+
 		// Itterate through and add them to our new playlist
-		foreach ($objects as $uid=>$object_data) { 
-			// For now only allow songs on here, we'll change this later
-			if ($object_data['1'] == 'song') { 
-				$songs[] = $object_data['0']; 
-			} 
+		foreach ($objects as $element) { 
+			$type = array_shift($element); 
+			switch ($type) { 
+				case 'song': 
+					$songs[] = array_shift($element); 
+				break; 
+			} // end switch 	
 		} // foreach
+
+		// Override normal include procedure 
+		Ajax::set_include_override(true); 
 
 		// Add our new songs
 		$playlist->add_songs($songs); 
 		$playlist->format(); 
+		$object_ids = $playlist->get_items(); 
 		ob_start(); 
 		require_once Config::get('prefix') . '/templates/show_playlist.inc.php'; 
 		$results['content'] = ob_get_contents(); 

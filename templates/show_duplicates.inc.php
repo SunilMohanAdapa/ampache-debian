@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -50,12 +50,13 @@
 		foreach ($songs as $key=>$song_id) {
 			$song = new Song($song_id); 
 			$song->format(); 
-			$row_key = 'duplicate_' . $song_id; 
+			$row_key = 'duplicate_' . $song_id;
+			$button_flip_state_id = 'button_flip_state_' . $song_id;
 			$current_class = ($key == '0') ? 'row-highlight' : flip_class(); 
 			$button = $song->enabled ? 'disable' : 'enable'; 
 		?>
 <tr id="<?php echo $row_key; ?>" class="<?php echo $current_class; ?>">
-	<td class="cel_disable">
+	<td class="cel_disable" id="<?php echo($button_flip_state_id); ?>">
 		<?php echo Ajax::button('?page=song&action=flip_state&song_id=' . $song_id,$button,_(ucfirst($button)),'flip_state_' . $song_id); ?>
 	</td>
 	<td class="cel_song"><?php echo $song->f_link; ?></td>

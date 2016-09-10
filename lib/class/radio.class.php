@@ -25,7 +25,7 @@
  * This handles the internet radio stuff, that is inserted into live_stream
  * this can include podcasts or what-have-you
  */
-class Radio {
+class Radio extends database_object implements media {
 
 	/* DB based variables */
 	public $id; 
@@ -34,7 +34,6 @@ class Radio {
 	public $url; 
 	public $frequency;
 	public $call_sign;
-	public $genre; 
 	public $catalog; 
 
 	/**
@@ -43,11 +42,7 @@ class Radio {
 	 */
 	public function __construct($id) { 
 
-		$this->id = intval($id);
-
-		if (!$this->id) { return false; }
-
-		$info = $this->_get_info();
+		$info = $this->get_info($id,'live_stream');
 
 		// Set the vars
 		foreach ($info as $key=>$value) { 
@@ -55,23 +50,6 @@ class Radio {
 		} 
 
 	} // constructor
-
-	/**
-	 * _get_info
-	 * Private function for getting the information for this object from the database 
-	 */
-	private function _get_info() { 
-
-		$id = Dba::escape($this->id);
-
-		$sql = "SELECT * FROM `live_stream` WHERE `id`='$id'";
-		$db_results = Dba::query($sql);
-
-		$results = Dba::fetch_assoc($db_results);
-		
-		return $results;
-
-	} // _get_info
 
 	/**
 	 * format
@@ -87,23 +65,9 @@ class Radio {
 		$this->f_callsign	= scrub_out($this->call_sign); 
 		$this->f_frequency	= scrub_out($this->frequency); 
 
-		$genre = new Genre($this->genre); 
-		$genre->format(); 
-		$this->f_genre		= $genre->f_link; 
-
 		return true; 
 
 	} // format
-
-	/**
-	 * get_url	
-	 * This returns the URL for this live stream
-	 */
-	public function get_url() { 
-
-		
-
-	} // get_url 
 
 	/**
 	 * update
@@ -115,23 +79,25 @@ class Radio {
 
 		// Verify the incoming data
 		if (!$data['id']) { 
+			// FIXME: Untranslated
 			Error::add('general','Missing ID'); 
 		} 
 
 		if (!$data['name']) { 
+			// FIXME: Untranslated
 			Error::add('general','Name Required'); 
 		} 
 
-		if (!preg_match("/^https?:\/\/.+/",$data['url'])) { 
-			Error::add('general','Invalid URL must be https:// or http://'); 
+		$allowed_array = array('https','http','mms','mmsh','mmsu','mmst','rtsp'); 
+
+		$elements = explode(":",$data['url']); 
+		
+		if (!in_array($elements['0'],$allowed_array)) { 
+			// FIXME: Untranslated
+			Error::add('general','Invalid URL must be mms:// , https:// or http://'); 
 		} 
 
-		$genre = new Genre($data['genre']); 
-		if (!$genre->name) { 
-			Error::add('general','Invalid Genre Selected'); 
-		} 
-
-		if (Error::$state) { 
+		if (Error::occurred()) { 
 			return false; 
 		} 
 
@@ -141,10 +107,9 @@ class Radio {
 		$url		= Dba::escape($data['url']); 
 		$frequency	= Dba::escape($data['frequency']); 
 		$call_sign	= Dba::escape($data['call_sign']); 
-		$genre		= Dba::escape($data['genre']); 
 		$id		= Dba::escape($data['id']); 
 
-		$sql = "UPDATE `live_stream` SET `name`='$name',`site_url`='$site_url',`url`='$url',`genre`='$genre'" . 
+		$sql = "UPDATE `live_stream` SET `name`='$name',`site_url`='$site_url',`url`='$url'" . 
 			",`frequency`='$frequency',`call_sign`='$call_sign' WHERE `id`='$id'"; 
 		$db_results = Dba::query($sql); 
 
@@ -161,44 +126,38 @@ class Radio {
 
 		// Make sure we've got a name
 		if (!strlen($data['name'])) { 
+			// FIXME: Untranslated
 			Error::add('name','Name Required'); 
 		} 
 
-		if (!preg_match("/^https?:\/\/.+/",$data['url'])) { 
+		$allowed_array = array('https','http','mms','mmsh','mmsu','mmst','rtsp'); 
+
+		$elements = explode(":",$data['url']); 
+		
+		if (!in_array($elements['0'],$allowed_array)) { 
 			Error::add('url','Invalid URL must be http:// or https://'); 
-		} 
-
-		// If they specified other try to use that
-		if (strlen($data['other_genre'])) { 
-			$data['genre'] = Catalog::check_genre($data['other_genre']); 
-		} 
-
-		// Make sure it's a real genre
-		$genre = new Genre($data['genre']); 
-		if (!$genre->name) { 
-			Error::add('genre','Invalid Genre'); 
 		} 
 
 		// Make sure it's a real catalog
 		$catalog = new Catalog($data['catalog']); 
 		if (!$catalog->name) { 
+			// FIXME: Untranslated
 			Error::add('catalog','Invalid Catalog'); 
 		} 
 
-		if (Error::$state) { return false; } 
+		if (Error::occurred()) { return false; } 
 
 		// Clean up the input
 		$name		= Dba::escape($data['name']); 
 		$site_url	= Dba::escape($data['site_url']); 
 		$url		= Dba::escape($data['url']); 
-		$genre		= $genre->id; 
 		$catalog	= $catalog->id; 
 		$frequency	= Dba::escape($data['frequency']); 
 		$call_sign	= Dba::escape($data['call_sign']); 
 
 		// If we've made it this far everything must be ok... I hope
-		$sql = "INSERT INTO `live_stream` (`name`,`site_url`,`url`,`genre`,`catalog`,`frequency`,`call_sign`) " . 
-			"VALUES ('$name','$site_url','$url','$genre','$catalog','$frequency','$call_sign')"; 
+		$sql = "INSERT INTO `live_stream` (`name`,`site_url`,`url`,`catalog`,`frequency`,`call_sign`) " . 
+			"VALUES ('$name','$site_url','$url','$catalog','$frequency','$call_sign')"; 
 		$db_results = Dba::query($sql); 
 
 		return $db_results;  
@@ -219,6 +178,47 @@ class Radio {
 		return true; 
 
 	} // delete
+
+	/**
+	 * native_stream
+	 * This is needed by the media interface
+	 */
+	public function native_stream() { 
+
+
+
+	} // native_stream 
+
+	/**
+	 * play_url
+	 * This is needed by the media interface
+	 */
+	public static function play_url($oid,$sid='',$force_http='') { 
+
+		$radio = new Radio($oid); 
+		
+		return $radio->url; 
+
+	} // play_url  
+
+	/**
+	 * has_flag
+	 * This is needed by the media interface
+	 */
+	public function has_flag() { 
+
+
+
+	} // has_flag
+
+	/**
+	 * stream_cmd
+	 * Needed by the media interface
+	 */
+	public function stream_cmd() { 
+
+
+	} // stream_cmd
 
 } //end of radio class
 

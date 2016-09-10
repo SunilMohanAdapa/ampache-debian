@@ -32,6 +32,8 @@ if (INIT_LOADED != '1') { exit; }
  */
 class Dba { 
 
+	public static $stats = array('query'=>0); 
+
 	private static $_default_db;
 	private static $_sql; 
 	private static $config; 
@@ -59,10 +61,50 @@ class Dba {
 		
 		// Save the query, to make debug easier
 		self::$_sql = $sql; 
+		self::$stats['query']++; 
+
+		// Do a little error checking here and try to recover from some forms of failure
+		if (!$resource) { 
+			switch (mysql_errno(self::dbh())) { 
+				case '2006': 
+				case '2013': 
+				case '2055': 
+					debug_event('DBH','Lost connection to database server, trying to re-connect and hope nobody noticed','1'); 
+					self::disconnect(); 
+					// Try again
+					$resource = mysql_query($sql,self::dbh()); 
+				break;
+				default:
+					debug_event('DBH',mysql_error(self::dbh()) . ' ['. mysql_errno(self::dbh()) . ']','1'); 
+				break; 
+			} // end switch on error #
+		} // if failed query
 
 		return $resource; 
 
 	} // query
+
+	/**
+	 * read
+	 * This is a wrapper for query, it's so that in the future if we ever wanted
+	 * to split reads and writes we could
+	 */
+	public static function read($sql) { 
+
+		return self::query($sql); 
+
+	} // read
+
+	/**
+	 * write
+	 * This is a wrapper for a write query, it is so that we can split out reads and
+	 * writes if we want to 
+	 */
+	public static function write($sql) { 
+
+		return self::query($sql); 
+
+	} // write
 
 	/**
 	 * escape
@@ -178,20 +220,46 @@ class Dba {
 		$data = self::translate_to_mysqlcharset(Config::get('site_charset'));
 
 		if (function_exists('mysql_set_charset')) { 
-			$charset = mysql_set_charset($data['charset'],$dbh); 
+			if (!$charset = mysql_set_charset($data['charset'],$dbh)) { 
+				debug_event('Database','Error unable to set MySQL Connection charset to ' . $data['charset'] . ' this may cause issues...','1'); 
+			} 
 		} 
 		else { 
 			$sql = "SET NAMES " . mysql_real_escape_string($data['charset']); 
 			$charset = mysql_query($sql,$dbh); 
+			if (mysql_error($dbh)) { debug_event('Database','Error unable to set MySQL Connection charset to ' . $data['charset'] . ' using SET NAMES, you may have issues','1'); } 
+
 		}
 		if (!$charset) { debug_event('Database','Error unable to set connection charset, function missing or set failed','1'); }  
 
 		$select_db = mysql_select_db($database,$dbh); 
 		if (!$select_db) { debug_event('Database','Error unable to select ' . $database . ' error ' . mysql_error(),'1'); } 
 		
+		if (Config::get('sql_profiling')) {
+			mysql_query('set profiling=1', $dbh);
+			mysql_query('set profiling_history_size=50', $dbh);
+			mysql_query('set query_cache_type=0', $dbh);
+		}
 		return $dbh;
 
 	} // _connect
+
+	/**
+	 * show_profile
+	 * This function is used for debug, helps with profiling
+	 */
+	public static function show_profile() {
+
+		if (Config::get('sql_profiling')) {
+		    print '<br/>Profiling data: <br/>';
+		    $res = Dba::query('show profiles');
+		    print '<table>';
+		    while ($r = Dba::fetch_row($res)) {
+		      print '<tr><td>' . implode('</td><td>', $r) . '</td></tr>';
+		    }
+		    print '</table>';
+		}
+	} // show_profile
 
 	/**
 	 * dbh
@@ -216,6 +284,26 @@ class Dba {
 
 
 	} // dbh
+
+	/**
+	 * disconnect
+	 * This nukes the dbh connection based, this isn't used very often...
+	 */
+	public static function disconnect($database='') { 
+
+		if (!$database) { $database = self::$_default_db; } 
+
+		$handle = 'dbh_' . $database; 
+
+		// Try to close it correctly
+		mysql_close(Config::get($handle)); 
+
+		// Nuke it
+		Config::set($handle,false,1); 
+
+		return true; 
+
+	} // disconnect
 
 	/**
 	 * insert_id
@@ -263,7 +351,6 @@ class Dba {
                 switch (strtoupper($charset)) {
                         case 'CP1250':
                         case 'WINDOWS-1250':
-                        case 'WINDOWS-1252':
                                 $target_charset = 'cp1250';
                                 $target_collation = 'cp1250_general_ci';
                         break;
@@ -273,8 +360,10 @@ class Dba {
                                 $target_collation = 'latin2_general_ci';
                         break;
                         case 'ISO-8859-1':
+			case 'CP1252':
+                        case 'WINDOWS-1252':
                                 $target_charset = 'latin1';
-                                $target_charset = 'latin1_general_ci';
+                                $target_collation = 'latin1_general_ci';
                         break;
                         case 'EUC-KR':
                                 $target_charset = 'euckr';

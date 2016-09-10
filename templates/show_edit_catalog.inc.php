@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 
 */
 ?>
-<?php show_box_top(_('Settings for') . ' ' . $catalog->name . ' (' . $catalog->path . ')'); ?>
+<?php show_box_top(sprintf(_('Settings for %s') , $catalog->name . ' (' . $catalog->path . ')')); ?>
 <form method="post" action="<?php echo Config::get('web_path'); ?>/admin/catalog.php" enctype="multipart/form-data">
 <table cellspacing="0" cellpadding="0">
 <tr>
@@ -30,7 +30,6 @@
 		%A = <?php echo _('album name'); ?><br />
 		%a = <?php echo _('artist name'); ?><br />
 		%c = <?php echo _('id3 comment'); ?><br />
-		%g = <?php echo _('genre'); ?><br />
 		%T = <?php echo _('track number (padded with leading 0)'); ?><br />
 		%t = <?php echo _('song title'); ?><br />
 		%y = <?php echo _('year'); ?><br />
@@ -44,7 +43,7 @@
 <tr>
 	<td><?php echo _('XML-RPC Key'); ?>:</td>
 	<td>
-		<input size="30" type="text" name="key" value="<?php echo scrub_out($catalog->key); ?>" />*<span class="error">Required for Remote Catalogs</span>
+		<input size="30" type="text" name="key" value="<?php echo scrub_out($catalog->key); ?>" />*<span class="error"><?php echo _('Required for Remote Catalogs'); ?></span>
 	</td>
 </tr>
 <tr>

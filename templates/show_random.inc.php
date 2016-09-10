@@ -38,23 +38,19 @@
 		<option value="-1"><?php echo _('All'); ?></option>
 		</select>
 	</td>
-	<td rowspan="5" valign="top"><?php echo  _('From genre'); ?></td>
-	<td rowspan="5">
-	<?php show_genre_select('genre[]','','6'); ?>
-	</td>
 </tr>
 <tr>
 	<td><?php echo _('Length'); ?></td>
 	<td>
 		<select name="length">
 			<option value="0"><?php echo _('Unlimited'); ?></option>
-			<option value="15">15 <?php echo ngettext('minute','minutes',15); ?></option>
-			<option value="30">30 <?php echo ngettext('minute','minutes',30); ?></option>
-			<option value="60">1 <?php echo ngettext('hour','hours',1); ?></option>
-			<option value="120">2 <?php echo ngettext('hour','hours',2); ?></option>
-			<option value="240">4 <?php echo ngettext('hour','hours',4); ?></option>
-			<option value="480">8 <?php echo ngettext('hour','hours',8); ?></option>
-			<option value="960">16 <?php echo ngettext('hour','hours',16); ?></option>
+			<option value="15"><?php printf(ngettext('%d minute','%d minutes',15), "15"); ?></option>
+			<option value="30"><?php printf(ngettext('%d minute','%d minutes',30), "30"); ?></option>
+			<option value="60"><?php printf(ngettext('%d hour','%d hours',1), "1"); ?></option>
+			<option value="120"><?php printf(ngettext('%d hour','%d hours',2), "2"); ?></option>
+			<option value="240"><?php printf(ngettext('%d hour','%d hours',4), "4"); ?></option>
+			<option value="480"><?php printf(ngettext('%d hour','%d hours',8), "8"); ?></option>
+			<option value="960"><?php printf(ngettext('%d hour','%d hours',16), "16"); ?></option>
 		</select>
 	</td>
 </tr>

@@ -24,7 +24,7 @@
  * This is the class responsible for handling the Album object
  * it is related to the album table in the database.
  */
-class Album {
+class Album extends database_object {
 
 	/* Variables from DB */
 	public $id;
@@ -50,15 +50,12 @@ class Album {
 	 * pull the album or thumb art by default or
 	 * get any of the counts.
 	 */
-	public function __construct($album_id='') {
+	public function __construct($id='') {
 
-		if (!$album_id) { return false; } 
-
-		/* Assign id for use in get_info() */
-		$this->id = intval($album_id);
+		if (!$id) { return false; } 
 
 		/* Get the information from the db */
-		$info = $this->_get_info();
+		$info = $this->get_info($id);
 	
 		// Foreach what we've got
 		foreach ($info as $key=>$value) { 
@@ -70,7 +67,7 @@ class Album {
 
 		return true; 
 
-	} //constructor
+	} // constructor
 
 	/**
 	 * construct_from_array
@@ -92,21 +89,45 @@ class Album {
 	} // construct_from_array
 
 	/**
-	 * _get_info
-	 * This is a private function that pulls the album 
-	 * from the database 
+	 * build_cache
+	 * This takes an array of object ids and caches all of their information
+	 * with a single query
 	 */
-	private function _get_info() {
+	public static function build_cache($ids,$extra=false) {
 
-		// Just get the album information
-		$sql = "SELECT * FROM `album` WHERE `id`='" . $this->id . "'"; 
+		// Nothing to do if they pass us nothing
+		if (!is_array($ids) OR !count($ids)) { return false; } 
+
+		$idlist = '(' . implode(',', $ids) . ')';
+
+		$sql = "SELECT * FROM `album` WHERE `id` IN $idlist";
 		$db_results = Dba::query($sql);
+	  
+		while ($row = Dba::fetch_assoc($db_results)) {
+			parent::add_to_cache('album',$row['id'],$row); 
+		}
 
-		$results = Dba::fetch_assoc($db_results);
+		// If we're extra'ing cache the extra info as well
+		if ($extra) { 
+			$sql = "SELECT COUNT(DISTINCT(song.artist)) as artist_count,COUNT(song.id) AS song_count,artist.name AS artist_name" .
+				",artist.prefix AS artist_prefix,album_data.art AS has_art,album_data.thumb AS has_thumb, artist.id AS artist_id,`song`.`album`".
+		                "FROM `song` " .
+		                "INNER JOIN `artist` ON `artist`.`id`=`song`.`artist` " .
+		                "LEFT JOIN `album_data` ON `album_data`.`album_id` = `song`.`album` " .
+		                "WHERE `song`.`album` IN $idlist GROUP BY `song`.`album`";
 
-		return $results;
+			$db_results = Dba::read($sql); 
 
-	} // _get_info
+			while ($row = Dba::fetch_assoc($db_results)) { 
+		                $row['has_art'] = make_bool($row['has_art']); 
+		                $row['has_thumb'] = make_bool($row['has_thumb']); 
+				parent::add_to_cache('album_extra',$row['album'],$row); 
+			} // while rows
+		} // if extra
+
+		return true;
+
+	} // build_cache
 
 	/**
 	 * _get_extra_info
@@ -114,6 +135,10 @@ class Album {
 	 * do it
 	 */
 	private function _get_extra_info() { 
+
+		if (parent::is_cached('album_extra',$this->id)) { 
+			return parent::get_from_cache('album_extra',$this->id); 
+		} 
 
 		$sql = "SELECT COUNT(DISTINCT(song.artist)) as artist_count,COUNT(song.id) AS song_count,artist.name AS artist_name" . 
 			",artist.prefix AS artist_prefix,album_data.art AS has_art,album_data.thumb AS has_thumb, artist.id AS artist_id ".
@@ -127,6 +152,8 @@ class Album {
 
 		if ($results['has_art']) { $results['has_art'] = 1; } 
 		if ($results['has_thumb']) { $results['has_thumb'] = 1; } 
+
+		parent::add_to_cache('album_extra',$this->id,$results); 
 
 		return $results; 
 
@@ -234,6 +261,12 @@ class Album {
 			$this->year = "N/A";
 		}
 
+		$tags = Tag::get_top_tags('album',$this->id); 
+		$this->tags = $tags; 
+
+		$this->f_tags = Tag::get_display($tags,$this->id,'album'); 	
+		
+
 		// Format the artist name to include the prefix
 		$this->f_artist_name = trim($this->artist_prefix . ' ' . $this->artist_name); 
 
@@ -245,10 +278,12 @@ class Album {
 	 * it trys to pull the resized art instead, if resized art is found then
 	 * it returns an additional resized=true in the array
 	 */
-	public function get_art() { 
+	public function get_art($return_raw=false) { 
 
 		// Attempt to get the resized art first
-		$art = $this->get_resized_db_art(); 
+		if (!$return_raw) { 
+			$art = $this->get_resized_db_art(); 
+		} 
 		
 		if (!is_array($art)) { 
 			$art = $this->get_db_art(); 
@@ -307,7 +342,8 @@ class Album {
 
 				// Add the results we got to the current set
 				$total_results += count($data); 
-				$results = array_merge($results,$data); 
+				// HACK for PHP 5, $data must be cast as array $results = array_merge($results, (array)$data); 
+				$results = array_merge($results,(array)$data); 
 				
 				if ($total_results > $limit AND $limit > 0) { 
 					return $results;
@@ -340,6 +376,14 @@ class Album {
 			$album = $this->full_name; 
 		} 
 
+		if(Config::get('proxy_host') AND Config::get('proxy_port')) {
+			$proxyhost = Config::get('proxy_host');
+			$proxyport = Config::get('proxy_port');
+			$proxyuser = Config::get('proxy_user');
+			$proxypass = Config::get('proxy_pass');
+			debug_event("lastfm", "set Proxy", "5");
+			$lastfm->setProxy($proxyhost, $proxyport, $proxyuser, $proxypass);
+		}
 		$raw_data = $lastfm->search($artist,$album); 
 
 		if (!count($raw_data)) { return array(); } 
@@ -573,6 +617,15 @@ class Album {
 
 		    	// Create the Search Object
 	        	$amazon = new AmazonSearch(Config::get('amazon_developer_key'), $amazon_base);
+				if(Config::get('proxy_host') AND Config::get('proxy_port')) {
+					$proxyhost = Config::get('proxy_host');
+					$proxyport = Config::get('proxy_port');
+					$proxyuser = Config::get('proxy_user');
+					$proxypass = Config::get('proxy_pass');
+					debug_print("amazon", "setProxy", "5");
+					$amazon->setProxy($proxyhost, $proxyport, $proxyuser, $proxypass);
+				}
+
 			$search_results = array();
 
 			/* Setup the needed variables */
@@ -697,7 +750,7 @@ class Album {
 
 		$current_id = $this->id; 
 
-		if ($artist != $this->artist_id AND $artist > 0) { 
+		if ($artist != $this->artist_id AND $artist) { 
 			// Update every song
 			$songs = $this->get_songs(); 
 			foreach ($songs as $song_id) { 
@@ -774,7 +827,7 @@ class Album {
                 $sql = "REPLACE INTO `album_data` SET `art` = '" . Dba::escape($image) . "'," .
                         " `art_mime` = '" . Dba::escape($mime) . "'" .
         	        ", `album_id` = '$this->id'," . 
-			"`thumb` = NULL, `thumb_mime` = NULL"; 
+			"`thumb` = NULL, `thumb_mime`=NULL";
 	        $db_results = Dba::query($sql);
 
 		return true;
@@ -800,6 +853,145 @@ class Album {
 		$db_results = Dba::query($sql); 
 
 	} // save_resized_art
+
+	/**
+	 * get_random_albums
+	 * This returns a random number of albums from the catalogs
+	 * this is used by the index to return some 'potential' albums to play
+	 */
+	public static function get_random_albums($count=6) {
+
+	        $sql = 'SELECT `id` FROM `album` ORDER BY RAND() LIMIT ' . ($count*2);
+	        $db_results = Dba::query($sql);
+
+	        $in_sql = '`album_id` IN (';
+
+	        while ($row = Dba::fetch_assoc($db_results)) {
+	                $in_sql .= "'" . $row['id'] . "',";
+	                $total++;
+	        }
+
+	        if ($total < $count) { return false; }
+
+	        $in_sql = rtrim($in_sql,',') . ')';
+
+	        $sql = "SELECT `album_id`,ISNULL(`art`) AS `no_art` FROM `album_data` WHERE $in_sql";
+	        $db_results = Dba::query($sql);
+	        $results = array();
+
+	        while ($row = Dba::fetch_assoc($db_results)) {
+	                $results[$row['album_id']] = $row['no_art'];
+	        } // end for
+	
+	        asort($results);
+	        $albums = array_keys($results);
+	        $results = array_slice($albums,0,$count);
+	
+	        return $results;
+
+	} // get_random_albums
+
+	/**
+	 * get_image_from_source
+	 * This gets an image for the album art from a source as 
+	 * defined in the passed array. Because we don't know where
+	 * its comming from we are a passed an array that can look like
+	 * ['url']      = URL *** OPTIONAL ***
+	 * ['file']     = FILENAME *** OPTIONAL ***
+	 * ['raw']      = Actual Image data, already captured
+	 */
+	public static function get_image_from_source($data) {
+
+	        // Already have the data, this often comes from id3tags
+	        if (isset($data['raw'])) {
+	                return $data['raw'];
+	        }
+
+	        // If it came from the database
+	        if (isset($data['db'])) {
+	                // Repull it 
+	                $album_id = Dba::escape($data['db']);
+	                $sql = "SELECT * FROM `album_data` WHERE `album_id`='$album_id'";
+	                $db_results = Dba::query($sql);
+	                $row = Dba::fetch_assoc($db_results);
+	                return $row['art'];
+	        } // came from the db
+
+	        // Check to see if it's a URL
+	        if (isset($data['url'])) {
+	                $snoopy = new Snoopy();
+					if(Config::get('proxy_host') AND Config::get('proxy_port')) {
+						$snoopy->proxy_user = Config::get('proxy_host');
+						$snoopy->proxy_port = Config::get('proxy_port');
+						$snoopy->proxy_user = Config::get('proxy_user');
+						$snoopy->proxy_pass = Config::get('proxy_pass');
+					}
+	                $snoopy->fetch($data['url']);
+	                return $snoopy->results;
+	        }
+
+	        // Check to see if it's a FILE
+	        if (isset($data['file'])) {
+	                $handle = fopen($data['file'],'rb');
+	                $image_data = fread($handle,filesize($data['file']));
+	                fclose($handle);
+	                return $image_data;
+        	}
+	
+	        // Check to see if it is embedded in id3 of a song
+	        if (isset($data['song'])) {
+	                // If we find a good one, stop looking
+	                $getID3 = new getID3();
+	                $id3 = $getID3->analyze($data['song']);
+	
+	                if ($id3['format_name'] == "WMA") {
+	                        return $id3['asf']['extended_content_description_object']['content_descriptors']['13']['data'];
+	                }
+	                elseif (isset($id3['id3v2']['APIC'])) {
+	                        // Foreach incase they have more then one 
+	                        foreach ($id3['id3v2']['APIC'] as $image) {
+	                                return $image['data'];
+	                        }
+	                }
+	        } // if data song
+
+	        return false;
+
+	} // get_image_from_source
+
+	/**
+	 * get_art_url
+	 * This returns the art URL for the album
+	 */
+	public static function get_art_url($album_id,$sid=false) { 
+
+		$sid = $sid ? scrub_out($sid) : session_id(); 
+
+		$sql = "SELECT `art_mime`,`thumb_mime` FROM `album_data` WHERE `album_id`='" . Dba::escape($album_id) . "'"; 
+		$db_results = Dba::read($sql); 
+
+		$row = Dba::fetch_assoc($db_results); 
+
+		$mime = $row['thumb_mime'] ? $row['thumb_mime'] : $row['art_mime']; 
+
+		switch ($type) { 
+			case 'image/gif': 
+				$type = 'gif'; 
+			break; 
+			case 'image/png': 
+				$type = 'png'; 
+			break; 
+			default:
+			case 'image/jpeg': 
+				$type = 'jpg'; 
+			break; 
+		} // end type translation
+
+		$name = 'art.' . $type;  
+
+		return Config::get('web_path') . '/image.php?id=' . scrub_out($album_id) . '&auth=' . $sid . '&name=' . $name;
+
+	} // get_art_url
 
 } //end of album class
 

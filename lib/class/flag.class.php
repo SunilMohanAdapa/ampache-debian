@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright 2001 - 2007 Ampache.org
+ Copyright Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
  * Flag Class
  * This handles flagging of songs, albums and artists	
  */
-class Flag {
+class Flag extends database_object {
 
 	public $id; 
 	public $user;
@@ -45,7 +45,7 @@ class Flag {
 	 */
 	public function __construct($flag_id) { 
 
-		$info = $this->_get_info($flag_id);
+		$info = $this->get_info($flag_id,'flagged');
 		
 		foreach ($info as $key=>$value) { 
 			$this->$key = $value; 
@@ -56,21 +56,77 @@ class Flag {
 	} // Constructor
 
 	/**
-	 * _get_info
-	 * Private function for getting the information for this object from the database 
+	 * build_cache
+	 * This takes an array of ids and builds up a nice little cache
+	 * for us
 	 */
-	private function _get_info($flag_id) { 
+	public static function build_cache($ids) { 
 
-		$id = Dba::escape($flag_id);
+		if (!is_array($ids) OR !count($ids)) { return false; } 
 
-		$sql = "SELECT * FROM `flagged` WHERE `id`='$id'";
-		$db_results = Dba::query($sql);
+		$idlist = '(' . implode(',',$ids) . ')'; 
 
-		$results = Dba::fetch_assoc($db_results);
+		$sql = "SELECT * FROM `flagged` WHERE `id` IN $idlist"; 
+		$db_results = Dba::query($sql); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			parent::add_to_cache('flagged',$row['id'],$row); 
+		} 
+
+	} // build_cache
+
+	/**
+	 * build_map_cache
+	 * This takes an array of ids and builds a map cache to avoid some of the object_type calls
+	 * we would normally have to make
+	 */
+	public static function build_map_cache($ids,$type) { 
+
+		if (!is_array($ids) OR !count($ids)) { return false; } 
+
+		$idlist = '(' . implode(',',$ids) . ')'; 
+		$type = Dba::escape($type); 
+
+		$sql = "SELECT * FROM `flagged` " . 
+			"WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id` IN $idlist"; 
+		$db_results = Dba::read($sql); 
 		
-		return $results;
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$results[$row['object_id']] = $row; 
+		} 
+		
+		// Itterate through the passed ids as we need to cache 'nulls' 
+		foreach ($ids as $id) { 
+			parent::add_to_cache('flagged_' . $type,$id,$results[$id]); 
+		} 	
 
-	} // _get_info
+		return true; 	
+
+	} // build_map_cache
+
+	/**
+	 * has_flag
+	 * Static function, tries to check the cache, but falls back on a query
+	 */
+	public static function has_flag($id,$type) { 
+
+		if (parent::is_cached('flagged_' . $type,$id)) { 
+			$data = parent::get_from_cache('flagged_' . $type,$id); 
+			return $data['date']; 
+		} 
+		
+		// Ok we have to query this
+		$type = Dba::escape($type); 
+
+		$sql = "SELECT * FROM `flagged` WHERE `flagged`.`object_type`='$type' AND `flagged`.`object_id`='$id'"; 
+		$db_results = Dba::read($sql); 
+
+		$row = Dba::fetch_assoc($db_results);
+		parent::add_to_cache('flagged_' . $type,$row['object_id'],$row); 
+
+		return $row['date']; 
+
+	} // has_flag
 
 	/**
 	 * get_recent
@@ -95,19 +151,24 @@ class Flag {
 	} // get_recent
 
 	/**
-	 * get_total
-	 * Returns the total number of flagged objects
+	 * get_disabled
+	 * This returns all of the songs that have been disabled, this is
+	 * a form of being flagged
 	 */
-	function get_total() { 
+	public static function get_disabled() { 
 
-		$sql = "SELECT COUNT(id) FROM flagged";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "SELECT `id` FROM `song` WHERE `enabled`='0'"; 
+		$db_results = Dba::query($sql); 
 
-		$results = mysql_fetch_row($db_results);
+		$results = array(); 
+		
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$results[] = $row['id']; 
+		} 
 
-		return $results['0'];
+		return $results; 
 
-	} // get_total
+	} // get_disabled
 
 	/**
 	 * get_all
@@ -191,7 +252,7 @@ class Flag {
 
 		// Re-scan the file
 		$song = new Song($this->object_id); 
-		$info = Catalog::update_song_from_tags($song); 
+		$info = Catalog::update_media_from_tags($song); 
 
 		// Delete the row
 		$sql = "DELETE FROM `flagged` WHERE `id`='$this->id'";

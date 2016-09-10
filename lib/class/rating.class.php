@@ -24,7 +24,7 @@
  * This is an amalgamation(sp?) of code from SoundOfEmotion
  * to track ratings for songs, albums and artists. 
 */
-class Rating {
+class Rating extends database_object {
 
 	/* Provided vars */
 	var $id; 	// The ID of the object who's ratings we want to pull
@@ -58,18 +58,74 @@ class Rating {
 	} // Constructor
 
 	/**
+ 	 * build_cache
+	 * This attempts to get everything we'll need for this page load in a single query, saving
+	 * the connection overhead
+	 * //FIXME: Improve logic so that misses get cached as average
+	 */
+	public static function build_cache($type, $ids) {
+		
+		if (!is_array($ids) OR !count($ids)) { return false; }
+
+		$user_id = Dba::escape($GLOBALS['user']->id); 
+
+		$idlist = '(' . implode(',', $ids) . ')';
+		$sql = "SELECT `rating`, `object_id`,`rating`.`rating` FROM `rating` WHERE `user`='$user_id' AND `object_id` IN $idlist " . 
+			"AND `object_type`='$type'";
+		$db_results = Dba::read($sql);
+
+		while ($row = Dba::fetch_assoc($db_results)) {
+			$user[$row['object_id']] = $row['rating']; 
+		}
+		
+		$sql = "SELECT `rating`,`object_id` FROM `rating` WHERE `object_id` IN $idlist AND `object_type`='$type'"; 
+		$db_results = Dba::read($sql); 
+		
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$rating[$row['object_id']]['rating'] += $row['rating']; 
+			$rating[$row['object_id']]['total']++; 
+  		} 
+
+		foreach ($ids as $id) { 
+			parent::add_to_cache('rating_' . $type . '_user',$id,intval($user[$id])); 
+
+			// Do the bit of math required to store this
+			if (!isset($rating[$id])) { 
+				$entry = array('average'=>'0','percise'=>'0'); 
+			} 
+			else { 
+				$average = round($rating[$id]['rating']/$rating[$id]['total'],1); 
+				$entry = array('average'=>floor($average),'percise'=>$average); 
+			} 
+			
+			parent::add_to_cache('rating_' . $type . '_all',$id,$entry); 
+		} 
+
+		return true; 
+
+	} // build_cache
+
+	/**
 	 * get_user
 	 * Get the user's rating this is based off the currently logged
 	 * in user. It returns the value
 	 */
-	public function get_user($user_id) { 
+	 public function get_user($user_id) {
+		
+		$id = intval($this->id); 
+		
+		if (parent::is_cached('rating_' . $this->type . '_user',$id)) { 
+			return parent::get_from_cache('rating_' . $this->type . '_user',$id); 
+		} 
 
-		$user_id	= Dba::escape($user_id); 
+		$user_id = Dba::escape($user_id); 
 
-		$sql = "SELECT `rating` FROM `rating` WHERE `user`='$user_id' AND `object_id`='$this->id' AND `object_type`='$this->type'";
+		$sql = "SELECT `rating` FROM `rating` WHERE `user`='$user_id' AND `object_id`='$id' AND `object_type`='$this->type'";
 		$db_results = Dba::query($sql);
 		
 		$results = Dba::fetch_assoc($db_results);
+
+		parent::add_to_cache('rating_' . $this->type . '_user',$id,$results['rating']); 
 		
 		return $results['rating'];
 
@@ -84,7 +140,16 @@ class Rating {
 	 */
 	public function get_average() { 
 
-		$sql = "SELECT `rating` FROM `rating` WHERE `object_id`='$this->id' AND `object_type`='$this->type'";
+		$id = intval($this->id); 
+
+		if (parent::is_cached('rating_' . $this->type . '_all',$id)) { 
+			$data = parent::get_from_cache('rating_' . $this->type . '_user',$id); 
+			$this->rating = $data['rating']; 
+			$this->perciserating = $data['percise']; 
+			return true; 
+		} 
+
+		$sql = "SELECT `rating` FROM `rating` WHERE `object_id`='$id' AND `object_type`='$this->type'";
 		$db_results = Dba::query($sql);
 
 		$i = 0;

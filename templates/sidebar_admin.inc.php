@@ -36,25 +36,33 @@
   </li>
   <li><h4><?php echo _('Access Control'); ?></h4>
     <ul class="sb3" id="sb_admin_acl">
-      <li id="sb_admin_acl_AddAccess"><a href="<?php echo $web_path; ?>/admin/access.php?action=show_add_host"><?php echo _('Add ACL'); ?></a></li>
+      <li id="sb_admin_acl_AddAccess"><a href="<?php echo $web_path; ?>/admin/access.php?action=show_add_advanced"><?php echo _('Add ACL'); ?></a></li>
       <li id="sb_admin_acl_ShowAccess"><a href="<?php echo $web_path; ?>/admin/access.php"><?php echo _('Show ACL(s)'); ?></a></li>
     </ul>
   </li>
   <li><h4><?php echo _('Other Tools'); ?></h4>
     <ul class="sb3" id="sb_admin_ot">
       <li id="sb_admin_ot_Debug"><a href="<?php echo $web_path; ?>/admin/system.php?action=show_debug"><?php echo _('Ampache Debug'); ?></a></li>
-      <li id="sb_admin_ot_Duplicates"><a href="<?php echo $web_path; ?>/admin/duplicates.php"><?php echo _('Find Duplicates'); ?></a></li>
-      <li id="sb_admin_ot_Mail"><a href="<?php echo $web_path; ?>/admin/mail.php"><?php echo _('Mail Users'); ?></a></li>
       <li id="sb_admin_ot_ClearNowPlaying"><a href="<?php echo $web_path; ?>/admin/catalog.php?action=clear_now_playing"><?php echo _('Clear Now Playing'); ?></a></li>
-      <li id="sb_admin_ot_ClearCatStats"><a href="<?php echo $web_path; ?>/admin/catalog.php?action=clear_stats"><?php echo _('Clear Stats'); ?></a></li>
       <li id="sb_admin_ot_ExportCatalog"><a href="<?php echo $web_path; ?>/admin/export.php"><?php echo _('Export Catalog'); ?></a></li>
-      <li id="sb_admin_ot_ManageFlagged"><a href="<?php echo $web_path; ?>/admin/flag.php"><?php echo _('Manage Flagged'); ?></a></li>
       <?php if (Config::get('shoutbox')) { ?>
       <li id="sb_admin_ot_ManageShoutbox"><a href="<?php echo $web_path; ?>/admin/shout.php"><?php echo _('Manage Shoutbox'); ?></a></li>
       <?php } ?>
     </ul>
   </li>
-
+<?php if (Access::check('interface','100')) { ?>
+  <li><h4><?php echo _('Server Config'); ?></h4>
+    <ul class="sb3" id="sb_preferences_sc">
+<?php
+	$catagories = Preference::get_catagories();
+        foreach ($catagories as $name) {
+                $f_name = ucfirst($name);
+?>
+      <li id="sb_preferences_sc_<?php echo $f_name; ?>"><a href="<?php echo $web_path; ?>/preferences.php?action=admin&amp;tab=<?php echo $name; ?>"><?php echo _($f_name); ?></a></li>
+<?php } ?>
+    </ul>
+  </li>
+<?php } ?>
 </ul>
 
 

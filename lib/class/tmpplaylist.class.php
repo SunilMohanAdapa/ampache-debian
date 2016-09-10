@@ -25,7 +25,7 @@
  * tmp_playlist and tmp_playlist_data tables, and sneaks out at night to 
  * visit user_vote from time to time
  */
-class tmpPlaylist { 
+class tmpPlaylist extends database_object { 
 
 	/* Variables from the Datbase */
 	public $id;
@@ -140,7 +140,7 @@ class tmpPlaylist {
 
 		while ($results = Dba::fetch_assoc($db_results)) { 
 			$key		= $results['id'];
-			$items[$key] 	= array($results['object_id'],$results['object_type']);
+			$items[$key] 	= array($results['object_type'],$results['object_id']);
 		}
 
 		return $items;
@@ -310,24 +310,6 @@ class tmpPlaylist {
 		return true;
 
 	} // add_object
-
-	/**
-	 * get_vote
-	 * This returns the current count for a specific song on this tmp_playlist
-	 */
-	public function get_vote($object_id) { 
-
-		$object_id = Dba::escape($object_id);
-
-		$sql = "SELECT COUNT(`user`) AS `count` FROM user_vote " . 
-			" WHERE object_id='$object_id'";
-		$db_results = Dba::query($sql);
-
-		$results = Dba::fetch_assoc($db_results);
-
-		return $results['count'];
-
-	} // get_vote
 
 	/**
 	 * vote_active

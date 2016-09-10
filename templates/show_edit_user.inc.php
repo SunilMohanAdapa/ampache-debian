@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -19,13 +19,14 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-$form_string = generate_password('32'); 
-$_SESSION['forms']['adminuser'] = $form_string; 
 ?>
 <?php show_box_top(_('Editing existing User')); ?>
 <?php Error::display('general'); ?>
 <form name="update_user" enctype="multipart/form-data" method="post" action="<?php echo Config::get('web_path') . "/admin/users.php"; ?>">
 <table class="tabledata" cellspacing="0" cellpadding="0">
+<tr>
+	<th colspan="2"><?php echo _('User Properties'); ?></th>
+</tr>
 <tr>
 	<td>
 		<?php echo _('Username'); ?>:
@@ -81,11 +82,38 @@ $_SESSION['forms']['adminuser'] = $form_string;
                 </select>
 	</td>
 </tr>
+<tr>
+	<th colspan="2"><?php echo _('Other Options'); ?></th>
+</tr>
+<tr>
+	<td><?php echo _('Config Preset'); ?></td>
+	<td>
+		<select name="preset">
+			<option value=""></option>
+			<option value="democratic"><?php echo _('Democratic'); ?></option>
+			<option value="localplay"><?php echo _('Localplay'); ?></option>
+			<option value="flash"><?php echo _('Flash'); ?></option>
+			<option value="stream"><?php echo _('Stream'); ?></option>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td><?php echo _('Prevent Preset Override'); ?></td>
+	<td>
+		<input type="checkbox" value="1" name="prevent_override" /><span class="information"> <?php echo _('This Affects all non-Admin accounts'); ?></span>
+	</td>
+</tr>
+<tr>
+	<td><?php echo _('Clear Stats'); ?></td>
+	<td>
+		<input type="checkbox" value="1" name="reset_stats" />
+	</td>
+</tr>
 </table>
 <div class="formValidation">
 		<input type="hidden" name="action" value="update_user" />
 		<input type="submit" value="<?php echo _('Update User'); ?>" />
-		<input type="hidden" name="formkey" value="<?php echo $form_string; ?>" />
+		<?php echo Core::form_register('edit_user'); ?>
 		<input type="hidden" name="user_id" value="<?php echo $client->id; ?>" />
 </div>
 </form>

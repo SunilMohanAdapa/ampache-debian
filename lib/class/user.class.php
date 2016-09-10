@@ -24,7 +24,7 @@
  * and deletion of the user objects from the database by defualt you constrcut it
  * with a user_id from user.id
  */
-class User {
+class User extends database_object {
 
 	//Basic Componets
 	public $id;
@@ -49,8 +49,9 @@ class User {
 		
 		if (!$user_id) { return false; } 
 
-		$this->id		= intval($user_id);
-		$info 			= $this->_get_info();
+		$this->id = intval($user_id);
+
+		$info = $this->_get_info();
 
 		foreach ($info as $key=>$value) { 
 			// Let's not save the password in this object :S
@@ -69,21 +70,26 @@ class User {
 	 */
 	private function _get_info() {
 
+		$id = intval($this->id); 
+
+		if (parent::is_cached('user',$id)) { 
+			return parent::get_from_cache('user',$id); 
+		} 
+
 		// If the ID is -1 then
-		if ($this->id == '-1') { 
+		if ($id == '-1') { 
 			$data['username'] = 'System'; 
 			$data['fullname'] = 'Ampache User'; 
 			$data['access'] = '25'; 
 			return $data; 
 		} 
 
-		// Else...
-		$id = Dba::escape($this->id);
-
-		$sql = "SELECT * FROM `user` WHERE `id`='" . $id . "'";
+		$sql = "SELECT * FROM `user` WHERE `id`='$id'";
 		$db_results = Dba::query($sql);
 
 		$data = Dba::fetch_assoc($db_results);  
+
+		parent::add_to_cache('user',$id,$data); 
 
 		return $data; 
 
@@ -113,7 +119,7 @@ class User {
 		$username = Dba::escape($username); 
 		
 		$sql = "SELECT `id` FROM `user` WHERE `username`='$username'"; 
-		$db_results = Dba::query($sql);
+		$db_results = Dba::read($sql);
 		$results = Dba::fetch_assoc($db_results); 
 		
 		$user = new User($results['id']); 
@@ -121,6 +127,29 @@ class User {
 		return $user; 
 
 	} // get_from_username
+
+	/**
+	 * get_catalogs
+	 * This returns the catalogs as an array of ids that this user is allowed to access
+	 */
+	public function get_catalogs() { 
+
+		if (parent::is_cached('user_catalog',$this->id)) { 
+			return parent::get_from_cache('user_catalog',$this->id); 
+		} 
+
+		$sql = "SELECT * FROM `user_catalog` WHERE `user`='$user_id'"; 
+		$db_results = Dba::read($sql); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$catalogs[] = $row['catalog']; 
+		} 
+
+		parent::add_to_cache('user_catalog',$this->id,$catalogs); 
+
+		return $catalogs;
+
+	} // get_catalogs
 
 	/**
 	 * get_preferences
@@ -315,7 +344,7 @@ class User {
 		$db_results = Dba::query($sql);
 
 		if ($row = Dba::fetch_assoc($db_results)) { 
-			$ip = $row['ip'] ? $row['ip'] : '1'; 
+			$ip = $row['ip'] ? $row['ip'] : NULL; 
 			return $ip;
 		}
 
@@ -354,7 +383,7 @@ class User {
 			Error::add('password',_("Error Passwords don't match")); 
 		} 
 
-		if (Error::$state) { 
+		if (Error::occurred()) { 
 			return false; 
 		} 
 		
@@ -536,7 +565,6 @@ class User {
 		Stats::insert('song',$song_id,$user);
 		Stats::insert('album',$song_info->album,$user);
 		Stats::insert('artist',$song_info->artist,$user);
-		Stats::insert('genre',$song_info->genre,$user);
 
 
 	} // update_stats
@@ -557,17 +585,20 @@ class User {
 			debug_event('User Ip', 'Login from ip adress: ' . $sip,'3');
 		}
 
-		$ip = sprintf("%u",ip2long($sip)); 
+		$ip = Dba::escape(inet_pton($sip)); 
 		$date = time(); 
 		$user = $this->id;
+		$agent = Dba::escape($_SERVER['HTTP_USER_AGENT']); 
 
-		$sql = "INSERT INTO `ip_history` (`ip`,`user`,`date`) VALUES ('$ip','$user','$date')";
+		$sql = "INSERT INTO `ip_history` (`ip`,`user`,`date`,`agent`) VALUES ('$ip','$user','$date','$agent')";
 		$db_results = Dba::query($sql);
 
-		/* Clean up old records */
-		$date = time() - (86400*Config::get('user_ip_cardinality'));
-		$sql = "DELETE FROM `ip_history` WHERE `date` < $date";
-		$db_results = Dba::query($sql);
+		/* Clean up old records... sometimes  */
+		if (rand(1,100) > 60) { 
+			$date = time() - (86400*Config::get('user_ip_cardinality'));
+			$sql = "DELETE FROM `ip_history` WHERE `date` < $date";
+			$db_results = Dba::query($sql);
+		} 
 
 		return true;
 
@@ -584,11 +615,12 @@ class User {
 		$fullname	= Dba::escape($fullname);
 		$email		= Dba::escape($email);
 		$access		= Dba::escape($access);
-	
+		$password_hashed = hash('sha256', $password);
+
 		/* Now Insert this new user */
 		$sql = "INSERT INTO `user` (`username`, `fullname`, `email`, `password`, `access`, `create_date`) VALUES" .
-			" ('$username','$fullname','$email',PASSWORD('$password'),'$access','" . time() ."')";
-		$db_results = Dba::query($sql);
+			" ('$username','$fullname','$email','$password_hashed','$access','" . time() ."')";
+		$db_results = Dba::write($sql);
 		
 		if (!$db_results) { return false; }
 
@@ -608,9 +640,14 @@ class User {
 	 */
 	public function update_password($new_password) { 
 
+		$new_password = hash('sha256',$new_password); 
+
 		$new_password = Dba::escape($new_password);
-		$sql = "UPDATE `user` SET `password`=PASSWORD('$new_password') WHERE `id`='$this->id'";
-		$db_results = Dba::query($sql);
+		$sql = "UPDATE `user` SET `password`='$new_password' WHERE `id`='$this->id'";
+		$db_results = Dba::write($sql);
+	
+		// Clear this (temp fix)
+		if ($db_results) { unset($_SESSION['userdata']['password']); } 
 
 	} // update_password 
 
@@ -636,7 +673,7 @@ class User {
 		/* Calculate their total Bandwidth Useage */
 		$sql = "SELECT `song`.`size` FROM `song` LEFT JOIN `object_count` ON `song`.`id`=`object_count`.`object_id` " . 
 			"WHERE `object_count`.`user`='$this->id' AND `object_count`.`object_type`='song'";
-		$db_results = Dba::query($sql);
+		$db_results = Dba::read($sql);
 
 		while ($r = Dba::fetch_assoc($db_results)) { 
 			$total = $total + $r['size'];
@@ -662,7 +699,7 @@ class User {
 		
 		/* Get Users Last ip */
 		$data = $this->get_ip_history(1);
-		$this->ip_history = long2ip($data['0']['ip']);	
+		$this->ip_history = inet_ntop($data['0']['ip']);	
 
 	} // format_user
 
@@ -728,6 +765,34 @@ class User {
 		return $results; 
 
 	 } // format_recommendations
+
+	/**
+	 * access_name_to_level
+	 * This takes the access name for the user and returns the level
+	 */
+	public static function access_name_to_level($level) { 
+
+		switch ($level) { 
+			case 'admin': 
+				return '100'; 
+			break; 
+			case 'user': 
+				return '25'; 
+			break; 
+			case 'manager': 
+				return '75';
+			break; 
+			case 'guest': 
+				return '5'; 
+			break;
+			default:
+				return '0'; 
+			break; 
+		} 
+
+		return false;
+
+	} // access_name_to_level
 
 	/**
  	 * fix_preferences
@@ -814,17 +879,6 @@ class User {
                 }
 
 	} // fix_preferences
-
-	/*!
-		@function delete_stats
-		@discussion deletes the stats for this user 
-	*/
-	function delete_stats() { 
-
-		$sql = "DELETE FROM object_count WHERE user='" . $this->id . "'";
-		$db_results = mysql_query($sql, dbh());
-
-	} // delete_stats
 
 	/**
 	 * delete
@@ -952,27 +1006,6 @@ class User {
 
 	} // get_recently_played
 
-	/**
- 	 * get_recent
-	 * This returns users by thier last login date
-	 */
-	function get_recent($count=0) { 
-
-		if ($count) { $limit_clause = " LIMIT $count"; } 
-	
-		$results = array();		
-
-		$sql = "SELECT username FROM user ORDER BY last_seen $limit_clause";
-		$db_results = mysql_query($sql, dbh());
-
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$results[] = $r['username'];
-		} 
-
-		return $results;
-
-	} // get_recent
-
         /**
          * get_ip_history 
          * This returns the ip_history from the
@@ -981,27 +1014,24 @@ class User {
         public function get_ip_history($count='',$distinct='') { 
 
 		$username 	= Dba::escape($this->id);
-
-		if ($count) { 
-			$limit_sql = "LIMIT " . intval($count);
-		}
-		else { 
-			$limit_sql = "LIMIT " . intval(Config::get('user_ip_cardinality'));
-		} 
-		if ($distinct) { 
-			$group_sql = "GROUP BY `ip`";
-		}
+		$count		= $count ? intval($count) : intval(Config::get('user_ip_cardinality')); 
+		
+		// Make sure it's something 
+		if ($count < 1) { $count = '1'; } 
+		$limit_sql = "LIMIT " . intval($count);
+		
+		if ($distinct) { $group_sql = "GROUP BY `ip`"; }
                         
                 /* Select ip history */
                 $sql = "SELECT `ip`,`date` FROM `ip_history`" .
                         " WHERE `user`='$username'" .
                         " $group_sql ORDER BY `date` DESC $limit_sql";
-                $db_results = Dba::query($sql);
+                $db_results = Dba::read($sql);
 
                 $results = array();
          
-                while ($r = Dba::fetch_assoc($db_results)) {
-                        $results[] = $r;
+                while ($row = Dba::fetch_assoc($db_results)) {
+                        $results[] = $row;
                 }
         
                 return $results;
@@ -1012,7 +1042,7 @@ class User {
 		@function activate_user
 		@activates the user from public_registration
 	*/
-	function activate_user($username) {
+	public function activate_user($username) {
 	
 		$username = Dba::escape($username); 
 	

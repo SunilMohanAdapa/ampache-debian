@@ -32,6 +32,7 @@
 		  </li>
 		<?php 
 			$playlists = Playlist::get_users($GLOBALS['user']->id); 
+			Playlist::build_cache($playlists); 
 			foreach ($playlists as $playlist_id) { 
 				$playlist = new Playlist($playlist_id);
 				$playlist->format(); 
@@ -65,7 +66,7 @@
 	    <?php echo Ajax::text('?action=basket&type=dynamic&random_type=album',_('Related Album'),'rb_add_related_album'); ?>
 	   </li>
 	   <li>
-	    <?php echo Ajax::text('?action=basket&type=dynamic&random_type=genre',_('Related Genre'),'rb_add_related_genre'); ?>
+	    <?php echo Ajax::text('?action=basket&type=dynamic&random_type=tag',_('Related Tag'),'rb_add_related_tag'); ?>
 	   </li>
 	  </ul>
 	</li>
@@ -73,8 +74,13 @@
 <?php if (Config::get('play_type') == 'localplay') { require_once Config::get('prefix') . '/templates/show_localplay_control.inc.php'; } ?> 
 <ul id="rb_current_playlist">
 <?php 
-	//FIXME :: this feels kludgy
-	$objects = $GLOBALS['user']->playlist->get_items(); 
+
+	$objects = array(); 
+
+	//FIXME :: this is kludgy
+	if (NO_SONGS != '1') { 	
+		$objects = $GLOBALS['user']->playlist->get_items(); 
+	} 
 
 	// Limit the number of objects we show here
 	if (count($objects) > 100) { 
@@ -82,14 +88,16 @@
 		$objects = array_slice($objects,0,100); 
 	} 
 
+	$normal_array = array('radio','song','video','random'); 
+
 	foreach ($objects as $uid=>$object_data) { 
-		if ($object_data['1'] == 'radio' || $object_data['1'] == 'song') { 
-			$object = new $object_data['1']($object_data['0']); 
+		$type = array_shift($object_data);
+		if (in_array($type,$normal_array)) { 
+			$object = new $type(array_shift($object_data)); 
 			$object->format(); 
 		} 
-		else { 
-			$object = new Random(); 
-			$object->f_link = Random::get_type_name($object_data['1']); 
+		if ($type == 'random') { 
+			$object->f_link = Random::get_type_name($type); 	
 		} 
 ?>
 <li class="<?php echo flip_class(); ?>" >

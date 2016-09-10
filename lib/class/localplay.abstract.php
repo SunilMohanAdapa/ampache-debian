@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -59,17 +59,9 @@ abstract class localplay_controller {
 			return $object; 		
 		} 
 
-		// This can get a little complicated
-		switch ($object_type) { 
-			case 'random': 
+		$class = get_class($object); 
 		
-			break; 
-			case 'radio': 
-			case 'song': 
-			default: 
-				$url = $object->get_url(Stream::get_session()); 	
-			break;
-		} // end switch on objecttype
+		$url = call_user_func(array($class,'play_url'),$object->id); 
 
 		return $url;
 
@@ -88,34 +80,26 @@ abstract class localplay_controller {
 	/**
 	 * parse_url 
 	 * This takes an Ampache URL and then returns the 'primary' part of it
-	 * So that it's easier for localplay module sto return valid song information
+	 * So that it's easier for localplay modules to return valid song information
 	 */
 	public function parse_url($url) { 
 
 		// Define possible 'primary' keys
-		$primary_array = array('song','demo_id');  
+		$primary_array = array('oid','demo_id','random');  
+		$data = array(); 
 
-                // Delete everything before the first ? 
-                $file = preg_replace("/.*\?(.+)/",'$1',$url);
+		$variables = parse_url($url,PHP_URL_QUERY); 
+		parse_str($variables,$data); 
 
-                // Split on & symbol
-                $data = explode("&",$file);
-
-                foreach ($data as $pair) {  
-                        $elements = explode("=",$pair); 
-	                $key = $elements['0'];
-                        $value = $elements['1'];
-	                $results[$key] = $value;
-
-			if (in_array($key,$primary_array)) { 
-				$primary = $key; 
-			} 
+		foreach ($primary_array as $pkey) { 
+			if ($data[$pkey]) { 
+				$data['primary_key'] = $pkey; 
+				return $data; 
+			}
 
         	} // end foreach
 
-		$results['primary_key'] = $primary;
-
-		return $results; 
+		return $data;
 
 	} // parse_url 
 

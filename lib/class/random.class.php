@@ -26,15 +26,20 @@
  * by this class, there isn't a table for this class so most of it's functions
  * are static
  */
-class Random {
+class Random implements media {
+
+	public $type;
+	public $id; 
+
 
 	/**
 	 * Constructor
 	 * nothing to see here, move along
 	 */
-	public function __construct() { 
+	public function __construct($id) { 
 
-		// Rien a faire
+		$this->type = Random::get_id_type($id); 
+		$this->id = intval($id); 
 
 	} // constructor
 
@@ -91,31 +96,15 @@ class Random {
 	 * This generates a random play url based on the passed type
 	 * and returns it
 	 */
-	public static function play_url($type) { 
+	public static function play_url($id,$sid='',$force_http='') { 
 
-		if (!$type = self::validate_type($type)) { 
+		if (!$type = self::get_id_type($id)) { 
 			return false; 
 		} 
 	
-		if (Config::get('require_session')) { 
-			$session_string = '&sid=' . Stream::get_session();
-		} 
-
-                $web_path = Config::get('web_path');
-
-                if (Config::get('force_http_play') OR !empty($force_http)) {
-                        $port = Config::get('http_port');
-                        if (preg_match("/:\d+/",$web_path)) {
-                                $web_path = str_replace("https://", "http://",$web_path);
-                        }
-                        else {
-                                $web_path = str_replace("https://", "http://",$web_path);
-                        }
-                }
-		
 		$uid = $GLOBALS['user']->id; 
 	
-		$url = $web_path . "/play/index.php?random=1&type=$type&uid=$uid$session_string";
+		$url = Stream::get_base_url() . "random=1&type=$type&uid=$uid";
 
 		return $url; 
 
@@ -436,6 +425,56 @@ class Random {
 	} // get_type_name
 
 	/**
+	 * get_type_id
+	 * This takes random type and returns the ID
+	 * MOTHER OF PEARL THIS MAKES BABY JESUS CRY
+	 * HACK HACK HACK HACK HACK HACK HACK HACK
+	 */
+	public static function get_type_id($type) { 
+
+		switch ($type) { 
+			case 'album': 
+				return '1'; 
+			break; 
+			case 'artist': 
+				return '2'; 
+			break; 
+			case 'tag': 
+				return '3'; 
+			break; 
+			default: 
+				return '4'; 
+			break; 
+		} 
+
+	} // get_type_id
+
+	/**
+	 * get_id_name
+	 * This takes an ID and returns the 'name' of the random dealie
+	 * HACK HACK HACK HACK HACK HACK HACK
+	 * Can you tell I don't like this code? 
+	 */
+	public static function get_id_type($id) { 
+
+		switch ($id) { 
+			case '1': 
+				return 'album';
+			break;
+			case '2': 
+				return 'artist';
+			break; 
+			case '3': 
+				return 'tag';
+			break; 
+			default: 
+				return 'default'; 
+			break; 
+		} // end switch 
+
+	} // get_id_name
+
+	/**
 	 * validiate_type
 	 * this validates the random type
 	 */
@@ -457,6 +496,11 @@ class Random {
 		return $type; 
 
 	} // validate_type
+
+	public function native_stream() { } 
+	public function stream_cmd() { } 
+	public function has_flag() { }
+	public function format() { }
 
 } //end of random class
 

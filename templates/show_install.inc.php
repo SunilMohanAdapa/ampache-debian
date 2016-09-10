@@ -25,6 +25,7 @@ if (INSTALL != '1') { exit; }
 <head>
 <title>Ampache :: For The Love Of Music - Install</title>
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
+<meta http-equiv="Content-Type" content="text/html; Charset=<?php echo $charset; ?>" />
 </head>
 <body>
 <script src="lib/javascript-base.js" language="javascript" type="text/javascript"></script>
@@ -35,7 +36,7 @@ if (INSTALL != '1') { exit; }
 <div id="text-box">
 
 	<div class="notify">
-		<b><?php echo _('Requirements'); ?></b>
+		<h3><?php echo _('Requirements'); ?></h3>
 		<p>
 		<?php echo _("This Page handles the installation of the Ampache database and the creation of the ampache.cfg.php file. Before you continue please make sure that you have the following pre-requisites"); ?>
 		</p>
@@ -49,7 +50,7 @@ if (INSTALL != '1') { exit; }
 	</div>
 	
 	<div class="content">
-		<b><?php echo _("Step 1 - Creating and Inserting the Ampache Database"); ?></b><br />
+		<strong><?php echo _("Step 1 - Creating and Inserting the Ampache Database"); ?></strong><br />
 		<dl>
 			<dd><?php echo _("This step creates and inserts the Ampache database, as such please provide a mysql account with database creation rights. This step may take a while depending upon the speed of your computer"); ?></dd>
 		</dl>
@@ -107,7 +108,7 @@ if (INSTALL != '1') { exit; }
 		
 	</div>
 	<div id="bottom">
-    	<p><b>Ampache Installation.</b><br />
+    	<p><strong>Ampache Installation.</strong><br />
     	Pour l'Amour de la Musique</p>
    </div>
 </div>

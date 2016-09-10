@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 <table class="inline-edit" cellpadding="3" cellspacing="0">
 <tr>
 <td>
-	<input type="textbox" name="name" value="<?php echo scrub_out($album->full_name); ?>" />
+	<input type="text" name="name" value="<?php echo scrub_out($album->full_name); ?>" />
 </td>
 <td>
 	<?php 
@@ -37,7 +37,10 @@
 	?>
 </td>
 <td>
-	<input type="textbox" name="year" value="<?php echo scrub_out($album->year); ?>" /> 
+	<input type="text" name="year" value="<?php echo scrub_out($album->year); ?>" /> 
+</td>
+<td>
+	<input type="text" name="disk" value="<?php echo scrub_out($album->disk); ?>" />
 </td>
 <td>
 	<input type="hidden" name="id" value="<?php echo $album->id; ?>" />

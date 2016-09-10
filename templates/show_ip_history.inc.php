@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -20,14 +20,22 @@
 
 */
 ?>
-<?php show_box_top($working_user->fullname . ' ' . _('IP History')); ?>
-<div>
-<?php if (isset($_REQUEST['all'])){ ?>
-	<a class="button" href="<?php echo Config::get('web_path')?>/admin/users.php?action=show_ip_history&user_id=<?php echo $working_user->id?>"><?php echo _('Show Unique'); ?>...</a>
+<?php show_box_top(sprintf(_('%s IP History'), $working_user->fullname)); ?>
+<div id="information_actions">
+<ul>
+<li>
+<?php if (isset($_REQUEST['all'])){ ?>	
+	<a href="<?php echo Config::get('web_path')?>/admin/users.php?action=show_ip_history&user_id=<?php echo $working_user->id?>"><?php echo get_user_icon('disable'); ?></a>
+	<?php echo _('Show Unique'); ?>
 <?php }else{ ?>
-	<a class="button" href="<?php echo Config::get('web_path')?>/admin/users.php?action=show_ip_history&user_id=<?php echo $working_user->id?>&all"><?php echo _('Show All'); ?>...</a>
+	<a href="<?php echo Config::get('web_path')?>/admin/users.php?action=show_ip_history&user_id=<?php echo $working_user->id?>&all"><?php echo get_user_icon('add'); ?></a>
+	<?php echo _('Show All'); ?>
 <?php }?>
+</li>
+</ul>
 </div>
+<br />
+<br />
 <table class="tabledata" cellpadding="0" cellspacing="0">
 <colgroup>
   <col id="col_date" />
@@ -43,7 +51,7 @@
 		<?php echo date("d/m/Y H\hi",$data['date']); ?>
 	</td>
 	<td class="cel_ipaddress">
-		<?php echo long2ip($data['ip']); ?>
+		<?php echo inet_ntop($data['ip']); ?>
 	</td>
 </tr>
 <?php } ?>

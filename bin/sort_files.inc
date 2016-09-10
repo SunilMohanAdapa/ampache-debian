@@ -43,7 +43,6 @@ $prefix = realpath($path . '/../');
 require_once $prefix . '/lib/init.php';
 
 ob_end_clean(); 
-echo "- Sort Files -\n";
 
 /* First Clean the catalog to we don't try to write anything we shouldn't */
 
@@ -101,10 +100,10 @@ function sort_find_home($song,$sort_pattern,$base) {
 	/* Create the filename that this file should have */
 	$album 	= sort_clean_name($song->f_album_full);
 	$artist = sort_clean_name($song->f_artist_full);
-	$genre 	= sort_clean_name($song->f_genre);
 	$track	= sort_clean_name($song->track);
 	$title	= sort_clean_name($song->title);
 	$year	= sort_clean_name($song->year);
+	$comment = sort_clean_name($song->comment); 
 
 	/* Do the various check */
 	$album_object = new Album($song->album);
@@ -126,8 +125,8 @@ function sort_find_home($song,$sort_pattern,$base) {
 	}
 
 	/* Replace everything we can find */
-	$replace_array = array('%a','%A','%t','%T','%y','%g','%C');
-	$content_array = array($artist,$album,$title,$track,$year,$genre,'C');
+	$replace_array = array('%a','%A','%t','%T','%y','%c');
+	$content_array = array($artist,$album,$title,$track,$year,$comment);
 	$sort_pattern = str_replace($replace_array,$content_array,$sort_pattern);
 
 	/* Remove non A-Z0-9 chars */
@@ -160,9 +159,6 @@ function sort_element_name($key) {
 		break;
 		case '%y':
 			return 'year';
-		break;
-		case '%g':
-			return 'genre';
 		break;
 		default: 
 		break;
@@ -258,13 +254,13 @@ function sort_move_file($song,$fullname) {
 		debug_event('copy','Copied ' . $song->file . ' to ' . $fullname,'5'); 
 		
 		/* Look for the folder art and copy that as well */
-		if (!Config::get('album_art_preferred_filename')) { 
+		if (!Config::get('album_art_preferred_filename') OR strstr(Config::get('album_art_preferred_filename'),"%")) { 
 			$folder_art 	= $directory . '/folder.jpg';
 			$old_art 	= $old_dir . '/folder.jpg';
 		}
 		else { 
-			$folder_art 	= $directory . "/" . Config::get('album_art_preferred_filename'); 
-			$old_art 	= $old_dir . "/" . Config::get('album_art_preferred_filename');
+			$folder_art 	= $directory . "/" . sort_clean_name(Config::get('album_art_preferred_filename')); 
+			$old_art 	= $old_dir . "/" . sort_clean_name(Config::get('album_art_preferred_filename')); 
 		}
 
 		debug_event('copy_art','Copied ' . $old_art . ' to ' . $folder_art,'5');

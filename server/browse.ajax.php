@@ -29,6 +29,8 @@ switch ($_REQUEST['action']) {
 
 		$object_ids = array(); 
 
+		Browse::set_type($_REQUEST['type']); 
+
 		// Check 'value' with isset because it can null
 		//(user type a "start with" word and deletes it)
 		if ($_REQUEST['key'] && (isset($_REQUEST['multi_alpha_filter']) OR isset($_REQUEST['value']))) {
@@ -41,28 +43,29 @@ switch ($_REQUEST['action']) {
 			Browse::set_sort($_REQUEST['sort']);
 		}
 
-		// Refresh the browse div with our new filter options if we're not static
-		if (!Browse::$static_content) { 
-	                $object_ids = Browse::get_objects();
-		} 
-
 		ob_start();
-                Browse::show_objects($object_ids);
-                $results['browse_content'] = ob_get_contents();
-                ob_end_clean();
+                Browse::show_objects(false);
+                $results['browse_content'] = ob_get_clean();
 	break;
 	case 'set_sort':
+
+		Browse::set_type($_REQUEST['type']); 
+
 		if ($_REQUEST['sort']) { 
 			Browse::set_sort($_REQUEST['sort']); 
 		} 
 
-		// Refresh the browse div with our new hotness
-		$object_ids = Browse::get_saved(); 
-
 		ob_start(); 
-		Browse::show_objects($object_ids); 
-		$results['browse_content'] = ob_get_contents(); 
-		ob_end_clean(); 
+		Browse::show_objects(false); 
+		$results['browse_content'] = ob_get_clean(); 
+	break; 
+	case 'toggle_tag': 
+		$type = $_SESSION['tagcloud_type'] ? $_SESSION['tagcloud_type'] : 'song';
+		Browse::set_type($type); 
+
+		
+
+
 	break; 
 	case 'delete_object': 
 		switch ($_REQUEST['type']) { 
@@ -88,6 +91,15 @@ switch ($_REQUEST['action']) {
 
 		$results[$key] = ''; 
 
+	break; 
+	case 'page': 
+		Browse::set_type($_REQUEST['type']); 
+		Browse::set_start($_REQUEST['start']); 
+
+		ob_start(); 
+		Browse::show_objects(); 
+		$results['browse_content'] = ob_get_clean(); 	
+	
 	break; 
 	default: 
 		$results['rfc3514'] = '0x1'; 

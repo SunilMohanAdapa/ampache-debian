@@ -33,19 +33,19 @@ switch ($_REQUEST['action']) {
 	case 'update_user':
 	        if (Config::get('demo_mode')) { break; }
 		
-		if (!$_SESSION['forms']['adminuser'] || $_SESSION['forms']['adminuser'] != $_POST['formkey']) { 
+		if (!Core::form_verify('edit_user','post')) { 
 			access_denied(); 
 			exit; 
 		} 
 
 		/* Clean up the variables */
-		$user_id	= scrub_in($_REQUEST['user_id']);
-		$username 	= scrub_in($_REQUEST['username']);
-		$fullname 	= scrub_in($_REQUEST['fullname']);
-		$email 		= scrub_in($_REQUEST['email']);
-		$access 	= scrub_in($_REQUEST['access']);
-		$pass1 		= scrub_in($_REQUEST['password_1']);
-		$pass2 		= scrub_in($_REQUEST['password_2']);
+		$user_id	= scrub_in($_POST['user_id']);
+		$username 	= scrub_in($_POST['username']);
+		$fullname 	= scrub_in($_POST['fullname']);
+		$email 		= scrub_in($_POST['email']);
+		$access 	= scrub_in($_POST['access']);
+		$pass1 		= scrub_in($_POST['password_1']);
+		$pass2 		= scrub_in($_POST['password_2']);
 	
 		/* Setup the temp user */	
 	    	$client = new User($user_id);
@@ -59,7 +59,7 @@ switch ($_REQUEST['action']) {
 		}
 
 		/* If we've got an error then break! */
-		if (Error::$state) { 
+		if (Error::occurred()) { 
 			$_REQUEST['action'] = 'show_edit';
 			break;
 		} // if we've had an oops!
@@ -85,17 +85,17 @@ switch ($_REQUEST['action']) {
 	case 'add_user':
         	if (Config::get('demo_mode')) { break; }
 
-                if (!$_SESSION['forms']['adminuser'] || $_SESSION['forms']['adminuser'] != $_POST['formkey']) { 
+                if (!Core::form_verify('add_user','post')) { 
                         access_denied();
                         exit;
                 } 
 
-		$username	= scrub_in($_REQUEST['username']);
-		$fullname	= scrub_in($_REQUEST['fullname']);
-		$email		= scrub_in($_REQUEST['email']);
-		$access		= scrub_in($_REQUEST['access']);
-		$pass1		= scrub_in($_REQUEST['password_1']);
-		$pass2		= scrub_in($_REQUEST['password_2']);
+		$username	= scrub_in($_POST['username']);
+		$fullname	= scrub_in($_POST['fullname']);
+		$email		= scrub_in($_POST['email']);
+		$access		= scrub_in($_POST['access']);
+		$pass1		= scrub_in($_POST['password_1']);
+		$pass2		= scrub_in($_POST['password_2']);
 
 		if ($pass1 !== $pass2 || !strlen($pass1)) { 
 			Error::add('password',_("Error Passwords don't match"));
@@ -110,7 +110,7 @@ switch ($_REQUEST['action']) {
 			Error::add('username',_('Error Username already exists'));
 		} 
 
-		if (!Error::$state) { 
+		if (!Error::occurred()) { 
 			/* Attempt to create the user */
 			$user_id = User::create($username, $fullname, $email, $pass1, $access);
 			if (!$user_id) { 
@@ -131,27 +131,17 @@ switch ($_REQUEST['action']) {
 	case 'enable':
 		$client = new User($_REQUEST['user_id']); 
 		$client->enable(); 
-		show_confirmation(_('User Enabled'),'','admin/users.php'); 
+		show_confirmation(_('User Enabled'),$client->fullname . ' (' . $client->username . ')','admin/users.php'); 
 	break;
 	case 'disable':
 		$client = new User($_REQUEST['user_id']); 
 		if ($client->disable()) { 
-			show_confirmation(_('User Disabled'),'','admin/users.php'); 
+			show_confirmation(_('User Disabled'),$client->fullname . ' (' . $client->username . ')','admin/users.php'); 
 		} 
 		else { 
 			show_confirmation(_('Error'),_('Unable to Disabled last Administrator'),'admin/users.php'); 
 		} 
 	break;
-
-} // End Work Switch
-
-
-/**
- * This is the second half, it handles displaying anything
- * the first half (work half) potentially has 'adjusted' the user
- * input
- */
-switch ($_REQUEST['action']) { 
 	case 'show_edit':
         	if (Config::get('demo_mode')) { break; }
 		$client	= new User($_REQUEST['user_id']); 
@@ -179,11 +169,11 @@ switch ($_REQUEST['action']) {
 		/* get the user and their history */
 		$working_user	= new User($_REQUEST['user_id']); 
 		
-		if (!isset ($_REQUEST['all'])){
-			$history	= $working_user->get_ip_history('',1);
+		if (!isset($_REQUEST['all'])){
+			$history	= $working_user->get_ip_history(0,1);
 		} 
 		else {
-			$history	= $working_user->get_ip_history('','');
+			$history	= $working_user->get_ip_history();
 		}
 		require Config::get('prefix') . '/templates/show_ip_history.inc.php';
 	break;

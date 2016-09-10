@@ -199,7 +199,7 @@ class AmpacheHttpq extends localplay_controller {
 		$name	= Dba::escape($data['name']); 
 		$pass	= Dba::escape($data['password']); 
 		
-		$sql = "UPDATE `localplay_httpq` SET `host`='$host', `port`='$port', `name`='$name', `password`='$password' WHERE `id`='$uid'"; 
+		$sql = "UPDATE `localplay_httpq` SET `host`='$host', `port`='$port', `name`='$name', `password`='$pass' WHERE `id`='$uid'"; 
 		$db_results = Dba::query($sql); 
 
 		return true; 
@@ -312,7 +312,7 @@ class AmpacheHttpq extends localplay_controller {
 	 * clear_playlist
 	 * This deletes the entire Httpq playlist... nuff said
 	 */
-	function clear_playlist() { 
+	public function clear_playlist() { 
 
 		if (is_null($this->_httpq->clear())) { return false; }
 
@@ -329,7 +329,6 @@ class AmpacheHttpq extends localplay_controller {
 	 * take any arguments
 	 */
 	public function play() { 
-
 		/* A play when it's already playing causes a track restart
 		 * which we don't want to doublecheck its state
 		 */
@@ -358,7 +357,7 @@ class AmpacheHttpq extends localplay_controller {
 	 * skip
 	 * This tells HttpQ to skip to the specified song
 	 */
-	function skip($song) { 
+	public function skip($song) { 
 
 		if (is_null($this->_httpq->skip($song))) { return false; }
 		return true; 
@@ -368,7 +367,7 @@ class AmpacheHttpq extends localplay_controller {
 	/**
 	 * This tells Httpq to increase the volume by WinAmps default amount
 	 */
-	function volume_up() { 
+	public function volume_up() { 
 
 		if (is_null($this->_httpq->volume_up())) { return false; } 
 		return true;
@@ -378,7 +377,7 @@ class AmpacheHttpq extends localplay_controller {
 	/**
 	 * This tells HttpQ to decrease the volume by Winamps default amount
 	 */
-	function volume_down() { 
+	public function volume_down() { 
 
 		if (is_null($this->_httpq->volume_down())) { return false; }
 		return true;
@@ -387,9 +386,9 @@ class AmpacheHttpq extends localplay_controller {
 
 	/**
 	 * next
-	 * This just tells MPD to skip to the next song 
+	 * This just tells HttpQ to skip to the next song 
 	 */
-	function next() { 
+	public function next() { 
 
 		if (is_null($this->_httpq->next())) { return false; } 
 
@@ -399,9 +398,9 @@ class AmpacheHttpq extends localplay_controller {
 
 	/**
 	 * prev
-	 * This just tells MPD to skip to the prev song
+	 * This just tells HttpQ to skip to the prev song
 	 */
-	function prev() { 
+	public function prev() { 
 
 		if (is_null($this->_httpq->prev())) { return false; } 
 
@@ -411,9 +410,9 @@ class AmpacheHttpq extends localplay_controller {
 
 	/**
 	 * pause
-	 * This tells MPD to pause the current song 
+	 * This tells HttpQ to pause the current song 
 	 */
-	function pause() { 
+	public function pause() { 
 		
 		if (is_null($this->_httpq->pause())) { return false; } 
 		return true;
@@ -425,7 +424,7 @@ class AmpacheHttpq extends localplay_controller {
         * This tells HttpQ to set the volume to the specified amount this
 	* is 0-100
         */
-       function volume($volume) {
+       public function volume($volume) {
 
                if (is_null($this->_httpq->set_volume($volume))) { return false; }
                return true;
@@ -464,7 +463,7 @@ class AmpacheHttpq extends localplay_controller {
 
 		/* Get the Current Playlist */
 		$list = $this->_httpq->get_tracks();
-		
+
 		if (!$list) { return array(); } 
 	
 		$songs = explode("::",$list); 
@@ -478,8 +477,8 @@ class AmpacheHttpq extends localplay_controller {
 
 			$url_data = $this->parse_url($entry); 
                         switch ($url_data['primary_key']) {
-                                case 'song':
-                                        $song = new Song($url_data['song']);
+                                case 'oid':
+                                        $song = new Song($url_data['oid']);
                                         $song->format();
                                         $data['name'] = $song->f_title . ' - ' . $song->f_album . ' - ' . $song->f_artist;
                                         $data['link']   = $song->f_link;
@@ -489,26 +488,37 @@ class AmpacheHttpq extends localplay_controller {
                                         $data['name'] = _('Democratic') . ' - ' . $democratic->name;
                                         $data['link']   = '';
                                 break;
+				case 'random': 
+					$data['name'] = _('Random') . ' - ' . scrub_out(ucfirst($url_data['type'])); 
+					$data['link'] = ''; 
+				break; 
                                 default:
-
                                         /* If we don't know it, look up by filename */
-                                        $filename = Dba::escape(basename($entry));
-                                        $sql = "SELECT `id` FROM `song` WHERE `file` LIKE '%$filename'";
-                                        $db_results = Dba::query($sql);
-                                        if ($r = Dba::fetch_assoc($db_results)) {
-                                                $song = new Song($r['id']);
-                                                $song->format();
-                                                $data['name'] = $song->f_title . ' - ' . $song->f_album . ' - ' . $song->f_artist;
-                                                $data['link'] = $song->f_link;
-                                        }
-                                        else {
-                                                $data['name'] = _('Unknown');
-                                                $data['link']   = '';
-                                        }
+                                        $filename = Dba::escape($entry['file']);
+                                        $sql = "SELECT `id`,'song' AS `type` FROM `song` WHERE `file` LIKE '%$filename' " .
+                                                "UNION ALL " .
+                                                "SELECT `id`,'radio' AS `type` FROM `live_stream` WHERE `url`='$filename' ";
+
+                                        $db_results = Dba::read($sql);
+                                        if ($row = Dba::fetch_assoc($db_results)) {
+                                                $media = new $row['type']($row['id']);
+                                                $media->format();
+                                                switch ($row['type']) {
+                                                        case 'song':
+                                                                $data['name'] = $media->f_title . ' - ' . $media->f_album . ' - ' . $media->f_artist;
+                                                                $data['link'] = $media->f_link;
+                                                        break;
+                                                        case 'radio':
+                                                                $frequency = $media->frequency ? '[' . $media->frequency . ']' : '';
+                                                                $site_url = $media->site_url ? '(' . $media->site_url . ')' : '';
+                                                                $data['name'] = "$media->name $frequency $site_url";
+                                                                $data['link'] = $media->site_url; 
+                                                        break; 
+                                                } // end switch on type 
+                                        } // end if results
 
                                 break;
                         } // end switch on primary key type
-
 
 			$data['track']	= $key+1;
 
@@ -534,9 +544,8 @@ class AmpacheHttpq extends localplay_controller {
 		$array['random']	= $this->_httpq->get_random();
 		$array['track']		= $this->_httpq->get_now_playing();
 
-		preg_match("/song=(\d+)\&/",$array['track'],$matches);
-		$song_id = $matches['1'];
-		$song = new Song($song_id);
+		$url_data = $this->parse_url($array['track']); 
+		$song = new Song($url_data['oid']);
 		$array['track_title'] 	= $song->title;
 		$array['track_artist'] 	= $song->get_artist_name();
 		$array['track_album']	= $song->get_album_name();

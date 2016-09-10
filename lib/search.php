@@ -72,7 +72,6 @@ function run_search($data) {
 	switch($_REQUEST['object_type']) { 
 		case 'artist':
 		case 'album':
-		case 'genre':
 		case 'song':
 			$function_name = 'search_' . $_REQUEST['object_type'];
 			if (function_exists($function_name)) { 
@@ -86,7 +85,7 @@ function run_search($data) {
 		break;
 	} // end switch 
 
-	return false;
+	return array();
 
 } // run_search
 
@@ -125,20 +124,14 @@ function search_song($data,$operator,$method,$limit) {
                                 {
                                     if($ii++ > 0)
                                         $where_sql .= " AND ";
-                                    $where_sql .= "
-                                                 ( 
-                                                    song.title LIKE '%$word%' OR
-                                                    album2.name LIKE '%$word%' OR
-                                                    artist2.name LIKE '%$word%' OR
-                                                    genre2.name LIKE '%$word%' OR
-                                                    song.year LIKE '%$word%' OR
-                                                    song.file LIKE '%$word%'
-                                                  ) ";
+                                    $where_sql .= "(song.title LIKE '%$word%' OR album2.name LIKE '%$word%' OR artist2.name LIKE '%$word%' OR
+                                                    song.year LIKE '%$word%' OR song.file LIKE '%$word%' OR tag2.name LIKE '%$word%') ";
                                 }
                                 $where_sql .= " ) $operator";
                                 $table_sql .= " LEFT JOIN `album` as `album2` ON `song`.`album`=`album2`.`id`"; 
-				$table_sql .= " LEFT JOIN `artist` as `artist2` ON `song`.`artist`=`artist2`.`id`"; 
-				$table_sql .= " LEFT JOIN `genre` as `genre2` ON `song`.`genre`=`genre2`.`id`";
+				$table_sql .= " LEFT JOIN `artist` AS `artist2` ON `song`.`artist`=`artist2`.`id`"; 
+				$table_sql .= " LEFT JOIN `tag_map` ON `song`.`id`=`tag_map`.`object_id` AND `tag_map`.`object_type`='song'"; 
+				$table_sql .= " LEFT JOIN `tag` AS `tag2` ON `tag_map`.`tag_id`=`tag2`.`id`"; 
                         break;
 			case 'title':
 				$where_sql .= " song.title $value_string $operator";
@@ -151,10 +144,6 @@ function search_song($data,$operator,$method,$limit) {
 				$where_sql .= " artist.name $value_string $operator";
 				$table_sql .= " LEFT JOIN `artist` ON `song`.`artist`=`artist`.`id` ";
 			break;
-			case 'genre':
-				$where_sql .= " genre.name $value_string $operator";
-				$table_sql .= " LEFT JOIN `genre` ON `song`.`genre`=`genre`.`id`";
-			break;
 			case 'year':
 				if (empty($data["year2"]) && is_numeric($data["year"])) {
 					$where_sql .= " song.year $value_string $operator";
@@ -163,6 +152,14 @@ function search_song($data,$operator,$method,$limit) {
 					$where_sql .= " (song.year BETWEEN ".$data["year"]." AND ".$data["year2"].") $operator";
 				}
 			break;
+			case 'time': 
+				if (!empty($data['time2'])) { 
+					$where_sql .= " `song`.`time` <= " . Dba::escape(intval($data['time2'])*60) . " $operator"; 
+				}
+				if (!empty($data['time'])) { 
+					$where_sql .= " `song`.`time` >= " . Dba::escape(intval($data['time'])*60) . " $operator"; 
+				} 
+			break; 
 			case 'filename':
 				$where_sql .= " song.file $value_string $operator";
 			break;
@@ -185,20 +182,36 @@ function search_song($data,$operator,$method,$limit) {
 				// This is a little more complext, pull a list of IDs that have this average rating
 				$rating_sql = "SELECT `object_id`,AVG(`rating`.`rating`) AS avgrating FROM `rating` " . 
 						"WHERE `object_type`='song' GROUP BY `object_id`"; 
-				$db_results = Dba::query($rating_sql); 
+				$db_results = Dba::read($rating_sql); 
 
+				// Fill it with one value to prevent sql error on no results
 				$where_sql .= " `song`.`id` IN (";
-				$end_rating = ''; 
+
+				$ids = array('0'); 
 
 				while ($row = Dba::fetch_assoc($db_results)) { 
 					if ($row['avgrating'] < $value) { continue; } 
-					$where_sql .= $row['object_id'] . ','; 
-					$end_rating = ") $operator"; 
+					$ids[] = $row['object_id']; 
 				} 
-		
-				$where_sql = rtrim($where_sql,"`song`.`id` IN ("); 
-				$where_sql = rtrim($where_sql,",") . $end_rating;  
-				
+
+				$where_sql .= implode(',',$ids) . ') ' . $operator; 
+			break;
+			case 'tag': 
+
+				// Fill it with one value to prevent sql error on no results
+				$ids = array('0'); 
+
+				$tag_sql = "SELECT `object_id` FROM `tag` LEFT JOIN `tag_map` ON `tag`.`id`=`tag_map`.`tag_id` " . 
+						"WHERE `tag_map`.`object_type`='song' AND `tag`.`name` $value_string "; 
+				$db_results = Dba::read($tag_sql); 
+
+				while ($row = Dba::fetch_assoc($db_results)) { 
+					$ids[] = $row['object_id']; 
+				} 
+
+				$where_sql  = " `song`.`id` IN (" . implode(',',$ids) . ") $operator"; 
+
+			break; 				
 			default:
 				// Notzing!
 			break;
@@ -225,7 +238,9 @@ function search_song($data,$operator,$method,$limit) {
 	 */
 	$_SESSION['userdata']['stored_search'] = $sql;
 
-	$db_results = Dba::query($sql);
+	$db_results = Dba::read($sql);
+
+	$results = array(); 
 	
 	while ($row = Dba::fetch_assoc($db_results)) { 
 		$results[] = $row['id'];
@@ -235,32 +250,5 @@ function search_song($data,$operator,$method,$limit) {
 
 } // search_songs
 
-
-/** 
- * show_search
- * This shows the results of a search, it takes the input from a run_search function call
- * @package Search
- * @catagory Display
- */
-function show_search($type,$results) { 
-
-	/* Display based on the type of object we are trying to view */
-	switch ($type) { 
-		case 'artist':
-		
-		break;
-		case 'album':
-		
-		break;
-		case 'genre':
-		
-		break;
-		case 'song':
-		default:
-			show_songs($results,0);
-		break;
-	} // end type switch
-
-} // show_search
 
 ?>

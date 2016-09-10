@@ -33,7 +33,6 @@ $htmllang = str_replace("_","-",Config::get('lang'));
 <meta http-equiv="Content-Type" content="text/html; charset=<?php echo Config::get('site_charset'); ?>" />
 <link rel="shortcut icon" href="<?php echo Config::get('web_path'); ?>/favicon.ico" />
 <link rel="stylesheet" href="<?php echo Config::get('web_path'); ?>/templates/print.css" type="text/css" media="print" />
-<link rel="stylesheet" href="<?php echo Config::get('web_path'); ?>/templates/handheld.css" type="text/css" media="handheld" />
 <link rel="stylesheet" href="<?php echo Config::get('web_path'); ?><?php echo Config::get('theme_path'); ?>/templates/default.css" type="text/css" media="screen" />
 <title> <?php echo scrub_out(Config::get('site_title')); ?> </title>
 <script type="text/javascript" language="javascript">
@@ -45,7 +44,7 @@ function focus(){ document.login.username.focus(); }
 <div id="maincontainer">
 	<div id="header"><!-- This is the header -->
 		<h1 id="headerlogo">
-		  <a href="http://www.ampache.org">
+		  <a href="<?php echo Config::get('web_path'); ?>/login.php">
 		    <img src="<?php echo Config::get('web_path'); ?><?php echo Config::get('theme_path'); ?>/images/ampache.png" title="<?php echo Config::get('site_title'); ?>" alt="<?php echo Config::get('site_title'); ?>" />
 		  </a>
     </h1>
@@ -55,11 +54,11 @@ function focus(){ document.login.username.focus(); }
 		<form name="login" method="post" enctype="multipart/form-data" action="<?php echo Config::get('web_path'); ?>/login.php">
 
 			<div class="loginfield" id="usernamefield">
-        <label for="username"><?php echo  _('Username'); ; ?>:</label> 
+        <label for="username"><?php echo  _('Username'); ?>:</label> 
 			  <input class="text_input" type="text" id="username" name="username" value="<?php echo  $_REQUEST['username']; ; ?>" />
       </div>
 			<div class="loginfield" id="passwordfield">
-        <label for="password"><?php echo  _('Password'); ; ?>:</label> 
+        <label for="password"><?php echo  _('Password'); ?>:</label> 
   			<input class="text_input" type="password" id="password" name="password" value="" />
       </div>
 			<div class="loginfield" id="remembermefield"><label for="rememberme">

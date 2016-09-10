@@ -27,8 +27,8 @@
  */
 class Error { 
 
-	public static $state = false; // set to one when an error occurs
-	public static $errors = array(); // Errors array key'd array with errors that have occured
+	private static $state = false; // set to one when an error occurs
+	private static $errors = array(); // Errors array key'd array with errors that have occured
 
 	/**
 	 * __constructor
@@ -81,6 +81,18 @@ class Error {
 
 	} // add
 
+	/**	
+	 * occurred
+	 * This returns true / false if an error has occured anywhere
+	 */
+	public static function occurred() { 
+
+		if (self::$state == '1') { return true; } 
+
+		return false; 
+
+	} // occurred
+
 	/**
 	 * get
 	 * This returns an error by name
@@ -121,6 +133,5 @@ class Error {
 		} 
 
 	} // auto_init
-
 
 } // Error

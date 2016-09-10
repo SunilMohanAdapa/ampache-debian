@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -216,6 +216,9 @@ a.button{padding:1px 3px;}
   font-weight:normal;
   color:#5b5b5b;
 }
+#sidebar-page div.sb3 input[type=radio] { 
+	margin-left:2px; 
+} 
 
 #sidebar-page ul.sb3 li{
   margin:0;
@@ -499,8 +502,9 @@ a.button{padding:1px 3px;}
 
 
 /* Specific to Info Boxes */
-.info-box .album_art {float:left;margin-right:10px;}
-#information_actions { margin-left:5px; font-size:0.7em; } 
+.info-box { float:left;margin-right:10px; }
+.album_art { float:left; margin-right:10px; } 
+#information_actions { margin-left:5px; font-size:0.7em; float:left; } 
 #information_actions h3 { font-size:1.2em; margin:0.2em; }
 
 /* Specific boxes */
@@ -605,8 +609,9 @@ dt:hover, dt:hover + dd {background:#9cf;}
 .np_row {
 	padding: 3px;
 	float:left;
-	clear:both;
 	font-size:0.75em;
+	display:block;
+	
 }
 .np_cell {
   padding-left:5px;
@@ -772,3 +777,4 @@ td.lp_current a {
 	font-style: italic; 
 	color: #c0c0c0; 
 } 
+

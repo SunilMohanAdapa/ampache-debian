@@ -36,7 +36,7 @@ switch ($_REQUEST['action']) {
 
 		// we didn't find anything 
 		if (empty($_FILES['file']['tmp_name'])) { 
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received corectly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 			break;
 		}
 
@@ -44,7 +44,7 @@ switch ($_REQUEST['action']) {
 		
 		// Pull the image information
 		$data = array('file'=>$_FILES['file']['tmp_name']); 
-		$image_data = get_image_from_source($data); 
+		$image_data = Album::get_image_from_source($data); 
 
 		// If we got something back insert it
 		if ($image_data) { 
@@ -53,7 +53,7 @@ switch ($_REQUEST['action']) {
 		} 
 		// Else it failed
 		else { 
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received corectly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 		} 
 
 	break; 
@@ -73,7 +73,7 @@ switch ($_REQUEST['action']) {
 			$path_info = pathinfo($_FILES['file']['name']); 
 			$upload['file'] = $_FILES['file']['tmp_name'];
 			$upload['mime'] = 'image/' . $path_info['extension']; 
-			$image_data = get_image_from_source($upload); 
+			$image_data = Album::get_image_from_source($upload); 
 
 			if ($image_data) { 
 				$album->insert_art($image_data,$upload['0']['mime']); 
@@ -126,7 +126,7 @@ switch ($_REQUEST['action']) {
 		}
 		// Else nothing
 		else {
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received corectly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 		}
 	  
 		$albumname = $album->name;
@@ -145,7 +145,7 @@ switch ($_REQUEST['action']) {
 		$image_id = $_REQUEST['image'];
 		$album_id = $_REQUEST['album_id'];
 		
-		$image 	= get_image_from_source($_SESSION['form']['images'][$image_id]);
+		$image 	= Album::get_image_from_source($_SESSION['form']['images'][$image_id]);
 		$mime	= $_SESSION['form']['images'][$image_id]['mime'];
 	
 		$album = new Album($album_id);
@@ -160,21 +160,19 @@ switch ($_REQUEST['action']) {
 			exit; 
 		} 
 
-		show_box_top(_('Starting Update from Tags')); 
-
-		Catalog::update_single_item('album',$_REQUEST['album_id']);
-
-		echo "<br /><strong>" . _('Update From Tags Complete') . "</strong> &nbsp;&nbsp;";
-		echo "<a href=\"" . Config::get('web_path') . "/albums.php?action=show&amp;album=" . scrub_out($_REQUEST['album_id']) . "\">[" . _('Return') . "]</a>";
-		show_box_bottom(); 
+		$type 		= 'album'; 
+		$object_id 	= intval($_REQUEST['album_id']); 
+		$target_url	= Config::get('web_path') . '/albums.php?action=show&amp;album=' . $object_id; 
+		require_once Config::get('prefix') . '/templates/show_update_items.inc.php'; 
 	break;
 	// Browse by Album
 	default:
 	case 'show':
 		$album = new Album($_REQUEST['album']);
 		$album->format();
-
+		Browse::reset_filters();
 		require Config::get('prefix') . '/templates/show_album.inc.php';
+		
 	break;
 } // switch on view
 

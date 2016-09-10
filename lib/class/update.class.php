@@ -277,6 +277,52 @@ class Update {
 
 		$version[] = array('version' => '340018','description'=>$update_string); 
 
+		$update_string = '- Modify the Tag tables so that they actually work.<br />' . 
+				'- Alter the Prefix fields to allow for more prefixs.<br />'; 
+		
+		$version[] = array('version' => '350001','description'=>$update_string); 
+
+		$update_string = '- Remove Genre Field from song table.<br />' . 
+				'- Add user_catalog table for tracking user<-->catalog mappings.<br />' . 
+				'- Add tmp_browse to handle caching rather then session table.<br />';  
+
+		$version[] = array('version' => '350002','description'=>$update_string); 
+
+		$update_string = '- Modify Tag tables.<br />' . 
+				'- Remove useless config preferences.<br />'; 
+
+		$version[] = array('version'=> '350003','description'=>$update_string); 
+
+		$update_string = '- Modify ACL table to enable IPv6 ACL support<br />' . 
+				'- Modify Session Tables to store IPv6 addresses if provided<br />' . 
+				'- Modify IP History table to store IPv6 addresses and User Agent<br />'; 
+
+		$version[] = array('version'=>'350004','description'=>$update_string); 
+
+		$update_string = "- Add table for Video files<br />"; 
+
+		$version[] = array('version'=>'350005','description'=>$update_string); 
+
+		$update_string = "- Add data for Lyrics<br />";
+
+		$version[] = array('version'=>'350006','description'=>$update_string);
+
+		$update_string = '- Remove unused fields from catalog, playlist, playlist_data<br />' . 
+				'- Add tables for dynamic playlists<br />' . 
+				'- Add last_clean to catalog table<br />' . 
+				'- Add track to tmp_playlist_data<br />' . 
+				'- Increase Thumbnail blob size<br />'; 
+
+		$version[] = array('version'=>'350007','description'=>$update_string); 
+
+		$update_string = '- Modify Now Playing table to handle Videos<br />' . 
+				'- Modify tmp_browse to make it easier to prune<br />' . 
+				'- Add missing indexes to the _data tables<br />' . 
+				'- Drop unused song.hash<br />' . 
+				'- Add addition_time and update_time to video table<br />'; 
+
+		$version[] = array('version'=>'350008','description'=>$update_string); 
+
 
 		return $version;
 
@@ -323,7 +369,7 @@ class Update {
 	
 		/* Nuke All Active session before we start the mojo */
 		$sql = "TRUNCATE session";
-		$db_results = Dba::query($sql);
+		$db_results = Dba::write($sql);
                 
 		// Prevent the script from timing out, which could be bad
 		set_time_limit(0);
@@ -373,6 +419,10 @@ class Update {
 			} 
 		
 		} // end foreach version
+
+		// Once we've run all of the updates let's re-sync the character set as the user
+		// can change this between updates and cause mis-matches on any new tables
+		Dba::reset_db_charset(); 
 
 	} // run_update
 
@@ -1327,6 +1377,385 @@ class Update {
 		return true; 
 
 	} // update_340018
+
+	/**
+ 	 * update_350001
+	 * This updates modifies the tag tables per codeunde1load's specs from his tag patch
+	 * it also adjusts the prefix fields so that we can use more prefixes
+	 */
+	public static function update_350001() { 
+
+		$sql = "ALTER TABLE `tag_map` ADD `tag_id` INT ( 11 ) UNSIGNED NOT NULL AFTER `id`"; 
+		$db_results = Dba::query($sql); 
+
+		$sql = "RENAME TABLE `tags`  TO `tag`"; 
+		$db_results = Dba::query($sql); 
+
+		$sql = "ALTER TABLE `tag` CHANGE `map_id` `id` INT ( 11 ) UNSIGNED NOT NULL auto_increment"; 
+		$db_results = Dba::query($sql); 
+
+		$sql = "ALTER TABLE `album` CHANGE `prefix` `prefix` VARCHAR ( 32 ) NULL"; 
+		$db_results = Dba::query($sql); 
+
+		$sql = "ALTER TABLE `artist` CHANGE `prefix` `prefix` VARCHAR ( 32 ) NULL"; 
+		$db_results = Dba::query($sql); 
+		
+		self::set_version('db_version','350001'); 
+
+		return true; 
+
+	} // update_350001
+
+	/**
+	 * update_350002
+	 * This update adds in the browse_cache table that we use to hold peoples cached browse results
+	 * rather then try to store everything in the session we split them out into one serilized array per
+	 * row, per person. A little slow this way when browsing, but faster when now browsing and more flexible
+	 */
+	public static function update_350002() { 
+
+		$sql = "CREATE TABLE `tmp_browse` (`sid` varchar(128) collate utf8_unicode_ci NOT NULL,`data` longtext collate utf8_unicode_ci NOT NULL," . 
+			" UNIQUE KEY `sid` (`sid`)) ENGINE=MyISAM"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tmp_browse` ADD INDEX ( `type` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `song` DROP `genre`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "CREATE TABLE `user_catalog` (`user` INT( 11 ) UNSIGNED NOT NULL ,`catalog` INT( 11 ) UNSIGNED NOT NULL ,`level` SMALLINT( 4 ) UNSIGNED NOT NULL DEFAULT '5', " . 
+			"INDEX ( `user` )) ENGINE = MYISAM";
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `user_catalog` ADD INDEX ( `catalog` )"; 
+		$db_results = Dba::write($sql); 
+
+		self::set_version('db_version','350002'); 
+
+		return true; 
+
+	} // update_350002
+
+	/**
+	 * update_350003
+	 * This update tweakes the tag tables a little bit more, we're going to simplify things for the first little bit and then
+	 * then if it all works out we will worry about making it complex again. One thing at a time people...
+	 */
+	public static function update_350003() { 
+
+		$sql = "ALTER TABLE `tag` DROP `order`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tag` DROP INDEX `order`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tag` ADD UNIQUE ( `name` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tag` CHANGE `name` `name` VARCHAR( 255 )"; 
+		$db_results = Dba::write($sql); 
+
+		// Make sure that they don't have any of the mystrands crap left
+		$sql = "DELETE FROM `preference` WHERE `name`='mystrands_user' OR `name`='mystrands_pass'"; 
+		$db_results = Dba::write($sql); 
+
+		self::set_version('db_version','350003'); 
+
+		return true; 
+
+	} // update_350003
+
+	/**
+	 * update_350004
+	 * This update makes some changes to the ACL table so that it can support IPv6 entries as well as some other feature 
+	 * enhancements
+	 */
+	public static function update_350004() { 
+
+		$sql = "ALTER TABLE `session` CHANGE `ip` `ip` VARBINARY( 255 ) NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `session_stream` CHANGE `ip` `ip` VARBINARY( 255 ) NULL"; 
+		$db_results = Dba::write($sql); 
+
+		// Pull all of the IP history, this could take a while
+		$sql = "SELECT * FROM `ip_history`"; 
+		$db_results = Dba::read($sql); 
+
+		$ip_history = array(); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$row['ip'] = long2ip($row['ip']);
+			$ip_history[] = $row; 
+		} 
+
+		// Clear the table before we make the changes
+		$sql = "TRUNCATE `ip_history`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `ip_history` CHANGE `ip` `ip` VARBINARY( 255 ) NULL"; 
+		$db_results = Dba::write($sql); 
+		
+		$sql = "ALTER TABLE `ip_history` ADD `agent` VARCHAR ( 255 ) NULL AFTER `date`"; 
+		$db_results = Dba::write($sql); 
+
+		// Reinsert the old rows
+		foreach ($ip_history as $row) { 
+			$ip = Dba::escape(inet_pton($row['ip'])); 
+			$sql = "INSERT INTO `ip_history` (`user`,`ip`,`date`,`agent`) " . 
+				"VALUES ('" . $row['user'] . "','" . $ip . "','" . $row['date'] . "',NULL)"; 
+			$db_results = Dba::write($sql); 
+		} 
+	
+		// First pull all of their current ACL's
+		$sql = "SELECT * FROM `access_list`"; 
+		$db_results = Dba::read($sql); 
+
+		$acl_information = array(); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$row['start'] = long2ip($row['start']);
+			$row['end'] = long2ip($row['end']);
+			$acl_information[] = $row; 
+		} 
+
+		$sql = "TRUNCATE `access_list`"; 
+		$db_results = Dba::write($sql); 
+
+		// Make the changes to the database
+		$sql = "ALTER TABLE `access_list` CHANGE `start` `start` VARBINARY( 255 ) NOT NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `access_list` CHANGE `end` `end` VARBINARY( 255 ) NOT NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `access_list` DROP `dns`"; 	
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `access_list` ADD `enabled` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT '1' AFTER `key`"; 
+		$db_results = Dba::write($sql); 
+
+		// If we had nothing in there before add some base ALLOW ALL stuff as we're going
+		// to start defaulting Access Control to On. 
+		if (!count($acl_information)) { 
+			$v6_start = Dba::escape(inet_pton('::')); 
+			$v6_end = Dba::escape(inet_pton('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')); 
+			$v4_start = Dba::escape(inet_pton('0.0.0.0')); 
+			$v4_end = Dba::escape(inet_pton('255.255.255.255')); 
+			$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+				"VALUES ('DEFAULTv4','75','$v4_start','$v4_end',NULL,'-1','interface','1')"; 
+			$db_results = Dba::write($sql); 
+			$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+				"VALUES ('DEFAULTv4','75','$v4_start','$v4_end',NULL,'-1','stream','1')"; 
+			$db_results = Dba::write($sql); 
+			$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+				"VALUES ('DEFAULTv6','75','$v6_start','$v6_end',NULL,'-1','interface','1')"; 
+			$db_results = Dba::write($sql); 
+			$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+				"VALUES ('DEFAULTv6','75','$v6_start','$v6_end',NULL,'-1','stream','1')"; 
+			$db_results = Dba::write($sql); 
+		} // Adding default information
+
+		foreach ($acl_information as $row) { 
+			debug_event('Crap',print_r($row,1),1); 
+			$row['start'] = Dba::escape(inet_pton($row['start'])); 
+			$row['end'] = Dba::escape(inet_pton($row['end'])); 
+			$row['key'] = Dba::escape($row['key']); 
+			$sql = "INSERT INTO `access_list` (`name`,`level`,`start`,`end`,`key`,`user`,`type`,`enabled`) " . 
+				"VALUES ('" . Dba::escape($row['name']) . "','" . intval($row['level']) . 
+				"','" . $row['start'] . "','" . $row['end'] . "','" . $row['key'] . "','" . intval($row['user']) . "','" . 
+				$row['type'] . "','1')"; 
+			$db_results = Dba::write($sql); 
+		} // end foreach of existing rows
+		
+		self::set_version('db_version','350004');
+
+		return true; 
+
+	} // update_350004
+
+	/**
+	 * update_350005
+	 * This update adds the video table... *gasp* no you didn't <head shake>
+	 */
+	public static function update_350005() { 
+
+		$sql = " CREATE TABLE `video` (" . 
+			"`id` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," . 
+			"`file` VARCHAR( 255 ) NOT NULL , " . 
+			"`catalog` INT( 11 ) UNSIGNED NOT NULL ," . 
+			"`title` VARCHAR( 255 ) NOT NULL ," . 
+			"`video_codec` VARCHAR( 255 ) NOT NULL ," . 
+			"`audio_codec` VARCHAR( 255 ) NOT NULL ," . 
+			"`resolution_x` MEDIUMINT UNSIGNED NOT NULL ," . 
+			"`resolution_y` MEDIUMINT UNSIGNED NOT NULL ," . 
+			"`time` INT( 11 ) UNSIGNED NOT NULL ," . 
+			"`size` BIGINT UNSIGNED NOT NULL," . 
+			"`mime` VARCHAR( 255 ) NOT NULL," . 
+			"`enabled` TINYINT( 1) NOT NULL DEFAULT '1'" .
+			") ENGINE = MYISAM "; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `access_list` ADD INDEX ( `enabled` )";
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `video` ADD INDEX ( `file` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `video` ADD INDEX ( `enabled` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `video` ADD INDEX ( `title` )"; 
+		$db_results = Dba::write($sql); 
+
+		self::set_version('db_version','350005');
+
+		return true; 
+
+	} // update_350005
+
+	/**
+	 * update_350006
+	 * This update inserts the Lyrics pref table... 
+	 */
+	public static function update_350006() {
+
+		$sql = "INSERT INTO `preference` VALUES (69,'show_lyrics','0','Show Lyrics',0,'boolean','interface')";
+		$db_results = Dba::write($sql);
+
+		$sql = "INSERT INTO `user_preference` VALUES (1,69,'0')";
+		$db_results = Dba::write($sql);
+
+                $sql = "SELECT `id` FROM `user`";
+                $db_results = Dba::query($sql);
+
+                User::fix_preferences('-1');
+
+                while ($r = Dba::fetch_assoc($db_results)) {
+                        User::fix_preferences($r['id']);
+                } // while we're fixing the useres stuff
+
+		self::set_version('db_version','350006');
+
+		return true;
+
+	} // update_350006
+
+	/**
+	 * update_350007
+	 * This update adds in the random rules tables, and also increases the size of the blobs
+	 * on the album and artist data. Also add track to tmp_playlist_data 
+	 */
+	public static function update_350007() { 
+
+		// We need to clear the thumbs as they will need to be re-generated
+		$sql = "UPDATE `album_data` SET `thumb`=NULL,`thumb_mime`=NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "UPDATE `artist_data` SET `thumb`=NULL,`thumb_mime`=NULL"; 
+		$db_results = Dba::write($sql); 
+
+		// Change the db thumb sizes
+		$sql = "ALTER TABLE `album_data` CHANGE `thumb` `thumb` MEDIUMBLOB NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `artist_data` CHANGE `thumb` `thumb` MEDIUMBLOB NULL"; 
+		$db_results = Dba::write($sql); 
+
+		// Remove dead column
+		$sql = "ALTER TABLE `playlist_data` DROP `dynamic_song`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `playlist` DROP `genre`"; 
+		$db_results = Dba::write($sql); 
+
+		// Add track item to tmp_playlist_data so we can order this stuff manually
+		$sql = "ALTER TABLE `tmp_playlist_data` ADD `track` INT ( 11 ) UNSIGNED NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "DROP TABLE `genre`"; 
+		$db_results = Dba::write($sql); 
+
+		// Clean up the catalog and add last_clean to it
+		$sql = "ALTER TABLE `catalog` ADD `last_clean` INT ( 11 ) UNSIGNED NULL AFTER `last_update`"; 
+		$db_results = Dba::write($sql); 
+	
+		$sql = "ALTER TABLE `catalog` DROP `add_path`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "CREATE TABLE `dynamic_playlist` (" . 
+			"`id` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," . 
+			"`name` VARCHAR( 255 ) NOT NULL ," . 
+			"`user` INT( 11 ) NOT NULL ," . 
+			"`date` INT( 11 ) UNSIGNED NOT NULL ," . 
+			"`type` VARCHAR( 128 ) NOT NULL" . 
+			") ENGINE = MYISAM ";
+		$db_results = Dba::write($sql); 
+
+		$sql = "CREATE TABLE `dynamic_playlist_data` (" . 
+			"`id` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," . 
+			"`dynamic_id` INT( 11 ) UNSIGNED NOT NULL ," . 
+			"`field` VARCHAR( 255 ) NOT NULL ," . 
+			"`internal_operator` VARCHAR( 64 ) NOT NULL ," . 
+			"`external_operator` VARCHAR( 64 ) NOT NULL ," . 
+			"`value` VARCHAR( 255 ) NOT NULL" .
+			") ENGINE = MYISAM"; 
+		$db_results = Dba::write($sql); 
+
+		self::set_version('db_version','350007'); 
+
+		return true; 
+
+	} // update_350007
+
+	/**
+	 * update_350008
+	 * Change song_id references to be object so they are a little more general 
+	 * add a type to now playing table so that we can handle different playing information
+	 */
+	public static function update_350008() { 
+
+		$sql = "ALTER TABLE `now_playing` CHANGE `song_id` `object_id` INT( 11 ) UNSIGNED NOT NULL"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `now_playing` ADD `object_type` VARCHAR ( 255 ) NOT NULL AFTER `object_id`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `now_playing` ADD INDEX ( `expire` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `video` ADD `addition_time` INT( 11 ) UNSIGNED NOT NULL AFTER `mime`"; 
+		$db_results = Dba::write($sql); 
+		
+		$sql = "ALTER TABLE `video` ADD `update_time` INT( 11 ) UNSIGNED NULL AFTER `addition_time`"; 
+		$db_results = Dba::write($sql); 	
+
+		$sql = "ALTER TABLE `video` ADD INDEX (`addition_time`)"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `video` ADD INDEX (`update_time`)"; 
+		$db_results = Dba::write($sql); 
+
+                $sql = "ALTER TABLE `artist_data` ADD INDEX ( `art_mime` )";
+                $db_results = Dba::write($sql);
+
+		$sql = "ALTER TABLE `album_data` ADD INDEX ( `art_mime` )"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tmp_browse` ADD `type` VARCHAR ( 255 ) NOT NULL AFTER `sid`"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `tmp_browse` ADD INDEX (`type)"; 
+		$db_results = Dba::write($sql); 
+
+		$sql = "ALTER TABLE `song` DROP `hash`"; 
+		$db_results = Dba::write($sql); 
+
+		self::set_version('db_version','350008'); 
+
+	} // update_350008
+
 
 } // end update class
 ?>

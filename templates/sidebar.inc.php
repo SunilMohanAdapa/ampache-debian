@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -25,9 +25,9 @@ ${$class_name} = ' active';
 
 // List of buttons ( id, title, icon, access level)
 $sidebar_items[] = array('id'=>'home', 'title'=>_('Home'), 'icon'=>'home', 'access'=>5);
-$sidebar_items[] = array('id'=>'browse', 'title'=>_('Browse'), 'icon'=>'browse', 'access'=>5);
 $sidebar_items[] = array('id'=>'localplay', 'title'=>_('Localplay'), 'icon'=>'volumeup', 'access'=>5);
 $sidebar_items[] = array('id'=>'preferences', 'title'=>_('Preferences'), 'icon'=>'edit', 'access'=>5);
+$sidebar_items[] = array('id'=>'modules','title'=>_('Modules'),'icon'=>'plugin','access'=>100); 
 $sidebar_items[] = array('id'=>'admin', 'title'=>_('Admin'), 'icon'=>'admin', 'access'=>100);
 
 
@@ -38,18 +38,16 @@ $ajax_url = Config::get('ajax_url');
 <ul id="sidebar-tabs">
 <?php 
 	foreach ($sidebar_items as $item) { 
-	   if ($GLOBALS['user']->has_access($item['access']))
-	   {
-	     $li_params = "id='sb_tab_" . $item['id'] . "' class='sb1" . ${'sidebar_'.$item['id'] } . "'";
-	     ?><li <?php echo $li_params; ?>>
+		if (Access::check('interface',$item['access'])) {
+			$li_params = "id='sb_tab_" . $item['id'] . "' class='sb1" . ${'sidebar_'.$item['id'] } . "'";
+		?><li <?php echo $li_params; ?>>
       	<?php 
         // Button
-        echo Ajax::button("?action=sidebar&button=".$item['id'],$item['icon'],$item['title'],'sidebar_'.$item['id']);
+        echo Ajax::button("?page=index&action=sidebar&button=".$item['id'],$item['icon'],$item['title'],'sidebar_'.$item['id']);
       	
       	// Include subnav if it's the selected one
       	// so that it's generated inside its parent li
-      	if($item['id']==$_SESSION['state']['sidebar_tab'])
-      	{
+	if ($item['id']==$_SESSION['state']['sidebar_tab']) {
       	  ?><div id="sidebar-page"><?php
       	  require_once Config::get('prefix') . '/templates/sidebar_' . $_SESSION['state']['sidebar_tab'] . '.inc.php';
       	  ?></div><?php
@@ -58,9 +56,6 @@ $ajax_url = Config::get('ajax_url');
      }
 	}
 ?>
-<!-- <li <?php echo $sidebar_player; ?> onclick="ajaxPut('<?php echo $ajax_url; ?>?action=sidebar&button=player');" >
-</li>
--->
 <li id="sb_tab_logout" class="sb1">
 	<a href="<?php echo Config::get('web_path'); ?>/logout.php" id="sidebar_logout" >
 	<?php echo get_user_icon('logout',_('Logout')); ?>

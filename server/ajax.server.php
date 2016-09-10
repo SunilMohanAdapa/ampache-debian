@@ -61,6 +61,10 @@ switch ($_REQUEST['page']) {
 		require_once Config::get('prefix') . '/server/localplay.ajax.php'; 
 		exit; 
 	break;
+	case 'tag':
+		require_once Config::get('prefix') . '/server/tag.ajax.php';
+		exit; 
+	break;
 	case 'stream': 
 		require_once Config::get('prefix') . '/server/stream.ajax.php';
 		exit; 
@@ -229,7 +233,7 @@ switch ($_REQUEST['action']) {
 		switch ($_REQUEST['type']) { 
 			case 'album': 
 			case 'artist': 
-			case 'genre': 
+			case 'tag': 
 				$object = new $_REQUEST['type']($_REQUEST['id']); 
 				$songs = $object->get_songs(); 
 				foreach ($songs as $song_id) { 
@@ -237,6 +241,7 @@ switch ($_REQUEST['action']) {
 				} // end foreach
 			break;
 			case 'browse_set':
+				Browse::set_type($_REQUEST['object_type']); 
 				$objects = Browse::get_saved(); 
 				foreach ($objects as $object_id) { 
 					$GLOBALS['user']->playlist->add_object($object_id,'song'); 
@@ -244,7 +249,7 @@ switch ($_REQUEST['action']) {
 			break; 
 			case 'album_random': 
 			case 'artist_random': 
-			case 'genre_random':
+			case 'tag_random':
 				$data = explode('_',$_REQUEST['type']); 
 				$type = $data['0'];
 				$object = new $type($_REQUEST['id']); 
@@ -278,9 +283,12 @@ switch ($_REQUEST['action']) {
 				} 
 			break;
 			case 'dynamic': 
-				$random_type = Random::validate_type($_REQUEST['random_type']); 
-				$GLOBALS['user']->playlist->add_object('0',$random_type); 
+				$random_id = Random::get_type_id($_REQUEST['random_type']); 
+				$GLOBALS['user']->playlist->add_object($random_id,'random'); 
 			break;
+			case 'video': 
+				$GLOBALS['user']->playlist->add_object($_REQUEST['id'],'video'); 
+			break; 
 			default: 
 			case 'song': 
 				$GLOBALS['user']->playlist->add_object($_REQUEST['id'],'song'); 
@@ -288,19 +296,6 @@ switch ($_REQUEST['action']) {
 		} // end switch
 		
 		$results['rightbar'] = ajax_include('rightbar.inc.php'); 
-	break;
-	/* reloading the now playing information */
-	case 'reloadnp':
-		ob_start();
-		show_now_playing();	
-		$results['now_playing'] = ob_get_contents();
-		ob_clean();
-		$data = Song::get_recently_played(); 
-		if (count($data)) { 
-			require_once Config::get('prefix') . '/templates/show_recently_played.inc.php'; 
-		}
-		$results['recently_played'] = ob_get_contents(); 
-		ob_end_clean();
 	break;
 	/* Setting ratings */
 	case 'set_rating':
@@ -327,40 +322,8 @@ switch ($_REQUEST['action']) {
 		$object_ids = Browse::get_objects(); 
 
 		ob_start(); 
-		Browse::show_objects($object_ids); 
+		Browse::show_objects($object_ids, true); 
 		$results['browse_content'] = ob_get_contents(); 
-		ob_end_clean(); 
-	break;
-	case 'page': 
-		Browse::set_start($_REQUEST['start']); 
-
-		ob_start(); 
-		Browse::show_objects(); 
-		$results['browse_content'] = ob_get_contents(); 
-		ob_end_clean(); 
-	break;
-	case 'sidebar': 
-		switch ($_REQUEST['button']) {
-			case 'home':
-			case 'browse':
-			case 'localplay':
-			case 'player':
-			case 'preferences':
-				$button = $_REQUEST['button']; 
-			break;
-			case 'admin':
-				if ($GLOBALS['user']->has_access(100)) { $button = $_REQUEST['button']; } 
-				else { exit; } 
-			break;
-			default: 
-				exit; 
-			break;
-		} // end switch on button  
-
-		ob_start(); 
-		$_SESSION['state']['sidebar_tab'] = $button; 
-		require_once Config::get('prefix') . '/templates/sidebar.inc.php';
-		$results['sidebar'] = ob_get_contents(); 
 		ob_end_clean(); 
 	break;
 	default:

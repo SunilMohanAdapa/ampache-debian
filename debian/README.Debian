@@ -84,7 +84,7 @@ This will allow the Flash player to work again.  Sorry for the inconvenience.
 APACHE2-MPM-ITK
 
 Apache2-mpm-itk has been added as a alternative web server that can be used
-with ampache.  As I feel is is not the maintainers responsibility to set the 
+with ampache.  As I feel it is not the maintainers responsibility to set the 
 UID/GID for the ampache VHost, it will be left up to the system administrator
 create the "group" and "user" the Ampache VHost will run under.
 

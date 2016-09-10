@@ -65,7 +65,7 @@ Suggests:
 Description: web-based audio file management system common files
  This package provides common files for Ampache. This package is server
  independent and is intended for users who wish to use other web servers,
- virtual enviroments, or LXC's to deploy Ampache.
+ virtual environments, or LXC's to deploy Ampache.
  .
  Ampache is a web-based audio file manager implemented with PHP and
  MySQL which allows viewing, editing, and playing audio files via the

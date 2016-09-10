@@ -3,7 +3,26 @@
 --------------------------------------------------------------------------
 
 --------------------------------------------------------------------------
-  v.3.4.1
+  v.3.4.1 05/31/2008
+        - Fixed issue with art dump on jpeg files (Thx atrophic)
+	- Fixed issue with force http play and port not correctly specifying
+		non-standard http port (Thx Deathcrow)
+	- Fix Starts With box on browse so it remembers the prefix even
+		if you switch tabs
+	- Send correct charset name to mysql, was incorrect for non-utf8
+		charsets
+	- Actually use the thumbnail if it's been generated
+	- Add set_time_limit(0) on update_single_item for people who don't
+		take the function name litterly
+	- Escaped Patterns on filename parse so that :'s and other reserved
+		characters will work correctly
+	- Fixed translations so they are not all german m(__)m
+	- Ignore getid3() iconv solution as it seems to not work correctly
+	- Improved fix_filenames so that it tries a translation first, then
+		on failure strips invalid characters. 
+	- Fixed cached thumbnails not being cleared on album art change
+	- Fixed localplay instance switch not highlighting correctly until
+		after a page refresh
 	- Fixed an endless loop if you stop using ampache for more then 2 
 		years and then try to view the index page
 	- Fixed gather album art and parse m3u not working on catalog

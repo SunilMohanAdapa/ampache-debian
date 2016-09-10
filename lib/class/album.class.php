@@ -248,7 +248,7 @@ class Album {
 	public function get_art() { 
 
 		// Attempt to get the resized art first
-		//$art = $this->get_resized_db_art(); 
+		$art = $this->get_resized_db_art(); 
 		
 		if (!is_array($art)) { 
 			$art = $this->get_db_art(); 
@@ -773,7 +773,8 @@ class Album {
                 // Push the image into the database
                 $sql = "REPLACE INTO `album_data` SET `art` = '" . Dba::escape($image) . "'," .
                         " `art_mime` = '" . Dba::escape($mime) . "'" .
-        	        ", `album_id` = '$this->id'";
+        	        ", `album_id` = '$this->id'," . 
+			"`thumb` = NULL, `thumb_mime` = NULL"; 
 	        $db_results = Dba::query($sql);
 
 		return true;

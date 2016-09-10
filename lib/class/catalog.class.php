@@ -915,8 +915,14 @@ class Catalog {
                         $songs = $album->get_songs(1);
                         $song = new Song($songs[0]);
                         $dir = dirname($song->file);
-			$extension = substr($image['0']['mime'],strlen($image['0']['mime'])-3,3);
-			
+
+                        if ($image['0']['mime'] == 'image/jpeg') { 
+                                $extension = 'jpg';
+                        }
+                        else { 
+                                $extension = substr($image['0']['mime'],strlen($image['0']['mime'])-3,3);
+                        } 
+
 			// Try the preferred filename, if that fails use folder.???
 	                $preferred_filename = Config::get('album_art_preferred_filename');
 	                if (!$preferred_filename || strstr($preferred_filename,"%")) { $preferred_filename = "folder.$extension"; }
@@ -1016,6 +1022,9 @@ class Catalog {
 	 * this can be done by 75+
 	 */
 	public static function update_single_item($type,$id) { 
+
+                // Because single items are large numbers of things too
+                set_time_limit(0);
 
 		$songs = array();
 

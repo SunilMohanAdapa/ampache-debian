@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,88 +18,27 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-/*!
-	@header Preferences Library
-	@discussion This contains all of the functions needed for the preferences
-*/
 
-/*!
-	@function get_site_preferences
-	@discussion gets all of the preferences for this Ampache site
-*/
-function get_site_preferences() { 
-
-	$results = array();
-
-	$sql = "SELECT preferences.name, user_preference.value FROM preferences,user_preference " .
-		" WHERE preferences.id=user_preference.preference AND user_preference.user = '-1'";
-	$db_results = mysql_query($sql, dbh());
-
-	while ($r = mysql_fetch_assoc($db_results)) { 
-		$key = $r['name']; 
-		$results[$key] = $r['value'];
-	}
-
-	return $results;
-
-} // get_site_preferences
-
-/*!
-	@function set_site_preferences
-	@discussion sets the conf() function with the current site preferences from the db
-*/
-function set_site_preferences() { 
-
-	$results = array();
-
-	$sql = "SELECT preferences.name,user_preference.value FROM preferences,user_preference WHERE user='-1' AND user_preference.preference=preferences.id";
-	$db_results = mysql_query($sql, dbh());
-
-	while ($r = mysql_fetch_object($db_results)) { 
-		$results[$r->name] = $r->value;
-	} // db results
-
-	if (strlen($results['theme_name']) > 0) { 
-		$results['theme_path'] = "/themes/" . $results['theme_name'];
-	}
-
-	conf($results,1);
-
-} // set_site_preferences
-
-/*!
-	@function clean_preference_name
-	@discussion s/_/ /g & upper case first
-*/
-function clean_preference_name($name) { 
-
-	$name = str_replace("_"," ",$name);
-	$name = ucwords($name);
-
-	return $name;
-
-} // clean_preference_name
-
-/*!
-	@function update_preferences
-	@discussion grabs the current keys that should be added
-		and then runs throught $_REQUEST looking for those
-		values and updates them for this user
-*/
+/*
+ * update_preferences
+ * grabs the current keys that should be added
+ * and then runs throught $_REQUEST looking for those
+ * values and updates them for this user
+ */
 function update_preferences($pref_id=0) { 
 	
 	$pref_user = new User($pref_id);
 	
 	/* Get current keys */
-	$sql = "SELECT id,name,type FROM preferences";
+	$sql = "SELECT `id`,`name`,`type` FROM `preference`";
 
 	/* If it isn't the System Account's preferences */
-	if ($pref_id != '-1') { $sql .= " WHERE type!='system'"; }
+	if ($pref_id != '-1') { $sql .= " WHERE `catagory` != 'system'"; }
 	
-	$db_results = mysql_query($sql, dbh());
+	$db_results = Dba::query($sql);
 
 	// Collect the current possible keys
-	while ($r = mysql_fetch_assoc($db_results)) { 
+	while ($r = Dba::fetch_assoc($db_results)) { 
 		$results[] = array('id' => $r['id'], 'name' => $r['name'],'type' => $r['type']);
 	} // end collecting keys
 
@@ -109,23 +47,19 @@ function update_preferences($pref_id=0) {
 		/* Get the Value from POST/GET var called $data */
 		$type 		= $data['type'];
 		$name 		= $data['name'];
-		$apply_to_all	= "check_" . $data['name'];
+		$apply_to_all	= 'check_' . $data['name'];
+		$new_level	= 'level_' . $data['name']; 
 		$id		= $data['id'];
-		$value 		= sql_escape(scrub_in($_REQUEST[$name]));
+		$value 		= scrub_in($_REQUEST[$name]);
 
 		/* Some preferences require some extra checks to be performed */
 		switch ($name) { 
-			case 'theme_name':
-				// If the theme exists and it's different then our current one reset the colors
-				if (theme_exists($value) AND $pref_user->prefs['theme_name'] != $value) { 
-					set_theme_colors($value,$pref_id);
-				}
-			break;
 			case 'sample_rate':
-				$value = validate_bitrate($value);
+				$value = Stream::validate_bitrate($value);
 			break;
-			/* MD5 the LastFM so it's not plainTXT */
+			/* MD5 the LastFM & MyStrands so it's not plainTXT */
 			case 'lastfm_pass':
+			case 'mystrands_pass':
 				/* If it's our default blanking thing then don't use it */
 				if ($value == '******') { unset($_REQUEST[$name]); break; } 
 				$value = md5($value); 
@@ -133,42 +67,42 @@ function update_preferences($pref_id=0) {
 			default: 
 			break;
 		}
-		
 		/* Run the update for this preference only if it's set */
 		if (isset($_REQUEST[$name])) { 
-			update_preference($pref_id,$name,$id,$value);
+			Preference::update($id,$pref_id,$value,$_REQUEST[$apply_to_all]); 
+			if (Access::check('interface','100') AND $_REQUEST[$new_level]) { 
+				Preference::update_level($id,$_REQUEST[$new_level]); 
+			} 
 		}
 
 	} // end foreach preferences
-
 
 } // update_preferences
 
 /**
  * update_preference
  * This function updates a single preference and is called by the update_preferences function
- * @package Preferences
- * @catagory Update
  */
-function update_preference($username,$name,$pref_id,$value) { 
+function update_preference($user_id,$name,$pref_id,$value) { 
 
 	$apply_check = "check_" . $name;
+	$level_check = "level_" . $name; 
 
 	/* First see if they are an administrator and we are applying this to everything */
 	if ($GLOBALS['user']->has_access(100) AND make_bool($_REQUEST[$apply_check])) { 
-		$sql = "UPDATE user_preference SET `value`='$value' WHERE preference='$pref_id'";
-		$db_results = mysql_query($sql, dbh());
-		/* Reset everyones colors! */
-		if ($name =='theme_name') { 
-			set_theme_colors($value,0);
-		}
+		Preference::update_all($pref_id,$value); 
 		return true;
 	}
+
+	/* Check and see if they are an admin and the level def is set */
+	if ($GLOBALS['user']->has_access(100) AND make_bool($_REQUEST[$level_check])) { 
+		Preference::update_level($pref_id,$_REQUEST[$level_check]); 
+	} 
 	
 	/* Else make sure that the current users has the right to do this */
-	if (has_preference_access($name)) { 
-		$sql = "UPDATE user_preference SET `value`='$value' WHERE preference='$pref_id' AND user='$username'";
-		$db_results = mysql_query($sql, dbh());
+	if (Preference::has_access($name)) { 
+		$sql = "UPDATE `user_preference` SET `value`='$value' WHERE `preference`='$pref_id' AND `user`='$user_id'";
+		$db_results = Dba::query($sql);
 		return true;
 	}
 
@@ -176,52 +110,19 @@ function update_preference($username,$name,$pref_id,$value) {
 
 } // update_preference
 
-/*!
-	@function has_preference_access
-	@discussion makes sure that the user has sufficient
-		rights to actually set this preference, handle
-		as allow all, deny X
-	//FIXME:
-	// This is no longer needed, we just need to check against preferences.level
-*/
-function has_preference_access($name) { 
-
-	/* If it's a demo they don't get jack */
-        if (conf('demo_mode')) {
-	        return false;
-        }
-
-	$name = sql_escape($name);
-
-	/* Check Against the Database Row */
-	$sql = "SELECT level FROM preferences " . 
-		"WHERE name='$name'";
-	$db_results = mysql_query($sql, dbh());
-
-	$data = mysql_fetch_assoc($db_results);
-
-	$level = $data['level'];
-
-	if ($GLOBALS['user']->has_access($level)) { 
-		return true;
-	}
-
-	return false;
-
-} // has_preference_access
-
-
-/*!
-	@function create_preference_input
-	@discussion takes the key and then creates
-		the correct type of input for updating it
-*/
+/**
+ * create_preference_input
+ * takes the key and then creates the correct type of input for updating it
+ */
 function create_preference_input($name,$value) { 
+
+	// Escape it for output
+	$value = scrub_out($value); 
 
 	$len = strlen($value);
 	if ($len <= 1) { $len = 8; }
 
-	if (!has_preference_access($name)) { 
+	if (!Preference::has_access($name)) { 
 		if ($value == '1') { 
 			echo "Enabled";
 		}
@@ -247,7 +148,6 @@ function create_preference_input($name,$value) {
 		case 'use_auth':
 		case 'access_control':
 		case 'allow_stream_playback':
-		case 'allow_downsample_playback':
 		case 'allow_democratic_playback':
 		case 'allow_localplay_playback':
 		case 'demo_mode':
@@ -264,26 +164,22 @@ function create_preference_input($name,$value) {
 			echo "</select>\n";
 		break;
 		case 'play_type':
-			if ($value == 'downsample') { $is_down = 'selected="selected"'; }
-			elseif ($value == 'localplay') { $is_local = 'selected="selected"'; } 
+			if ($value == 'localplay') { $is_local = 'selected="selected"'; } 
 			elseif ($value == 'democratic') { $is_vote = 'selected="selected"'; } 
 			elseif ($value == 'xspf_player') { $is_xspf_player = 'selected="selected"'; } 
 			else { $is_stream = "selected=\"selected\""; } 
 			echo "<select name=\"$name\">\n";
 			echo "\t<option value=\"\">" . _('None') . "</option>\n";
-			if (conf('allow_stream_playback')) { 
+			if (Config::get('allow_stream_playback')) { 
 				echo "\t<option value=\"stream\" $is_stream>" . _('Stream') . "</option>\n";
 			}
-			if (conf('allow_downsample_playback')) { 
-				echo "\t<option value=\"downsample\" $is_down>" . _('Downsample') . "</option>\n";
-			}
-			if (conf('allow_democratic_playback')) { 
+			if (Config::get('allow_democratic_playback')) { 
 				echo "\t<option value=\"democratic\" $is_vote>" . _('Democratic') . "</option>\n";
 			}
-			if (conf('allow_localplay_playback')) { 
+			if (Config::get('allow_localplay_playback')) { 
 				echo "\t<option value=\"localplay\" $is_local>" . _('Localplay') . "</option>\n";	
 			} 
-			echo "\t<option value=\"xspf_player\" $is_xspf_player>" . _('XSPF Player') . "</option>\n";
+			echo "\t<option value=\"xspf_player\" $is_xspf_player>" . _('Flash Player') . "</option>\n";
 			echo "</select>\n";
 		break;
 		case 'playlist_type':
@@ -313,23 +209,26 @@ function create_preference_input($name,$value) {
 			echo "</select>\n";
 		break;
 		case 'localplay_controller':
-			$controllers = get_localplay_controllers();
+			$controllers = Localplay::get_controllers();
 			echo "<select name=\"$name\">\n";
+			echo "\t<option value=\"\">" . _('None') . "</option>\n";
 			foreach ($controllers as $controller) { 
+				if (!Localplay::is_enabled($controller)) { continue; } 
 				$is_selected = '';
 				if ($value == $controller) { $is_selected = 'selected="selected"'; } 
 				echo "\t<option value=\"" . $controller . "\" $is_selected>" . ucfirst($controller) . "</option>\n";
 			} // end foreach
-			echo "\t<option value=\"\">" . _('None') . "</option>\n";
 			echo "</select>\n";
 		break;
 		case 'localplay_level':
-			if ($value == '2') { $is_full = 'selected="selected"'; } 
-			elseif ($value == '1') { $is_global = 'selected="selected"'; } 
+			if ($value == '25') { $is_user = 'selected="selected"'; } 
+			elseif ($value == '100') { $is_admin = 'selected="selected"'; } 
+			elseif ($value == '50') { $is_manager = 'selected="selected"'; } 
 			echo "<select name=\"$name\">\n";
 			echo "<option value=\"0\">" . _('Disabled') . "</option>\n";
-			echo "<option value=\"1\" $is_global>" . _('Global') . "</option>\n";
-			echo "<option value=\"2\" $is_full>" . _('Local') . "</option>\n";
+			echo "<option value=\"25\" $is_user>" . _('User') . "</option>\n";
+			echo "<option value=\"50\" $is_manager>" . _('Manager') . "</option>\n";
+			echo "<option value=\"100\" $is_admin>" . _('Admin') . "</option>\n";
 			echo "</select>\n";
 		break;
 		case 'theme_name':
@@ -342,8 +241,26 @@ function create_preference_input($name,$value) {
 			} // foreach themes
 			echo "</select>\n";
 		break;
+		case 'mystrands_pass':
 		case 'lastfm_pass':
 			echo "<input type=\"password\" size=\"16\" name=\"$name\" value=\"******\" />";
+		break;
+		case 'playlist_method': 
+			${$value} = ' selected="selected"'; 
+			echo "<select name=\"$name\">\n"; 
+			echo "\t<option value=\"send\"$send>" . _('Send on Add') . "</option>\n"; 
+			echo "\t<option value=\"send_clear\"$send_clear>" . _('Send and Clear on Add') . "</option>\n"; 
+			echo "\t<option value=\"clear\"$clear>" . _('Clear on Send') . "</option>\n"; 
+			echo "\t<option value=\"default\"$default>" . _('Default') . "</option>\n"; 
+			echo "</select>\n"; 
+		break;
+		case 'transcode':
+			${$value} = ' selected="selected"'; 
+			echo "<select name=\"$name\">\n"; 
+			echo "\t<option value=\"never\"$never>" . _('Never') . "</option>\n"; 
+			echo "\t<option value=\"default\"$default>" . _('Default') . "</option>\n"; 
+			echo "\t<option value=\"always\"$always>" . _('Always') . "</option>\n"; 
+			echo "</select>\n";
 		break;
 		default:
 			echo "<input type=\"text\" size=\"$len\" name=\"$name\" value=\"$value\" />";
@@ -352,182 +269,5 @@ function create_preference_input($name,$value) {
 	} 
 
 } // create_preference_input
-
-/** 
- * get_preference_id
- * This takes the name of a preference and returns it's id this is usefull for calling
- * the user classes update_preference function
- * @package Preferences
- * @catagory Get
- */
-function get_preference_id($name) { 
-
-	$sql = "SELECT id FROM preferences WHERE name='" . sql_escape($name) . "'";
-	$db_results = mysql_query($sql, dbh());
-
-	$results = mysql_fetch_assoc($db_results);
-
-	return $results['id'];
-
-} // get_preference_id
-
-/**
- * get_preference_name
- * This does the inverse of the above function and returns the preference name from the ID
- * This is usefull for doing... the opposite of above. Amazing isn't it. 
- */
-function get_preference_name($id) { 
-
-	$id = sql_escape($id); 
-
-	$sql = "SELECT name FROM preferences WHERE id='$id'"; 
-	$db_results = mysql_query($sql,dbh()); 
-
-	$results = mysql_fetch_assoc($db_results); 
-
-	return $results['name']; 
-
-} // get_preference_name
-
-/**
- * insert_preference
- * This creates a new preference record in the
- * preferences table this is used by the modules
- */
-function insert_preference($name,$description,$default,$level,$type,$catagory) { 
-
-	/* Clean the incomming variables */
-	$name		= sql_escape($name);
-	$description 	= sql_escape($description);
-	$default	= sql_escape($default);
-	$level		= sql_escape($level);
-	$type		= sql_escape($type);
-	$catagory	= sql_escape($catagory);
-
-
-	/* Form the sql statement */
-	$sql = "INSERT INTO preferences (`name`,`description`,`value`,`type`,`level`,`catagory`) VALUES " . 
-		" ('$name','$description','$default','$type','$level','$catagory')";
-	$db_results = mysql_query($sql, dbh());
-
-	if ($db_results) { return true; }
-
-	return false;
-
-} // insert_preference
-
-/**
- * init_preferences
- * Third times the charm, why rename a function once when you can do it three times :(
- * This grabs the preferences and then loads them into conf it should be run on page load
- * to initialize the needed variables
- */
-function init_preferences() {
-
-
-        /* Get Global Preferences */
-        $sql = "SELECT preferences.name,user_preference.value FROM preferences,user_preference WHERE user_preference.user='-1' " .
-                " AND user_preference.preference = preferences.id AND preferences.catagory='system'";
-        $db_results = mysql_query($sql, dbh());
-
-        while ($r = mysql_fetch_assoc($db_results)) {
-                $name = $r['name'];
-                $results[$name] = $r['value'];
-        } // end while sys prefs
-
-        /* Now we need to allow the user to override some stuff that's been set by the above */
-        $user_id = '-1';
-        if ($GLOBALS['user']->username) {
-                $user_id = sql_escape($GLOBALS['user']->id);
-        }
-
-        $sql = "SELECT preferences.name,user_preference.value FROM preferences,user_preference WHERE user_preference.user='$user_id' " .
-                " AND user_preference.preference = preferences.id AND preferences.catagory != 'system'";
-        $db_results = mysql_query($sql, dbh());
-
-        while ($r = mysql_fetch_assoc($db_results)) {
-                $name = $r['name'];
-                $results[$name] = $r['value'];
-        } // end while
-
-        /* Set the Theme mojo */
-        if (strlen($results['theme_name']) > 0) {
-                $results['theme_path'] = '/themes/' . $results['theme_name'];
-        }
-
-        conf($results,1);
-
-        return true;
-
-} // init_preferences
-
-/**
- * show_import_playlist
- * This just shows the template for importing playlists
- * from something outside Ampache such as a m3u
- */
-function show_import_playlist() { 
-
-	require_once(conf('prefix') . '/templates/show_import_playlist.inc.php');
-
-} // show_import_playlist
-
-/**
- * get_preferences
- * This returns an array of all current preferences in the
- * preferences table, this isn't a users preferences
- */
-function get_preferences() {
-
-        $sql = "SELECT * FROM preferences";
-        $db_results = mysql_query($sql, dbh());
-
-        $results = array();
-
-        while ($r = mysql_fetch_assoc($db_results)) {
-                $results[] = $r;
-        }
-
-        return $results;
-
-} // get_preferences
-
-/**
- * update_preference_level
- * This function updates the level field in the preferences table
- * this has nothing to do with a users actuall preferences
- */
-function update_preference_level($name,$level) { 
-
-	$name 	= sql_escape($name);
-	$level 	= sql_escape($level);
-
-	$sql = "UPDATE preferences SET `level`='$level' WHERE `name`='$name'";
-	$db_results = mysql_query($sql,dbh());
-
-	return true;
-
-} // update_preference_level
-
-/**
- * fix_all_users_prefs
- * This function is used by install/uninstall and fixes all of the users preferences
- */
-function fix_all_users_prefs() {
-
-        $sql = "SELECT * FROM user";
-        $db_results = mysql_query($sql,dbh());
-
-        $user = new User();
-        $user->fix_preferences('-1');
-
-        while ($r = mysql_fetch_assoc($db_results)) {
-  	      $user->fix_preferences($r['id']);
-        }
-
-	return true;
-
-} // fix_all_users_prefs
-
 
 ?>

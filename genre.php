@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,32 +22,48 @@
  * Genres Pages
  * Nuff Said for now
  */
-require_once('lib/init.php');
+require_once 'lib/init.php';
 
-show_template('header');
+show_header();
 
-$action = scrub_in($_REQUEST['action']);
-
-switch($action) { 
+/**
+ * switch on action 
+ */
+switch($_REQUEST['action']) { 
 	case 'show_songs':
 		$genre = new Genre($_REQUEST['genre_id']);
 		show_genre($_REQUEST['genre_id']);
-		$songs = $genre->get_songs();
-		show_songs($songs);
+		$object_ids = $genre->get_songs();
+		Browse::reset_filters(); 
+		Browse::set_type('song'); 
+		Browse::set_sort('name','ASC'); 
+		Browse::set_static_content(1); 
+		Browse::save_objects($object_ids);
+		Browse::show_objects($object_ids); 
 	break;
 	case 'show_genre':
 	default:
 	case 'show_albums':
 		$genre = new Genre($_REQUEST['genre_id']);
 		show_genre($_REQUEST['genre_id']);
-		$albums = $genre->get_albums();
-		require (conf('prefix') . '/templates/show_albums.inc.php');
+		$object_ids = $genre->get_albums();
+		Browse::reset_filters(); 
+		Browse::set_type('album'); 
+		Browse::set_sort('name','ASC'); 
+		Browse::set_static_content(1); 
+		Browse::save_objects($object_ids); 
+		Browse::show_objects($object_ids); 
 	break;
 	case 'show_artists':
 		$genre = new Genre($_REQUEST['genre_id']);
 		show_genre($_REQUEST['genre_id']);
-		$artists = $genre->get_artists();
-		require (conf('prefix') . '/templates/show_artists.inc.php');
+		$object_ids = $genre->get_artists();
+		Browse::reset_filters(); 
+		Browse::set_type('artist'); 
+		Browse::set_sort('name','ASC'); 
+		Browse::set_static_content(1); 
+		Browse::save_objects($object_ids); 
+		Browse::show_objects($object_ids); 
 	break;
 } // action
 

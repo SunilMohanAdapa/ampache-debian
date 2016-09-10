@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All Rights Reserved
 
  this program is free software; you can redistribute it and/or
@@ -19,26 +19,29 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+
 ?>
 <?php show_box_top(_('Catalog Statistics')); ?>
-<table cellspacing="1" cellpadding="3" width="100%" border="0"> 
-<tr class="table-header">
-	<td><?php echo _("Connected Users"); ?></td>
-	<td><?php echo _("Total Users"); ?></td>
-	<td><?php echo _("Albums"); ?></td>
-	<td><?php echo _("Artists"); ?></td>
-	<td><?php echo _("Songs"); ?></td>
-	<td><?php echo _("Catalog Size"); ?></td>
-	<td><?php echo _("Catalog Time"); ?></td>
+<table class="tabledata" cellpadding="3" cellspacing="1">
+<tr class="th-top">
+	<th><?php echo _('Connected Users'); ?></th>
+	<th><?php echo _('Total Users'); ?></th>
+	<th><?php echo _('Albums'); ?></th>
+	<th><?php echo _('Artists'); ?></th>
+	<th><?php echo _('Songs'); ?></th>
+	<th><?php echo _('Genres'); ?></th>
+	<th><?php echo _('Catalog Size'); ?></th>
+	<th><?php echo _('Catalog Time'); ?></th>
 </tr>
 <tr>
-	<td><?php echo $connected_users[0]; ?></td>
-	<td><?php echo $users[0]; ?></td>
-	<td><?php echo $albums[0]; ?></td>
-	<td><?php echo $artists[0]; ?></td>
-	<td><?php echo $songs['songs']; ?></td>
-	<td><?php echo $total_size; ?> <?php echo $size_unit; ?></td>
-	<td><?php echo $time_text; ?></td>
+	<td><?php echo $stats['connected']; ?></td>
+	<td><?php echo $stats['users'] ?></td>
+	<td><?php echo $stats['albums']; ?></td>
+	<td><?php echo $stats['artists']; ?></td>
+	<td><?php echo $stats['songs']; ?></td>
+	<td><?php echo $stats['genres']; ?></td>
+	<td><?php echo $stats['total_size']; ?> <?php echo $stats['size_unit']; ?></td>
+	<td><?php echo $stats['time_text']; ?></td>
 </tr>
 </table>
 <?php show_box_bottom(); ?>

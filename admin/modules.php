@@ -1,13 +1,13 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ as published by the Free Software Foundation; version 2
+ of the License.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,7 +20,7 @@
 
 */
 
-require('../lib/init.php');
+require_once '../lib/init.php';
 
 if (!$GLOBALS['user']->has_access(100)) {
 	access_denied();
@@ -28,77 +28,83 @@ if (!$GLOBALS['user']->has_access(100)) {
 }
 
 
-$action = scrub_in($_REQUEST['action']);
-
 /* Always show the header */
-show_template('header');
+show_header(); 
 
-switch ($action) { 
-	case 'insert_localplay_preferences':
-		$type = scrub_in($_REQUEST['type']);
-		insert_localplay_preferences($type);
-		$url 	= conf('web_path') . '/admin/preferences.php?tab=modules';
-		$title 	= _('Module Activated');
-		$body	= '';
-		show_confirmation($title,$body,$url);
+switch ($_REQUEST['action']) { 
+	case 'install_localplay': 
+		$localplay = new Localplay($_REQUEST['type']); 
+		if (!$localplay->player_loaded()) { 
+			Error::add('general',_('Install Failed, Controller Error')); 
+			Error::display('general'); 
+			break;
+		} 	
+		// Install it!
+		$localplay->install(); 
+
+		// Go ahead and enable Localplay (Admin->System) as we assume they want to do that
+		// if they are enabling this
+		Preference::update('allow_localplay_playback','-1','1'); 
+		Preference::update('localplay_level',$GLOBALS['user']->id,'100'); 
+		Preference::update('localplay_controller',$GLOBALS['user']->id,$localplay->type);
+
+		header("Location:" . Config::get('web_path') . '/admin/modules.php?action=show_localplay'); 
 	break;
-	case 'confirm_remove_localplay_preferences':
-		$type = scrub_in($_REQUEST['type']);
-		$url	= conf('web_path') . '/admin/modules.php?action=remove_localplay_preferences&amp;type=' . $type;
-		$title	= _('Are you sure you want to remove this module?');
-		$body	= '';
-		show_confirmation($title,$body,$url,1);
+	case 'confirm_uninstall_localplay': 
+		$type = scrub_in($_REQUEST['type']); 
+		$url = Config::get('web_path') . '/admin/modules.php?action=uninstall_localplay&amp;type=' . $type; 
+		$title = _('Are you sure you want to remove this plugin?'); 
+		$body = ''; 
+		show_confirmation($title,$body,$url,1); 
 	break;
-	case 'remove_localplay_preferences':
-		$type = scrub_in($_REQUEST['type']);
-		remove_localplay_preferences($type);
-		$url	= conf('web_path') . '/admin/preferences.php?tab=modules';
-		$title	= _('Module Deactivated');
-		$body	= '';
-		show_confirmation($title,$body,$url);
+	case 'uninstall_localplay': 
+		$type = scrub_in($_REQUEST['type']); 
+
+		$localplay = new Localplay($type); 
+		$localplay->uninstall(); 
+			
+                /* Show Confirmation */
+                $url    = Config::get('web_path') . '/admin/modules.php?action=show_localplay';
+                $title  = _('Plugin Deactivated');
+                $body   = '';
+                show_confirmation($title,$body,$url);
 	break;
 	case 'install_plugin':
 		/* Verify that this plugin exists */
-		$plugins = get_plugins(); 
+		$plugins = Plugin::get_plugins();  
 		if (!array_key_exists($_REQUEST['plugin'],$plugins)) { 
 			debug_event('plugins','Error: Invalid Plugin: ' . $_REQUEST['plugin'] . ' selected','1'); 
 			break;
 		}
 		$plugin = new Plugin($_REQUEST['plugin']); 
-		$plugin->install(); 
+		if (!$plugin->install()) { 
+			debug_event('plugins','Error: Plugin Install Failed, ' . $_REQUEST['plugin'],'1'); 
+			$url    = Config::get('web_path') . '/admin/modules.php?action=show_plugins';
+			$title = _('Unable to Install Plugin'); 
+			$body = ''; 
+			show_confirmation($title,$body,$url); 
+			break; 
+		} 
+
+		// Don't trust the plugin to this stuff
+		User::rebuild_all_preferences(); 
 		
 		/* Show Confirmation */
-		$url	= conf('web_path') . '/admin/preferences.php?tab=modules';
+		$url	= Config::get('web_path') . '/admin/modules.php?action=show_plugins';
 		$title	= _('Plugin Activated'); 
 		$body	= '';
 		show_confirmation($title,$body,$url); 
 	break;
-	case 'update_plugin': 
-		$plugins = get_plugins(); 
-		if (!array_key_exists($_REQUEST['plugin'],$plugins)) { 
-			debug_event('plugins','Error: Invalid Plugin: ' . $_REQUEST['plugin'] . ' selected','1'); 
-			break;
-		}
-		$plugin = new Plugin($_REQUEST['plugin']); 
-		$plugin->uninstall(); 
-		$plugin->install(); 
-
-		/* Show Confirmation */
-		$url = conf('web_path') . '/admin/preferences.php?tab=modules'; 
-		$title = _('Plugin Updated'); 
-		$body = ''; 
-		show_confirmation($title,$body,$url); 
-	break;
 	case 'confirm_uninstall_plugin':
 		$plugin = scrub_in($_REQUEST['plugin']); 
-		$url	= conf('web_path') . '/admin/modules.php?action=uninstall_plugin&amp;plugin=' . $plugin;
+		$url	= Config::get('web_path') . '/admin/modules.php?action=uninstall_plugin&amp;plugin=' . $plugin;
 		$title	= _('Are you sure you want to remove this plugin?'); 
 		$body	= '';
 		show_confirmation($title,$body,$url,1); 
 	break; 
 	case 'uninstall_plugin':
 		/* Verify that this plugin exists */
-                $plugins = get_plugins();
+                $plugins = Plugin::get_plugins(); 
                 if (!array_key_exists($_REQUEST['plugin'],$plugins)) {
                         debug_event('plugins','Error: Invalid Plugin: ' . $_REQUEST['plugin'] . ' selected','1');
                         break;
@@ -106,8 +112,11 @@ switch ($action) {
                 $plugin = new Plugin($_REQUEST['plugin']);
 		$plugin->uninstall(); 
 
+		// Don't trust the plugin to do it
+		User::rebuild_all_preferences(); 
+
                 /* Show Confirmation */
-                $url    = conf('web_path') . '/admin/preferences.php?tab=modules';
+                $url    = Config::get('web_path') . '/admin/modules.php?action=show_plugins';
                 $title  = _('Plugin Deactivated');
                 $body   = '';
                 show_confirmation($title,$body,$url);
@@ -115,8 +124,20 @@ switch ($action) {
 	case 'upgrade_plugin':
 
 	break;
+	case 'show_plugins': 
+		$plugins = Plugin::get_plugins(); 	
+		show_box_top(_('Plugins')); 
+		require_once Config::get('prefix') . '/templates/show_plugins.inc.php'; 
+		show_box_bottom(); 
+	break;
+	case 'show_localplay': 
+		$controllers = Localplay::get_controllers(); 
+		show_box_top(_('Localplay Controllers')); 
+		require_once Config::get('prefix') . '/templates/show_localplay_controllers.inc.php'; 
+		show_box_bottom(); 
+	break;
 	default: 
-		require_once (conf('prefix') . '/templates/show_modules.inc.php');
+		// Rien a faire
 	break;
 } // end switch
 

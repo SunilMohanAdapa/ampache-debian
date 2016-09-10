@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) 2001 - 2008 Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -18,62 +18,49 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-$web_path = conf('web_path');
+$web_path = Config::get('web_path');
 
-// Build array of the table classes we are using
-$total_items = $view->total_items;
 ?>
-<?php require(conf('prefix') . '/templates/show_box_top.inc.php'); ?>
-<table class="tabledata" cellspacing="0" cellpadding="0" border="0">
-<tr class="table-header" align="center">
-	<td colspan="5">
-	<?php if ($GLOBALS['view']->offset_limit) { require (conf('prefix') . "/templates/list_header.inc"); } ?>
-	</td>
-</tr>
-<tr class="table-header">
-	<td>
-		<a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=artist.name&amp;sort_order=0"> <?php echo _('Artist'); ?> </a>
-	</td>
-	<td> <?php echo _('Songs');  ?> </td>
-	<td> <?php echo _('Albums'); ?> </td>
-	<td> <?php echo _('Action'); ?> </td>
+<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
+<table class="tabledata" cellpadding="0" cellspacing="0">
+<colgroup>
+  <col id="col_add" />
+  <col id="col_artist" />
+  <col id="col_songs" />
+  <col id="col_albums" />
+  <col id="col_rating" />
+  <col id="col_action" />
+</colgroup>
+<tr class="th-top">
+	<th class="cel_add"><?php echo _('Add'); ?></th>
+	<th class="cel_artist"><?php echo Ajax::text('?page=browse&action=set_sort&sort=name',_('Artist'),'artist_sort_name'); ?></th>
+	<th class="cel_songs"> <?php echo _('Songs');  ?> </th>
+	<th class="cel_albums"> <?php echo _('Albums'); ?> </th>
+	<th class="cel_rating"> <?php echo _('Rating'); ?> </th>
+	<th class="cel_action"> <?php echo _('Action'); ?> </th>
 </tr>
 <?php 
 /* Foreach through every artist that has been passed to us */
-//FIXME: These should come in as objects...
-foreach ($artists as $artist) { ?>
-	<tr class="<?php echo flip_class(); ?>">
-		<td><?php echo $artist->link; ?></td>
-		<td><?php echo $artist->songs; ?></td>
-		<td><?php echo $artist->albums; ?></td>	
-		<td nowrap="nowrap"> 
-			<a href="<?php echo $web_path; ?>/song.php?action=artist&amp;artist_id=<?php echo $artist->id; ?>">
-				<?php echo get_user_icon('all'); ?>	
-			</a> 
-			<a href="<?php echo $web_path; ?>/song.php?action=artist_random&amp;artist_id=<?php echo $artist->id; ?>">
-				<?php echo get_user_icon('random'); ?>
-			</a> 
-		<?php if ($GLOBALS['user']->has_access(100)) { ?>
-			<a href="<?php echo $web_path; ?>/admin/flag.php?action=show_edit_artist&amp;artist_id=<?php echo $artist->id; ?>">
-				<?php echo get_user_icon('edit'); ?>
-			</a>
-		<?php } ?>
-		</td>
-	</tr>
-<?php } //end foreach ($artists as $artist) ?>
-<tr class="table-header">
-        <td>
-                <a href="<?php echo $web_path; ?>/<?php echo $_SESSION['view_script']; ?>?action=<?php echo $_REQUEST['action']; ?>&amp;keep_view=true&amp;sort_type=artist.name&amp;sort_order=0"> <?php echo _("Artist"); ?> </a>
-        </td>
-        <td><?php echo _('Songs');  ?></td>
-        <td><?php echo _('Albums'); ?></td>
-	<td><?php echo _('Action'); ?></td>
-
+foreach ($object_ids as $artist_id) { 
+		$artist = new Artist($artist_id); 
+		$artist->format(); 
+?>
+<tr id="artist_<?php echo $artist->id; ?>" class="<?php echo flip_class(); ?>">
+	<?php require Config::get('prefix') . '/templates/show_artist_row.inc.php'; ?>
 </tr>
-<tr class="even" align="center">
-	<td colspan="4">
-	<?php if ($view->offset_limit) { require (conf('prefix') . "/templates/list_header.inc"); } ?>
-	</td>
+<?php } //end foreach ($artists as $artist) ?>
+<?php if (!count($object_ids)) { ?>
+<tr class="<?php echo flip_class(); ?>">
+	<td colspan="5"><span class="fatalerror"><?php echo _('Not Enough Data'); ?></span></td>
+</tr>
+<?php } ?>
+<tr class="th-bottom">
+	<th class="cel_add"><?php echo _('Add'); ?></th>
+	<th class="cel_artist"><?php echo Ajax::text('?page=browse&action=set_sort&sort=name',_('Artist'),'artist_sort_name_bottom'); ?></th>
+	<th class="cel_songs"> <?php echo _('Songs');  ?> </th>
+	<th class="cel_albums"> <?php echo _('Albums'); ?> </th>
+	<th class="cel_rating"> <?php echo _('Rating'); ?> </th>
+	<th class="cel_action"> <?php echo _('Action'); ?> </th>
 </tr>
 </table>
-<?php require(conf('prefix') . '/templates/show_box_bottom.inc.php'); ?>
+<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>

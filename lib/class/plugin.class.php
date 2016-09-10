@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -22,17 +22,17 @@
 class Plugin {
 
 	/* Base Variables */
-	var $name;
+	public $name;
 
 	/* constructed objects */
-	var $_plugin; 
+	public $_plugin; 
 
 	/**
 	 * Constructor
 	 * This constructor loads the Plugin config file which defines how to 
 	 * install/uninstall the plugin from Ampache's database
 	 */
-	function Plugin($name) { 
+	public function __construct($name) { 
 
 		/* Load the plugin */
 		if (!$this->_get_info($name)) { 
@@ -41,7 +41,7 @@ class Plugin {
 
 		return true; 
 
-	} // Plugin
+	} // Constructor
 
 
 	/**
@@ -52,7 +52,7 @@ class Plugin {
 	function _get_info($name) { 
 
 		/* Require the file we want */
-		require_once(conf('prefix') . '/modules/plugins/' . $name . '.plugin.php');
+		require_once Config::get('prefix') . '/modules/plugins/' . $name . '.plugin.php';
 
 		$plugin_name = "Ampache$name";
 
@@ -65,6 +65,40 @@ class Plugin {
 		return true; 		
 
 	} // _get_info
+
+	/**
+	 * get_plugins
+	 * This returns an array of plugin names
+	 */
+	public static function get_plugins() { 
+
+		$results = array(); 
+
+		// Open up the plugin dir
+		$handle = opendir(Config::get('prefix') . '/modules/plugins'); 
+
+		if (!is_resource($handle)) { 
+			debug_event('Plugins','Unable to read plugins directory','1'); 
+		} 
+
+		// Recurse the directory
+		while ($file = readdir($handle)) { 
+			// Ignore non-plugin files
+			if (substr($file,-10,10) != 'plugin.php') { continue; } 
+			if (is_dir($file)) { continue; } 
+
+			// It's a plugin record it
+			$plugin_name = basename($file,'.plugin.php'); 
+			$results[$plugin_name] = $plugin_name; 
+
+		} // end while
+
+		// Little stupid but hey
+		ksort($results); 
+
+		return $results; 
+
+	} // get_plugins
 
 	/**
 	 * is_valid
@@ -113,13 +147,13 @@ class Plugin {
 
 	/**
 	 * is_installed
-	 * This checks to see if the current plugin is currently installed in the
+	 * This checks to see if the specified plugin is currently installed in the
 	 * database, it doesn't check the files for integrity
 	 */
-	function is_installed() { 
+	public static function is_installed($plugin_name) { 
 
 		/* All we do is check the version */ 
-		return $this->get_plugin_version(); 
+		return self::get_plugin_version($plugin_name); 
 
 	} // is_installed
 
@@ -129,11 +163,15 @@ class Plugin {
 	 * at the end it inserts a row into the update_info table to indicate
 	 * That it's installed
 	 */
-	function install() { 
+	public function install() { 
 
-		$this->_plugin->install(); 
+		$installed = $this->_plugin->install(); 
 
-		$this->set_plugin_version($this->_plugin->version); 
+		$version = $this->set_plugin_version($this->_plugin->version); 
+
+		if (!$installed OR !$version) { return false; } 
+
+		return true; 
 
 	} // install
 
@@ -143,7 +181,7 @@ class Plugin {
 	 * at the end it removes the row from the update_info table to indicate
 	 * that it isn't installed
 	 */
-	function uninstall() { 
+	public function uninstall() { 
 
 		$this->_plugin->uninstall(); 
 
@@ -153,16 +191,16 @@ class Plugin {
 
 	/**
 	 * get_plugin_version
-	 * This returns the version of the currently installed plugin
+	 * This returns the version of the specified plugin
 	 */
-	function get_plugin_version() { 
+	public static function get_plugin_version($plugin_name) { 
 
-		$name = sql_escape('Plugin_' . $this->_plugin->name); 
+		$name = Dba::escape('Plugin_' . $plugin_name); 
 
-		$sql = "SELECT * FROM update_info WHERE `key`='$name'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "SELECT * FROM `update_info` WHERE `key`='$name'"; 
+		$db_results = Dba::query($sql); 
 
-		$results = mysql_fetch_assoc($db_results); 
+		$results = Dba::fetch_assoc($db_results); 
 		
 		return $results['value'];
 
@@ -174,10 +212,10 @@ class Plugin {
 	 */
 	function get_ampache_db_version() { 
 
-		$sql = "SELECT * FROM update_info WHERE `key`='db_version'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "SELECT * FROM `update_info` WHERE `key`='db_version'"; 
+		$db_results = Dba::query($sql); 
 
-		$results = mysql_fetch_assoc($db_results); 
+		$results = Dba::fetch_assoc($db_results); 
 
 		return $results['value'];
 
@@ -187,13 +225,13 @@ class Plugin {
 	 * set_plugin_version
 	 * This sets the plugin version in the update_info table
 	 */
-	function set_plugin_version($version) { 
+	public function set_plugin_version($version) { 
 
-		$name 		= sql_escape('Plugin_' . $this->_plugin->name);
-		$version	= sql_escape($version);
+		$name 		= Dba::escape('Plugin_' . $this->_plugin->name);
+		$version	= Dba::escape($version);
 
-		$sql = "INSERT INTO update_info SET `key`='$name', value='$version'";
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "INSERT INTO `update_info` SET `key`='$name', `value`='$version'";
+		$db_results = Dba::query($sql); 
 
 		return true; 
 
@@ -203,12 +241,12 @@ class Plugin {
  	 * remove_plugin_version
 	 * This removes the version row from the db done on uninstall
 	 */
-	function remove_plugin_version() { 
+	public function remove_plugin_version() { 
 	
-		$name	= sql_escape('Plugin_' . $this->_plugin->name);
+		$name	= Dba::escape('Plugin_' . $this->_plugin->name);
 	
-		$sql = "DELETE FROM update_info WHERE `key`='$name'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "DELETE FROM `update_info` WHERE `key`='$name'"; 
+		$db_results = Dba::query($sql); 
 
 		return true; 
 

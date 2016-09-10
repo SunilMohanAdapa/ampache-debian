@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2007 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -18,74 +18,109 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/*!
-	@header User Object
-	View object that is thrown into their session
-
-*/
-
+/**
+ * User Class
+ * This class handles all of the user related functions includingn the creationg
+ * and deletion of the user objects from the database by defualt you constrcut it
+ * with a user_id from user.id
+ */
 class User {
 
 	//Basic Componets
-	var $id;
-	var $uid; // HACK ALERT
-	var $username;
-	var $fullname;
-	var $access;
-	var $disabled;
-	var $email;
-	var $last_seen;
-	var $create_date;
-	var $validation;
+	public $id;
+	public $username;
+	public $fullname;
+	public $access;
+	public $disabled;
+	public $email;
+	public $last_seen;
+	public $create_date;
+	public $validation;
+
+	// Constructed variables
+	public $prefs = array(); 
 
 	/**
 	 * Constructor
 	 * This function is the constructor object for the user
 	 * class, it currently takes a username
-	 * //FIXME take UID
 	 */	
-	function User($id=0) {
+	public function __construct($user_id=0) {
+		
+		if (!$user_id) { return false; } 
 
-		if (!$id) { 
-			return true;
-		}
-
-		$this->id		= $id;
+		$this->id		= intval($user_id);
 		$info 			= $this->_get_info();
 
-		if (!count($info)) { return false; } 
-
-		$this->uid		= $info->id;
-		$this->username 	= $info->username;
-		$this->fullname 	= $info->fullname;
-		$this->access 		= $info->access;
-		$this->disabled		= $info->disabled;
-		$this->email		= $info->email;
-		$this->last_seen	= $info->last_seen;
-		$this->create_date	= $info->create_date;
-		$this->validation	= $info->validation;
-		$this->set_preferences();
-
+		foreach ($info as $key=>$value) { 
+			// Let's not save the password in this object :S
+			if ($key == 'password') { continue; } 
+			$this->$key = $value; 
+		} 
+		
 		// Make sure the Full name is always filled
 		if (strlen($this->fullname) < 1) { $this->fullname = $this->username; }
 
-	} // User
+	} // Constructor
 
 	/**
 	 * _get_info
 	 * This function returns the information for this object
 	 */
-	function _get_info() {
+	private function _get_info() {
 
-		$id = sql_escape($this->id);
+		// If the ID is -1 then
+		if ($this->id == '-1') { 
+			$data['username'] = 'System'; 
+			$data['fullname'] = 'Ampache User'; 
+			$data['access'] = '25'; 
+			return $data; 
+		} 
+
+		// Else...
+		$id = Dba::escape($this->id);
 
 		$sql = "SELECT * FROM `user` WHERE `id`='" . $id . "'";
-		
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 
-		return mysql_fetch_object($db_results);
+		$data = Dba::fetch_assoc($db_results);  
+
+		return $data; 
 
 	} // _get_info
+
+	/**
+	 * load_playlist
+	 * This is called once per page load it makes sure that this session
+	 * has a tmp_playlist, creating it if it doesn't, then sets $this->playlist
+	 * as a tmp_playlist object that can be fiddled with later on
+	 */
+	public function load_playlist() { 
+
+		$session_id = session_id(); 
+
+		$this->playlist = tmpPlaylist::get_from_session($session_id); 
+
+	} // load_playlist
+
+	/**
+	 * get_from_username
+	 * This returns a built user from a username. This is a 
+	 * static function so it doesn't require an instance
+	 */
+	public static function get_from_username($username) { 
+
+		$username = Dba::escape($username); 
+		
+		$sql = "SELECT `id` FROM `user` WHERE `username`='$username'"; 
+		$db_results = Dba::query($sql);
+		$results = Dba::fetch_assoc($db_results); 
+		
+		$user = new User($results['id']); 
+
+		return $user; 
+
+	} // get_from_username
 
 	/**
 	 * get_preferences
@@ -97,55 +132,57 @@ class User {
 	 * []['admin'] = t/f value if this is an admin only section
 	 */
 	function get_preferences($user_id=0,$type=0) { 
-		
-		if (!$user_id) { 
-			$user_id = $this->id;
-		}
-
-		if (!conf('use_auth')) { $user_id = '-1'; }
+	
+		// Fill out the user id
+		$user_id = $user_id ? Dba::escape($user_id) : Dba::escape($this->id); 
 
 		if ($user_id != '-1') { 
-			$user_limit = "AND preferences.catagory != 'system'";
+			$user_limit = "AND preference.catagory != 'system'";
 		}
-		
+
+		if (!Config::get('use_auth')) { $user_id = '-1'; }
+			
 		if ($type != '0') { 
-			$user_limit = "AND preferences.catagory = '" . sql_escape($type) . "'";
+			$user_limit = "AND preference.catagory = '" . Dba::escape($type) . "'";
 		}
 
 	
-		$sql = "SELECT preferences.name, preferences.description, preferences.catagory, user_preference.value FROM preferences,user_preference " .
-			"WHERE user_preference.user='$user_id' AND user_preference.preference=preferences.id $user_limit ORDER BY id";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "SELECT preference.name, preference.description, preference.catagory, preference.level, user_preference.value " . 
+			"FROM preference INNER JOIN user_preference ON user_preference.preference=preference.id " .
+			"WHERE user_preference.user='$user_id' " . $user_limit;
+		$db_results = Dba::query($sql);
 
 		/* Ok this is crapy, need to clean this up or improve the code FIXME */
-		while ($r = mysql_fetch_assoc($db_results)) { 
+		while ($r = Dba::fetch_assoc($db_results)) { 
 			$type = $r['catagory'];
 			$admin = false;
 			if ($type == 'system') { $admin = true; }
-			$type_array[$type][] = array('name'=>$r['name'],'description'=>$r['description'],'value'=>$r['value']);
+			$type_array[$type][$r['name']] = array('name'=>$r['name'],'level'=>$r['level'],'description'=>$r['description'],'value'=>$r['value']);
+			ksort($type_array[$type]); 
 			$results[$type] = array ('title'=>ucwords($type),'admin'=>$admin,'prefs'=>$type_array[$type]);
 		} // end while
-
-
+		
 		return $results;
 	
 	} // get_preferences
 
-	/*!
-		@function set_preferences
-		@discussion sets the prefs for this specific 
-			user
-	*/
-	function set_preferences() {
+	/**
+	 * set_preferences
+	 * sets the prefs for this specific user
+	 */
+	public function set_preferences() {
 
-		$sql = "SELECT preferences.name,user_preference.value FROM preferences,user_preference WHERE user_preference.user='$this->id' " .
-			"AND user_preference.preference=preferences.id AND preferences.type != 'system'";
-		$db_results = mysql_query($sql, dbh());
+		$user_id = Dba::escape($this->id); 
 
-		while ($r = mysql_fetch_object($db_results)) {
-			$this->prefs[$r->name] = $r->value;
+		$sql = "SELECT preference.name,user_preference.value FROM preference,user_preference WHERE user_preference.user='$user_id' " .
+			"AND user_preference.preference=preference.id AND preference.type != 'system'";
+		$db_results = Dba::query($sql);
+
+		while ($r = Dba::fetch_assoc($db_results)) {
+			$key = $r['name'];
+			$this->prefs[$key] = $r['value'];
 		} 
-	} // get_preferences
+	} // set_preferences
 
 	/**
 	 * get_favorites
@@ -153,10 +190,9 @@ class User {
 	 */
 	function get_favorites($type) { 
 
-	        $web_path = conf('web_path');
+	        $web_path = Config::get('web_path');
 
-		$stats = new Stats();
-		$results = $stats->get_user(conf('popular_threshold'),$type,$this->uid,1);
+		$results = Stats::get_user(Config::get('popular_threshold'),$type,$this->id,1);
 
 		$items = array();
 
@@ -165,7 +201,7 @@ class User {
 			if ($type == 'song') { 
 				$data = new Song($r['object_id']);
 				$data->count = $r['count'];
-				$data->format_song();
+				$data->format();
 				$data->f_name = $data->f_link;
 				$items[] = $data;
 			}
@@ -173,23 +209,23 @@ class User {
 			elseif ($type == 'album') { 
 				$data = new Album($r['object_id']);
 				$data->count = $r['count'];
-				$data->format_album();
+				$data->format();
 				$items[] = $data;
 			} 
 			/* If its an artist */
 			elseif ($type == 'artist') { 
 				$data = new Artist($r['object_id']);
 				$data->count = $r['count'];
-				$data->format_artist();
-				$data->f_name = $data->link;
+				$data->format();
+				$data->f_name = $data->f_link;
 				$items[] = $data;
 			} 		 
 			/* If it's a genre */
 			elseif ($type == 'genre') { 
 				$data = new Genre($r['object_id']);
 				$data->count = $r['count'];
-				$data->format_genre();
-				$data->f_name = $data->link;
+				$data->format();
+				$data->f_name = $data->f_link;
 				$items[] = $data;
 			}
 
@@ -208,24 +244,24 @@ class User {
 
 		/* First pull all of your ratings of this type */ 
 		$sql = "SELECT object_id,user_rating FROM ratings " . 
-			"WHERE object_type='" . sql_escape($type) . "' AND user='" . sql_escape($this->id) . "'";
-		$db_results = mysql_query($sql,dbh()); 
+			"WHERE object_type='" . Dba::escape($type) . "' AND user='" . Dba::escape($this->id) . "'";
+		$db_results = Dba::query($sql); 
 
 		// Incase they only have one user
 		$users = array(); 
 
-		while ($r = mysql_fetch_assoc($db_results)) { 
+		while ($r = Dba::fetch_assoc($db_results)) { 
 			/* Store the fact that you rated this */
 			$key = $r['object_id'];
 			$ratings[$key] = true;
 
 			/* Build a key'd array of users with this same rating */
-			$sql = "SELECT user FROM ratings WHERE object_type='" . sql_escape($type) . "' " . 
-				"AND user !='" . sql_escape($this->id) . "' AND object_id='" . sql_escape($r['object_id']) . "' " . 
-				"AND user_rating ='" . sql_escape($r['user_rating']) . "'";
-			$user_results = mysql_query($sql,dbh()); 
+			$sql = "SELECT user FROM ratings WHERE object_type='" . Dba::escape($type) . "' " . 
+				"AND user !='" . Dba::escape($this->id) . "' AND object_id='" . Dba::escape($r['object_id']) . "' " . 
+				"AND user_rating ='" . Dba::escape($r['user_rating']) . "'";
+			$user_results = Dba::query($sql); 
 
-			while ($user_info = mysql_fetch_assoc($user_results)) { 
+			while ($user_info = Dba::fetch_assoc($user_results)) { 
 				$key = $user_info['user'];
 				$users[$key]++; 
 			}
@@ -243,11 +279,11 @@ class User {
 
 			/* Find everything they've rated at 4+ */
 			$sql = "SELECT object_id,user_rating FROM ratings " . 
-				"WHERE user='" . sql_escape($user_id) . "' AND user_rating >='4' AND " . 
-				"object_type = '" . sql_escape($type) . "' ORDER BY user_rating DESC"; 
-			$db_results = mysql_query($sql,dbh()); 
+				"WHERE user='" . Dba::escape($user_id) . "' AND user_rating >='4' AND " . 
+				"object_type = '" . Dba::escape($type) . "' ORDER BY user_rating DESC"; 
+			$db_results = Dba::query($sql); 
 
-			while ($r = mysql_fetch_assoc($db_results)) { 
+			while ($r = Dba::fetch_assoc($db_results)) { 
 				$key = $r['object_id'];
 				if (isset($ratings[$key])) { continue; } 
 
@@ -265,35 +301,37 @@ class User {
 
 	} // get_recommendations
 
-	/*!
-		@function is_logged_in
-		@discussion checks to see if $this user is logged in
-	*/
-	function is_logged_in() { 
+	/**
+	 * is_logged_in
+	 * checks to see if $this user is logged in returns their current IP if they
+	 * are logged in 
+	 */
+	public function is_logged_in() { 
 
-		$username = sql_escape($this->username); 
+		$username = Dba::escape($this->username); 
 
 		$sql = "SELECT `id`,`ip` FROM `session` WHERE `username`='$username'" .
-			" AND expire > ". time();
-		$db_results = mysql_query($sql,dbh());
+			" AND `expire` > ". time();
+		$db_results = Dba::query($sql);
 
-		if ($row = mysql_fetch_assoc($db_results)) { 
-			return $row['ip'];
+		if ($row = Dba::fetch_assoc($db_results)) { 
+			$ip = $row['ip'] ? $row['ip'] : '1'; 
+			return $ip;
 		}
 
 		return false;
 
 	} // is_logged_in
 
-	/*!
-		@function has_access
-		@discussion this function checkes to see if this user has access
-			to the passed action (pass a level requirement)
-	*/
+	/**
+	 * has_access
+	 * this function checkes to see if this user has access
+	 * to the passed action (pass a level requirement)
+	 */
 	function has_access($needed_level) { 
 
-		if (!conf('use_auth') || conf('demo_mode')) { return true; }
-
+		if (!Config::get('use_auth') || Config::get('demo_mode')) { return true; }
+		
 		if ($this->access >= $needed_level) { return true; }
 
 		return false;
@@ -301,74 +339,59 @@ class User {
 	} // has_access
 
 	/**
-	 * update_preference
-	 * updates a single preference if the query fails
-	 * it attempts to insert the preference instead
-	 * @package User
-	 * @catagory Class
-	 * @todo Do a has_preference_access check
+	 * update
+	 * This function is an all encompasing update function that
+	 * calls the mini ones does all the error checking and all that
+	 * good stuff
 	 */
-	function update_preference($preference_id, $value, $user_id=0) {
-	
-		if (!has_preference_access(get_preference_name($preference_id))) { 
-			return false; 
+	public function update($data) { 
+
+		if (empty($data['username'])) { 
+			Error::add('username',_('Error Username Required')); 
 		} 
 
-		if (!$user_id) { 
-			$user_id = $this->id;
-		}
+		if ($data['password1'] != $data['password2'] AND !empty($data['password1'])) { 
+			Error::add('password',_("Error Passwords don't match")); 
+		} 
 
-		if (!conf('use_auth')) { $user_id = '-1'; }
+		if (Error::$state) { 
+			return false; 
+		} 
+		
+		foreach ($data as $name=>$value) { 
+			switch ($name) { 
+				case 'password1'; 
+					$name = 'password'; 
+				case 'access':
+				case 'email':
+				case 'username': 
+				case 'fullname'; 
+					if ($this->$name != $value) { 
+						$function = 'update_' . $name; 
+						$this->$function($value);
+					} 	
+				break;
+				default: 
+					// Rien a faire
+				break;
+			} // end switch on field
 
-		$value 		= sql_escape($value);
-		$preference_id 	= sql_escape($preference_id); 
-		$user_id	= sql_escape($user_id);
+		} // end foreach	
 
-		$sql = "UPDATE user_preference SET value='$value' WHERE user='$user_id' AND preference='$preference_id'";
+		return true; 
 
-		$db_results = mysql_query($sql, dbh());
-
-	} // update_preference
+	} // update
 
 	/**
-	 * legacy_add_preference
-	 * adds a new preference
-	 * @package User
-	 * @catagory Class
-	 * @param $key	preference name
-	 * @param $value	preference value
-	 * @param $id	user is
+	 * update_username
+	 * updates their username
 	 */
-	function add_preference($preference_id, $value, $username=0) { 
-	
-		if (!$username) { 
-			$username = $this->username;
-		}
+	public function update_username($new_username) {
 
-		$value = sql_escape($value);
-
-		if (!is_numeric($preference_id)) { 
-			$sql = "SELECT id FROM preferences WHERE `name`='$preference_id'";
-			$db_results = mysql_query($sql, dbh());
-			$r = mysql_fetch_array($db_results);
-			$preference_id = $r[0];
-		} // end if it's not numeric
-
-		$sql = "INSERT user_preference SET `user`='$username' , `value`='$value' , `preference`='$preference_id'";
-		$db_results = mysql_query($sql, dbh());
-
-	} // add_preference
-
-	/*!
-		@function update_username
-		@discussion updates their username
-	*/
-	function update_username($new_username) {
-
-		$new_username = sql_escape($new_username);
+		$new_username = Dba::escape($new_username);
 		$sql = "UPDATE `user` SET `username`='$new_username' WHERE `id`='$this->id'";
 		$this->username = $new_username;
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 
 	} // update_username
 
@@ -378,38 +401,38 @@ class User {
 	 * Use this function to update the validation key
 	 * NOTE: crap this doesn't have update_item the humanity of it all 
 	 */
-	function update_validation($new_validation) { 
+	public function update_validation($new_validation) { 
 
-		$new_validation = sql_escape($new_validation);
-		$sql = "UPDATE user SET validation='$new_validation',disabled='1' WHERE `id`='$this->id'";
+		$new_validation = Dba::escape($new_validation);
+		$sql = "UPDATE `user` SET `validation`='$new_validation', `disabled`='1' WHERE `id`='" . Dba::escape($this->id) . "'";
+		$db_results = Dba::query($sql); 
 		$this->validation = $new_validation;
-		$db_results = mysql_query($sql, dbh());
 
 		return $db_results;
 
 	} // update_validation
 
-	/*!
-		@function update_fullname
-		@discussion updates their fullname
-	*/
-	function update_fullname($new_fullname) {
+	/**
+	 * update_fullname
+	 * updates their fullname
+	 */
+	public function update_fullname($new_fullname) {
 		
-		$new_fullname = sql_escape($new_fullname);
-		$sql = "UPDATE user SET fullname='$new_fullname' WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$new_fullname = Dba::escape($new_fullname);
+		$sql = "UPDATE `user` SET `fullname`='$new_fullname' WHERE `id`='$this->id'";
+		$db_results = Dba::query($sql);
 
 	} // update_fullname
 
-	/*!
-		@function update_email
-		@discussion updates their email address
-	*/
-	function update_email($new_email) {
+	/**
+	 * update_email
+	 * updates their email address
+	 */
+	public function update_email($new_email) {
 
-		$new_email = sql_escape($new_email);
-		$sql = "UPDATE user SET email='$new_email' WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$new_email = Dba::escape($new_email);
+		$sql = "UPDATE `user` SET `email`='$new_email' WHERE `id`='$this->id'";
+		$db_results = Dba::query($sql);
 
 	} // update_email
 
@@ -417,20 +440,20 @@ class User {
 	 * disable
 	 * This disables the current user
 	 */
-	function disable() { 
+	public function disable() { 
 
 		// Make sure we aren't disabling the last admin
 		$sql = "SELECT `id` FROM `user` WHERE `disabled` = '0' AND `id` != '" . $this->id . "' AND `access`='100'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$db_results = Dba::query($sql); 
 		
-		if (!mysql_num_rows($db_results)) { return false; } 
+		if (!Dba::num_rows($db_results)) { return false; } 
 
 		$sql = "UPDATE `user` SET `disabled`='1' WHERE id='" . $this->id . "'";
-		$db_results = mysql_query($sql,dbh()); 
+		$db_results = Dba::query($sql); 
 
 		// Delete any sessions they may have
-		$sql = "DELETE FROM `session` WHERE `username`='" . sql_escape($this->username) . "'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "DELETE FROM `session` WHERE `username`='" . Dba::escape($this->username) . "'"; 
+		$db_results = Dba::query($sql); 
 
 		return true; 
 
@@ -440,10 +463,10 @@ class User {
  	 * enable
 	 * this enables the current user
 	 */
-	function enable() { 
+	public function enable() { 
 
 		$sql = "UPDATE `user` SET `disabled`='0' WHERE id='" . $this->id . "'";
-		$db_results = mysql_query($sql,dbh()); 
+		$db_results = Dba::query($sql); 
 
 		return true; 
 
@@ -452,20 +475,19 @@ class User {
 	/**
 	 * update_access
 	 * updates their access level
-	 * @todo Remove References to the named version of access
 	 */
-	function update_access($new_access) { 
+	public function update_access($new_access) { 
 
 		/* Prevent Only User accounts */
 		if ($new_access < '100') { 
 			$sql = "SELECT `id` FROM user WHERE `access`='100' AND `id` != '$this->id'";
-			$db_results = mysql_query($sql, dbh());
-			if (!mysql_num_rows($db_results)) { return false; }
+			$db_results = Dba::query($sql);
+			if (!Dba::num_rows($db_results)) { return false; }
 		}
 
-		$new_access = sql_escape($new_access);
+		$new_access = Dba::escape($new_access);
 		$sql = "UPDATE `user` SET `access`='$new_access' WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 
 	} // update_access
 
@@ -476,7 +498,7 @@ class User {
 	function update_last_seen() { 
 		
 		$sql = "UPDATE user SET last_seen='" . time() . "' WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 	
 	} // update_last_seen
 
@@ -484,44 +506,38 @@ class User {
 	 * update_user_stats
 	 * updates the playcount mojo for this specific user
 	 */
-	function update_stats($song_id) {
+	public function update_stats($song_id) {
 
 		$song_info = new Song($song_id);
+		$song_info->format(); 
 		$user = $this->id;
 		
-		if (!$song_info->file) { return false; }
+		if (!strlen($song_info->file)) { return false; }
 
-		$stats = new Stats();
-		$stats->insert('song',$song_id,$user);
-		$stats->insert('album',$song_info->album,$user);
-		$stats->insert('artist',$song_info->artist,$user);
-		$stats->insert('genre',$song_info->genre,$user);
+		// Make sure we didn't just play this song
+		$data = Stats::get_last_song($this->id);
+		$last_song = new Song($data['object_id']); 
+		if ($data['date']+($song_info->time/2) >= time()) { 
+			debug_event('Stats','Not collecting stats less then 50% of song has elapsed','3'); 
+			return false;
+		} 
 
-                /**
-		 * Record this play to LastFM 
-		 * because it lags like the dickens try twice on everything
-		 */
-                if (!empty($this->prefs['lastfm_user']) AND !empty($this->prefs['lastfm_pass'])) { 
-                        $song_info->format_song();
-                        $lastfm = new scrobbler($this->prefs['lastfm_user'],$this->prefs['lastfm_pass']);                       
-                        $lastfm->submit_host    = $this->prefs['lastfm_host'];
-                        $lastfm->submit_port    = $this->prefs['lastfm_port'];
-                        $lastfm->submit_url     = $this->prefs['lastfm_url'];
-                        $lastfm->challenge      = $this->prefs['lastfm_challenge'];
+		$this->set_preferences(); 
 
-                        if (!$lastfm->queue_track($song_info->f_artist_full,$song_info->f_album_full,$song_info->title,time(),$song_info->time)) { 
-				debug_event('LastFM','Error: Queue Failed: ' . $lastfm->error_msg,'3');
-			}
+		// Check if lastfm is loaded, if so run the update
+		if (Plugin::is_installed('Last.FM')) { 
+			$lastfm = new Plugin('Lastfm');
+			if ($lastfm->_plugin->load($this->prefs,$this->id)) { 
+				$lastfm->_plugin->submit($song_info,$this->id); 
+			} 
+		} // end if is_installed 
 
-			$submit = $lastfm->submit_tracks(); 
-	
-			/* Try again if it fails */
-			if (!$submit) { sleep(1); $submit = $lastfm->submit_tracks(); } 
+		// Do this last so the 'last played checks are correct' 
+		Stats::insert('song',$song_id,$user);
+		Stats::insert('album',$song_info->album,$user);
+		Stats::insert('artist',$song_info->artist,$user);
+		Stats::insert('genre',$song_info->genre,$user);
 
-			if (!$submit) { 
-				debug_event('LastFM','Error Submit Failed: ' . $lastfm->error_msg,'3'); 
-			}
-                } // record to LastFM
 
 	} // update_stats
 
@@ -530,20 +546,28 @@ class User {
 	 * This inserts a row into the IP History recording this user at this
 	 * address at this time in this place, doing this thing.. you get the point
 	 */
-	function insert_ip_history() { 
+	public function insert_ip_history() { 
 
-		$ip = ip2int($_SERVER['REMOTE_ADDR']);
+		if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])){
+			$sip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			debug_event('User Ip', 'Login from ip adress: ' . $sip,'3');
+		} 
+		else {
+			$sip = $_SERVER['REMOTE_ADDR'];
+			debug_event('User Ip', 'Login from ip adress: ' . $sip,'3');
+		}
+
+		$ip = sprintf("%u",ip2long($sip)); 
 		$date = time(); 
 		$user = $this->id;
 
-		$sql = "INSERT INTO ip_history (`ip`,`user`,`date`) VALUES ('$ip','$user','$date')";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "INSERT INTO `ip_history` (`ip`,`user`,`date`) VALUES ('$ip','$user','$date')";
+		$db_results = Dba::query($sql);
 
 		/* Clean up old records */
-		$date = time() - (86400*conf('user_ip_cardinality'));
-
-		$sql = "DELETE FROM ip_history WHERE `date` < $date";
-		$db_results = mysql_query($sql,dbh());
+		$date = time() - (86400*Config::get('user_ip_cardinality'));
+		$sql = "DELETE FROM `ip_history` WHERE `date` < $date";
+		$db_results = Dba::query($sql);
 
 		return true;
 
@@ -553,51 +577,50 @@ class User {
 	 * create
 	 * inserts a new user into ampache
 	 */
-	function create($username, $fullname, $email, $password, $access) { 
+	public static function create($username, $fullname, $email, $password, $access) { 
 
 		/* Lets clean up the fields... */
-		$username	= sql_escape($username);
-		$fullname	= sql_escape($fullname);
-		$email		= sql_escape($email);
-		$access		= sql_escape($access);
+		$username	= Dba::escape($username);
+		$fullname	= Dba::escape($fullname);
+		$email		= Dba::escape($email);
+		$access		= Dba::escape($access);
 	
 		/* Now Insert this new user */
-		$sql = "INSERT INTO user (username, fullname, email, password, access, create_date) VALUES" .
+		$sql = "INSERT INTO `user` (`username`, `fullname`, `email`, `password`, `access`, `create_date`) VALUES" .
 			" ('$username','$fullname','$email',PASSWORD('$password'),'$access','" . time() ."')";
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 		
 		if (!$db_results) { return false; }
 
 		// Get the insert_id
-		$insert_id = mysql_insert_id(dbh()); 
+		$insert_id = Dba::insert_id(); 
 
 		/* Populates any missing preferences, in this case all of them */
-		$this->fix_preferences($insert_id);
+		self::fix_preferences($insert_id);
 
 		return $insert_id;
 
 	} // create
 	
-	/*!
-		@function update_password
-		@discussion updates a users password
-	*/
-	function update_password($new_password) { 
+	/**
+	 * update_password
+	 * updates a users password
+	 */
+	public function update_password($new_password) { 
 
-		$new_password = sql_escape($new_password);
-		$sql = "UPDATE user SET password=PASSWORD('$new_password') WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$new_password = Dba::escape($new_password);
+		$sql = "UPDATE `user` SET `password`=PASSWORD('$new_password') WHERE `id`='$this->id'";
+		$db_results = Dba::query($sql);
 
-		return true;
 	} // update_password 
 
 	/**
-	 * format_user
+	 * format
 	 * This function sets up the extra variables we need when we are displaying a
 	 * user for an admin, these should not be normally called when creating a 
 	 * user object
 	 */
-	function format_user() { 
+	public function format() { 
 
 		/* If they have a last seen date */
 		if (!$this->last_seen) { $this->f_last_seen = _('Never'); }
@@ -607,12 +630,15 @@ class User {
         	if (!$this->create_date) { $this->f_create_date = _('Unknown'); }
 		else { $this->f_create_date = date("m\/d\/Y - H:i",$this->create_date); }
 
-		/* Calculate their total Bandwidth Useage */
-		$sql = "SELECT song.size FROM song LEFT JOIN object_count ON song.id=object_count.object_id " . 
-			"WHERE object_count.user='$this->id' AND object_count.object_type='song'";
-		$db_results = mysql_query($sql, dbh());
+		// Base link
+		$this->f_link = '<a href="' . Config::get('web_path') . '/stats.php?action=show_user&user_id=' . $this->id . '">' . $this->fullname . '</a>';
 
-		while ($r = mysql_fetch_assoc($db_results)) { 
+		/* Calculate their total Bandwidth Useage */
+		$sql = "SELECT `song`.`size` FROM `song` LEFT JOIN `object_count` ON `song`.`id`=`object_count`.`object_id` " . 
+			"WHERE `object_count`.`user`='$this->id' AND `object_count`.`object_type`='song'";
+		$db_results = Dba::query($sql);
+
+		while ($r = Dba::fetch_assoc($db_results)) { 
 			$total = $total + $r['size'];
 		}		
 
@@ -624,6 +650,7 @@ class User {
 		}
 
 		switch ($divided) { 
+			default:
 			case '1': $name = "KB"; break;
 			case '2': $name = "MB"; break;
 			case '3': $name = "GB"; break;
@@ -635,16 +662,16 @@ class User {
 		
 		/* Get Users Last ip */
 		$data = $this->get_ip_history(1);
-		$this->ip_history = int2ip($data['0']['ip']);	
+		$this->ip_history = long2ip($data['0']['ip']);	
 
 	} // format_user
 
-	/*!
-		@function format_favorites
-		@discussion takes an array of objects and formats them corrrectly
-			and returns a simply array with just <a href values
-	*/
-	function format_favorites($items) { 
+	/**
+	 * format_favorites
+	 * takes an array of objects and formats them corrrectly
+	 * and returns a simply array with just <a href values
+	 */
+	public function format_favorites($items) { 
 
 		// The length of the longest item
 		$maxlen = strlen($items[0]->count);
@@ -660,7 +687,7 @@ class User {
 			}
 
 			$item = "[$data->count] - $data->f_name";
-			$results[]->link = $item;
+			$results[]->f_name_link = $item;
 		} // end foreach items
 
 		return $results;
@@ -709,29 +736,24 @@ class User {
 	 * If -1 is passed it also removes duplicates from the `preferences`
 	 * table. 
 	 */
-	function fix_preferences($user_id='') { 
+	public static function fix_preferences($user_id) { 
 
-		if (!$user_id) { 
-			$user_id = $this->id; 
-		} 
-
-		$user_id = sql_escape($user_id); 
+		$user_id = Dba::escape($user_id); 
 
 		/* Get All Preferences for the current user */
 		$sql = "SELECT * FROM `user_preference` WHERE `user`='$user_id'"; 
-		$db_results = mysql_query($sql,dbh()); 
+		$db_results = Dba::query($sql); 
 
 		$results = array(); 
 
-		// Delete duplicates, and populate results array
-		while ($r = mysql_fetch_assoc($db_results)) { 
+		while ($r = Dba::fetch_assoc($db_results)) { 
 			$pref_id = $r['preference'];
 			/* Check for duplicates */
 			if (isset($results[$pref_id])) { 
-				$r['value'] = sql_escape($r['value']); 
+				$r['value'] = Dba::escape($r['value']); 
 				$sql = "DELETE FROM `user_preference` WHERE `user`='$user_id' AND `preference`='" . $r['preference'] . "' AND" . 
-					" `value`='" . sql_escape($r['value']) . "'"; 
-				$delete_results = mysql_query($sql,dbh()); 
+					" `value`='" . Dba::escape($r['value']) . "'"; 
+				$delete_results = Dba::query($sql); 
 			} // if its set
 			else { 
 				$results[$pref_id] = 1; 
@@ -740,34 +762,37 @@ class User {
 	
 		/* If we aren't the -1 user before we continue grab the -1 users values */
 		if ($user_id != '-1') { 
-                        $sql = "SELECT `user_preference`.`preference`,`user_preference`.`value` FROM `user_preference`,`preferences` " .
-                                "WHERE `user_preference`.`preference` = `preferences`.`id` AND `user_preference`.`user`='-1' AND `preferences`.`catagory` !='system'";
-                        $db_results = mysql_query($sql, dbh());
+                        $sql = "SELECT `user_preference`.`preference`,`user_preference`.`value` FROM `user_preference`,`preference` " .
+                                "WHERE `user_preference`.`preference` = `preference`.`id` AND `user_preference`.`user`='-1' AND `preference`.`catagory` !='system'";
+                        $db_results = Dba::query($sql);
 			/* While through our base stuff */
-                        while ($r = mysql_fetch_object($db_results)) {
-                                $zero_results[$r->preference] = $r->value;
+                        while ($r = Dba::fetch_assoc($db_results)) {
+				$key = $r['preference']; 
+                                $zero_results[$key] = $r['value'];
                         }
                 } // if not user -1
 
 		// get me _EVERYTHING_ 
-                $sql = "SELECT * FROM `preferences`";
+                $sql = "SELECT * FROM `preference`";
 
 		// If not system, exclude system... *gasp*
                 if ($user_id != '-1') {
                         $sql .= " WHERE catagory !='system'";
                 }
-                $db_results = mysql_query($sql, dbh());
+                $db_results = Dba::query($sql);
 
-                while ($r = mysql_fetch_object($db_results)) {
-			$pref_id = sql_escape($r->id); 
+                while ($r = Dba::fetch_assoc($db_results)) {
+
+			$key = $r['id'];
+
                         /* Check if this preference is set */
-                        if (!isset($results[$pref_id])) {
-                                if (isset($zero_results[$r->id])) {
-                                        $r->value = $zero_results[$r->id];
+                        if (!isset($results[$key])) {
+                                if (isset($zero_results[$key])) {
+                                        $r['value'] = $zero_results[$key];
                                 }
-				$value = sql_escape($r->value); 
-                                $sql = "INSERT INTO user_preference (`user`,`preference`,`value`) VALUES ('$user_id','$pref_id','$value')";
-                                $insert_db = mysql_query($sql, dbh());
+				$value = Dba::escape($r['value']); 
+                                $sql = "INSERT INTO user_preference (`user`,`preference`,`value`) VALUES ('$user_id','$key','$value')";
+                                $insert_db = Dba::query($sql);
                         }
                 } // while preferences
 
@@ -775,165 +800,20 @@ class User {
                 $sql = "SELECT DISTINCT(user_preference.user) FROM user_preference " .
                         "LEFT JOIN user ON user_preference.user = user.id " .
                         "WHERE user_preference.user!='-1' AND user.id IS NULL";
-                $db_results = mysql_query($sql, dbh());
+                $db_results = Dba::query($sql);
 
                 $results = array();
 
-                while ($r = mysql_fetch_assoc($db_results)) {
+                while ($r = Dba::fetch_assoc($db_results)) {
                         $results[] = $r['user'];
                 }
 
                 foreach ($results as $data) {
                         $sql = "DELETE FROM user_preference WHERE user='$data'";
-                        $db_results = mysql_query($sql, dbh());
+                        $db_results = Dba::query($sql);
                 }
-
 
 	} // fix_preferences
-
-	/**
-	 * username_fix_preferences
-	 * this is an old function that takes a username
-	 * and fixes the preferences based on that it is no longer
-	 * used by has to be maintained due to the update class
-	 */
-	function username_fix_preferences($user_id=0) { 
-	
-		if (!$user_id) { 
-			$user_id = $this->username;
-		}
-		/* Get All Preferences */
-		$sql = "SELECT * FROM user_preference WHERE user='$user_id'";
-		$db_results = mysql_query($sql, dbh());
-
-		while ($r = mysql_fetch_object($db_results)) {
-			/* Check for duplicates */
-			if (isset($results[$r->preference])) { 
-				$r->value = sql_escape($r->value);
-				$sql = "DELETE FROM user_preference WHERE user='$user_id' AND preference='$r->preference' AND value='$r->value'";
-				$delete_results = mysql_query($sql, dbh());
-			} // duplicate
-			else { 
-				$results[$r->preference] = $r;
-			}
-		} // while results
-
-		/* 
-		  If we aren't the -1 user before we continue then grab the 
-		  -1 user's values 
-		*/
-		if ($user_id != '-1') { 
-			$sql = "SELECT user_preference.preference,user_preference.value FROM user_preference,preferences " . 
-				"WHERE user_preference.preference = preferences.id AND user_preference.user='-1' AND preferences.catagory !='system'";
-			$db_results = mysql_query($sql, dbh());
-			while ($r = mysql_fetch_object($db_results)) { 
-				$zero_results[$r->preference] = $r->value;
-			}
-		} // if not user -1
-
-
-		$sql = "SELECT * FROM preferences";
-		if ($user_id != '-1') { 
-			$sql .= " WHERE catagory !='system'";
-		}
-		$db_results = mysql_query($sql, dbh());
-
-		while ($r = mysql_fetch_object($db_results)) { 
-			
-			/* Check if this preference is set */
-			if (!isset($results[$r->id])) { 
-				if (isset($zero_results[$r->id])) { 
-					$r->value = $zero_results[$r->id];
-				}
-				$sql = "INSERT INTO user_preference (`user`,`preference`,`value`) VALUES ('$user_id','$r->id','$r->value')";
-				$insert_db = mysql_query($sql, dbh());
-			}
-		} // while preferences
-
-		/* Let's also clean out any preferences garbage left over */
-		$sql = "SELECT DISTINCT(user_preference.user) FROM user_preference " . 
-			"LEFT JOIN user ON user_preference.user = user.username " . 
-			"WHERE user_preference.user!='-1' AND user.username IS NULL";
-		$db_results = mysql_query($sql, dbh());
-
-		$results = array();
-	
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$results[] = $r['user'];
-		}
-		
-		foreach ($results as $data) { 
-			$sql = "DELETE FROM user_preference WHERE user='$data'";
-			$db_results = mysql_query($sql, dbh());
-		}
-
-	} // fix_preferences
-
-	/** 
-	 * This function is specificly for the update script
-	 * it's maintained simply because we have to in order to previous updates to 
-	 * work correctly
-	 * @package Update
-	 * @catagory Legacy Function
-	 * @depreciated If working with a new db please use the fix_preferences
-	 */
-	function old_fix_preferences($user_id = 0) { 
-
-                if (!$user_id) { 
-                        $user_id = $this->id;
-                }
-
-                /* Get All Preferences */
-                $sql = "SELECT * FROM user_preference WHERE user='$user_id'";
-                $db_results = mysql_query($sql, dbh());
-
-                while ($r = mysql_fetch_object($db_results)) {
-                        /* Check for duplicates */
-                        if (isset($results[$r->preference])) { 
-                                $r->value = sql_escape($r->value);
-                                $sql = "DELETE FROM user_preference WHERE user='$user_id' AND preference='$r->preference' AND value='$r->value'";
-                                $delete_results = mysql_query($sql, dbh());
-                        } // duplicate
-                        else { 
-                                $results[$r->preference] = $r;
-                        }
-                } // while results
-
-                /* 
-                  If we aren't the 0 user before we continue then grab the 
-                  0 user's values 
-                */
-                if ($user_id != '0') { 
-                        $sql = "SELECT user_preference.preference,user_preference.value FROM user_preference,preferences " . 
-                                "WHERE user_preference.preference = preferences.id AND user_preference.user='0' AND preferences.type='user'";
-                        $db_results = mysql_query($sql, dbh());
-                        while ($r = mysql_fetch_object($db_results)) { 
-                                $zero_results[$r->preference] = $r->value;
-                        }
-                } // if not user 0
-
-
-                $sql = "SELECT * FROM preferences";
-                if ($user_id != '0') { 
-                        $sql .= " WHERE type='user'";
-                }
-                $db_results = mysql_query($sql, dbh());
-
-
-                while ($r = mysql_fetch_object($db_results)) { 
-                        
-                        /* Check if this preference is set */
-                        if (!isset($results[$r->id])) { 
-                                if (isset($zero_results[$r->id])) { 
-                                        $r->value = $zero_results[$r->id];
-                                }
-                                $sql = "INSERT INTO user_preference (`user`,`preference`,`value`) VALUES ('$user_id','$r->id','$r->value')";
-                                $insert_db = mysql_query($sql, dbh());
-                        }
-                } // while preferences
-
-	} // old_fix_preferences
-
 
 	/*!
 		@function delete_stats
@@ -946,87 +826,131 @@ class User {
 
 	} // delete_stats
 
-	/*!
-		@function delete
-		@discussion deletes this user and everything assoicated with it
-	*/
-	function delete() { 
+	/**
+	 * delete
+	 * deletes this user and everything assoicated with it. This will affect
+	 * ratings and tottal stats
+	 */
+	public function delete() { 
 
 		/* 
 		  Before we do anything make sure that they aren't the last 
 		  admin
 		*/
 		if ($this->has_access(100)) { 
-			$sql = "SELECT `id` FROM user WHERE `access`='100' AND id !='" . sql_escape($this->id) . "'";
-			$db_results = mysql_query($sql, dbh());
-			if (!mysql_num_rows($db_results)) { 
+			$sql = "SELECT `id` FROM `user` WHERE `access`='100' AND id !='" . Dba::escape($this->id) . "'";
+			$db_results = mysql_query($sql);
+			if (!Dba::num_rows($db_results)) { 
 				return false;
 			}
 		} // if this is an admin check for others 
 
 		// Delete their playlists
-		$sql = "DELETE FROM playlist WHERE user='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "DELETE FROM `playlist` WHERE `user`='$this->id'";
+		$db_results = Dba::query($sql);
+
+		// Clean up the playlist data table
+		$sql = "DELETE FROM `playlist_data` USING `playlist_data` " . 
+			"LEFT JOIN `playlist` ON `playlist`.`id`=`playlist_data`.`playlist` " . 
+			"WHERE `playlist`.`id` IS NULL"; 
+		$db_results = Dba::query($sql); 
 
 		// Delete any stats they have
-		$sql = "DELETE FROM object_count WHERE user='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "DELETE FROM `object_count` WHERE `user`='$this->id'";
+		$db_results = Dba::query($sql);
+
+		// Clear the IP history for this user
+		$sql = "DELETE FROM `ip_history` WHERE `user`='$this->id'"; 
+		$db_results = Dba::query($sql); 
+
+		// Nuke any access lists that are specific to this user
+		$sql = "DELETE FROM `access_list` WHERE `user`='$this->id'"; 
+		$db_results = Dba::query($sql); 
 
 		// Delete their ratings
-		$sql = "DELETE FROM `ratings` WHERE `user`='$this->id'";
-		$db_results = mysql_query($sql,dbh()); 
+		$sql = "DELETE FROM `rating` WHERE `user`='$this->id'";
+		$db_results = Dba::query($sql); 
 
 		// Delete their tags
 		$sql = "DELETE FROM `tag_map` WHERE `user`='$this->id'";
-		$db_results = mysql_query($sql,dbh());
+		$db_results = Dba::query($sql);
 
 		// Clean out the tags
 		$sql = "DELETE FROM `tags` USING `tag_map` LEFT JOIN `tag_map` ON tag_map.id=tags.map_id AND tag_map.id IS NULL";
-		$db_results = mysql_query($sql,dbh()); 
+		$db_results = Dba::query($sql); 
 
 		// Delete their preferences
-		$sql = "DELETE FROM preferences WHERE user='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "DELETE FROM `user_preference` WHERE `user`='$this->id'";
+		$db_results = Dba::query($sql);
 
+		// Delete their voted stuff in democratic play
+		$sql = "DELETE FROM `user_vote` WHERE `user`='$this->id'";
+		$db_results = Dba::query($sql); 
+
+		// Delete their shoutbox posts
+		$sql = "DELETE FROM `user_shout` WHERE `user='$this->id'";
+    		$db_results = Dba::query($sql); 
+		
 		// Delete the user itself
-		$sql = "DELETE FROM user WHERE `id`='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "DELETE FROM `user` WHERE `id`='$this->id'";
+		$db_results = Dba::query($sql);
 
-		$sql = "DELETE FROM session WHERE username='" . sql_escape($this->username) . "'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "DELETE FROM `session` WHERE `username`='" . Dba::escape($this->username) . "'";
+		$db_results = Dba::query($sql);
 
 		return true;
 
 	} // delete
 
-	/*!
-		@function is_online
-		@parameter delay how long since last_seen in seconds default of 20 min
-		@description  calcs difference between now and last_seen
-			if less than delay, we consider them still online
-	*/
-	
-	function is_online( $delay = 1200 ) {
+	/**
+	 * is_online
+	 * delay how long since last_seen in seconds default of 20 min
+	 * calcs difference between now and last_seen
+	 * if less than delay, we consider them still online
+	 */
+	public function is_online( $delay = 1200 ) {
+
 		return time() - $this->last_seen <= $delay;
-	}
 
-	/*!
-		@function get_user_validation
-		@check if user exists before activation can be done.
-	*/
-	function get_user_validation($username,$validation) {
+	} // is_online
+
+	/**
+	 * get_user_validation
+	 *if user exists before activation can be done.
+	 */
+	public static function get_validation($username) {
 	
-		$usename = sql_escape($username);
+		$usename = Dba::escape($username);
 	
-		$sql = "SELECT validation FROM user where username='$username'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "SELECT `validation` FROM `user` WHERE `username`='$username'";
+		$db_results = Dba::query($sql); 
 		
-		$row = mysql_fetch_assoc($db_results);
-		$val = $row['validation'];
+		$row = Dba::fetch_assoc($db_results);
 
-		return $val;
+		return $row['validation'];
 
-	} // get_user_validation
+	} // get_validation
+
+	/**
+	 * get_recently_played
+	 * This gets the recently played items for this user respecting
+	 * the limit passed
+	 */
+	public function get_recently_played($limit,$type='') { 
+
+		if (!$type) { $type = 'song'; } 
+
+		$sql = "SELECT * FROM `object_count` WHERE `object_type`='$type' AND `user`='$this->id' " . 
+			"ORDER BY `date` DESC LIMIT $limit"; 
+		$db_results = Dba::query($sql); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			$results[] = $row['object_id'];
+		} 
+
+		return $results; 
+
+	} // get_recently_played
 
 	/**
  	 * get_recent
@@ -1052,28 +976,31 @@ class User {
         /**
          * get_ip_history 
          * This returns the ip_history from the
-         * last conf('user_ip_cardinality') days
+         * last Config::get('user_ip_cardinality') days
          */             
-        function get_ip_history($count='',$distinct='') { 
+        public function get_ip_history($count='',$distinct='') { 
 
-		$username 	= sql_escape($this->id);
+		$username 	= Dba::escape($this->id);
 
 		if ($count) { 
 			$limit_sql = "LIMIT " . intval($count);
 		}
+		else { 
+			$limit_sql = "LIMIT " . intval(Config::get('user_ip_cardinality'));
+		} 
 		if ($distinct) { 
-			$group_sql = "GROUP BY ip";
+			$group_sql = "GROUP BY `ip`";
 		}
                         
                 /* Select ip history */
-                $sql = "SELECT ip,date FROM ip_history" .
-                        " WHERE user='$username'" .
+                $sql = "SELECT `ip`,`date` FROM `ip_history`" .
+                        " WHERE `user`='$username'" .
                         " $group_sql ORDER BY `date` DESC $limit_sql";
-                $db_results = mysql_query($sql, dbh());
+                $db_results = Dba::query($sql);
 
                 $results = array();
          
-                while ($r = mysql_fetch_assoc($db_results)) {
+                while ($r = Dba::fetch_assoc($db_results)) {
                         $results[] = $r;
                 }
         
@@ -1087,10 +1014,10 @@ class User {
 	*/
 	function activate_user($username) {
 	
-		$username = sql_escape($username);
+		$username = Dba::escape($username); 
 	
 		$sql = "UPDATE user SET disabled='0' WHERE username='$username'";
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 		
 	} // activate_user
 
@@ -1102,7 +1029,7 @@ class User {
         function is_xmlrpc() {
 
                 /* If we aren't using XML-RPC return true */
-                if (!conf('xml_rpc')) {
+                if (!Config::get('xml_rpc')) {
                         return false;
                 }
 
@@ -1112,7 +1039,46 @@ class User {
                 return true;
 
         } // is_xmlrpc
-	
+
+	/**
+	 * check_username
+	 * This checks to make sure the username passed doesn't already
+	 * exist in this instance of ampache
+	 */
+	public static function check_username($username) { 
+
+		$username = Dba::escape($username); 
+
+		$sql = "SELECT `id` FROM `user` WHERE `username`='$username'"; 
+		$db_results = Dba::query($sql); 
+
+		if (Dba::num_rows($db_results)) { 
+			return false; 
+		} 
+
+		return true; 
+
+	} // check_username
+
+	/**
+	 * rebuild_all_preferences
+	 * This rebuilds the user preferences for all installed users, called by the plugin functions
+	 */
+	public static function rebuild_all_preferences() { 
+
+		$sql = "SELECT * FROM `user`"; 
+		$db_results = Dba::query($sql); 
+
+		User::fix_preferences('-1'); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			User::fix_preferences($row['id']); 
+		} 
+
+		return true; 
+
+	} // rebuild_all_preferences
+
 } //end user class
 
 ?>

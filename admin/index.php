@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,21 +19,22 @@
 
 */
 
-require ('../lib/init.php');
+require '../lib/init.php';
 
-$action = scrub_in($_REQUEST['action']);
-
-if (!$GLOBALS['user']->has_access(100)) { 
+if (!Access::check('interface',100)) { 
 	access_denied();
 	exit();
 }
 
+show_header(); 
 
-show_template('header'); ?>
-<div id="admin-tools">
-	<?php require (conf('prefix') . '/templates/show_admin_tools.inc.php'); ?>
-</div>
-<div id="admin-info">
-	<?php require (conf('prefix') . '/templates/show_admin_info.inc.php'); ?>
-</div>
-<?php show_footer(); ?>
+switch ($_REQUEST['action']) { 
+	default: 
+		// Show Catalogs
+		$catalog_ids = Catalog::get_catalogs(); 	
+		Browse::set_type('catalog'); 
+		Browse::show_objects($catalog_ids); 
+	break;
+} 
+
+show_footer(); 

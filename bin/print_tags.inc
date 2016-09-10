@@ -5,9 +5,8 @@
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,8 +20,8 @@
 */
 
 define('NO_SESSION','1');
-$path = dirname(__FILE__);
-$prefix = realpath($path . '/../');
+$path = dirname(__FILE__); 
+$prefix = realpath($path . '/../'); 
 require_once $prefix . '/lib/init.php';
 
 if (count($GLOBALS['argv']) == '1') { $filename = usage(); }
@@ -34,9 +33,9 @@ else {
 echo "Reading: $filename\n";
 
 /* Attempt to figure out what catalog it comes from */
-$sql = "SELECT catalog.id FROM song LEFT JOIN catalog ON song.catalog=catalog.id WHERE song.file='" . sql_escape($filename) . "'";
-$db_results = mysql_query($sql,dbh());
-$results = mysql_fetch_assoc($db_results);
+$sql = "SELECT `catalog`.`id` FROM `song` INNER JOIN `catalog` ON `song`.`catalog`=`catalog`.`id` WHERE `song`.`file` LIKE '%" . Dba::escape($filename) . "'";
+$db_results = Dba::query($sql);
+$results = Dba::fetch_assoc($db_results);
 
 $catalog = new Catalog($results['id']);
 

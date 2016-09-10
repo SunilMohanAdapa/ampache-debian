@@ -5,9 +5,8 @@
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +27,8 @@
 
 function show_RSS ($type = 'artist',$username = 0) {
 	header ("Content-Type: application/xml");
-        $dbh = dbh();
-        $web_path = conf('web_path');
-        $rss_main_title = conf('rss_main_title');
+        $web_path = Config::get('web_path');
+        $rss_main_title = "Ampache :: Pour l'Amour de la Musique - RSS";
 
         $rss_latestartist_title = "Ampache Latest Artists";
         $rss_latestalbum_title = "Ampache Latest Albums";
@@ -39,9 +37,6 @@ function show_RSS ($type = 'artist',$username = 0) {
 	$rss_popularsong_title = "Ampache Most Popular Songs";
 	$rss_recentlyplayed_title = "Ampache Recently Played";
 
-        $rss_main_description = conf('rss_main_description');
-        $rss_main_copyright = conf('rss_main_copyright');
-        $rss_description = conf('rss_song_description');
         $today = date("d-m-Y");
 
         echo "<rss version=\"2.0\">\n";
@@ -57,7 +52,7 @@ switch ($type) {
 		" WHERE object_type='album' AND date >= '$date'" .
 		" GROUP BY object_id ORDER BY `count` DESC LIMIT 10";
 
-	$db_result = mysql_query($sql, $dbh);
+	$db_result = Dba::query($sql);
 
         echo " <channel>\n  <title>$rss_popularalbum_title</title>\n";
         echo "  <link>$web_path</link>\n  <description>$rss_main_description</description>\n";
@@ -123,7 +118,7 @@ switch ($type) {
                 $song   = new Song($r->object_id);
 		$artist = $song->get_artist_name();
  		echo " <title><![CDATA[$artist - $song->title ($r->count)]]></title>\n";
- 		echo " <link>$web_path/song.php?action=single_song&amp;song_id=$r->object_id</link>\n";
+ 		echo " <link>$web_path/stream.php?action=single_song&amp;song_id=$r->object_id</link>\n";
  		echo " <description><![CDATA[$artist - $song->title ($r->count)]]></description>\n";
  		echo "</item>\n";
         }
@@ -183,7 +178,7 @@ switch ($type) {
     case "recentlyplayed":
 
 	$time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago'));
-	$recent = get_recently_played();
+	$recent = Song::get_recently_played();
 
         echo " <channel>\n  <title>$rss_recentlyplayed_title</title>\n";
         echo "  <link>$web_path</link>\n  <description>$rss_main_description</description>\n";
@@ -204,11 +199,11 @@ switch ($type) {
 
 		echo "<item>\n";
 		$song = new Song($item['object_id']);
-                $song->format_song();
+                $song->format();
 		$user = new User($item['user']);
-		$user->format_user();
+		$user->format();
  		echo " <title><![CDATA[$song->title]]></title>\n";
- 		echo " <link>$web_path/song.php?action=single_song&amp;song_id=".$item['object_id']."</link>\n";
+ 		echo " <link>$web_path/stream.php?action=single_song&amp;song_id=".$item['object_id']."</link>\n";
  		echo " <description><![CDATA[$user->fullname played $song->title - $song->f_artist $time_string]]></description>\n";
  		echo "</item>\n";
 	}
@@ -230,15 +225,15 @@ switch ($type) {
 
 		$song = $r['song'];
 		$user = $r['user'];
-                $song->format_song();
-                        $artist = $song->f_artist;
-                        $album = $song->get_album_name();
-                        $text = "$artist - $song->f_title played by $user->fullname";
+                $song->format();
+                        $artist = $song->f_artist_full;
+                        $album = $song->f_album_full;
+                        $text = "$artist - $song->title played by $user->fullname";
                         echo "<item> \n";
                         echo " <title><![CDATA[$text]]></title> \n";
 			echo " <image>$web_path/image.php?id=$song->album</image>\n";
                         echo " <link>$web_path/albums.php?action=show&amp;album=$song->album</link>\n";
-                        echo " <description><![CDATA[$song->f_title @ $album is played by $user->fullname]]></description>\n";
+                        echo " <description><![CDATA[$song->title @ $album is played by $user->fullname]]></description>\n";
                         echo " <pubDate>$today</pubDate>\n";
                         echo "</item>\n";
         }

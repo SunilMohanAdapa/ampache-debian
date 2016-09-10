@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,22 +19,14 @@
 
 */
 
-/*!
-	@header Search page 
- Search stuff.  Can do by artist, album and song title.
+require_once 'lib/init.php';
 
- Also case-insensitive for now.
+show_header(); 
 
-*/
-
-require_once('lib/init.php');
-
-show_template('header');
-
-/* Import/Clean vars */
-$action = scrub_in($_REQUEST['action']);
-
-switch ($action) { 
+/**
+ * action switch 
+ */
+switch ($_REQUEST['action']) { 
 	case 'quick_search':
 		/* This needs to be done because we don't know what thing
 		 * they used the quick search to search on until after they've
@@ -44,14 +35,18 @@ switch ($action) {
 		$_REQUEST['s_all'] = $_REQUEST['search_string'];
 		
 		if (strlen($_REQUEST['search_string']) < 1) { 
-			$GLOBALS['error']->add_error('keyword',_("Error: No Keyword Entered"));
-			show_template('show_search');
+			Error::add('keyword',_('Error: No Keyword Entered'));
+			require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
 			break;
 		}
 	case 'search':
-		show_template('show_search');
+		require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
+		require_once Config::get('prefix') . '/templates/show_search_options.inc.php'; 
 		$results = run_search($_REQUEST);
-		show_search($_REQUEST['object_type'],$results);
+		Browse::set_type('song'); 
+		Browse::set_static_content(1);
+		Browse::save_objects($results); 
+		Browse::show_objects($results); 
 	break;
 	case 'save_as_track':
 		$playlist_id = save_search($_REQUEST);
@@ -59,7 +54,7 @@ switch ($action) {
 		show_confirmation("Search Saved","Your Search has been saved as a track in $playlist->name",conf('web_path') . "/search.php");
 	break;
 	default:
-		show_template('show_search');
+		require_once Config::get('prefix') . '/templates/show_search.inc.php'; 
 	break;
 }
 

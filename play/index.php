@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.  
 
  This program is free software; you can redistribute it and/or
@@ -25,25 +25,34 @@
    the case.  Also this will update local statistics for songs as well.
    This is also where it decides if you need to be downsampled. 
 */
-
 define('NO_SESSION','1');
-require_once('../lib/init.php');
-require_once(conf('prefix') . '/modules/horde/Browser.php');
-
+require_once '../lib/init.php';
+require_once Config::get('prefix') . '/modules/horde/Browser.php';
+ob_end_clean(); 
 
 /* These parameters had better come in on the url. */
 $uid 		= scrub_in($_REQUEST['uid']);
 $song_id 	= scrub_in($_REQUEST['song']);
 $sid 		= scrub_in($_REQUEST['sid']);
+$xml_rpc	= scrub_in($_REQUEST['xml_rpc']); 
 
 /* This is specifically for tmp playlist requests */
-$tmp_id		= scrub_in($_REQUEST['tmp_id']);
+$demo_id	= scrub_in($_REQUEST['demo_id']);
+$random		= scrub_in($_REQUEST['random']); 
+
+// Parse byte range request
+$n = sscanf($_SERVER['HTTP_RANGE'], "bytes=%d-%d",$start,$end);
 
 /* First things first, if we don't have a uid/song_id stop here */
-if (empty($song_id) && empty($tmp_id)) { 
+if (empty($song_id) && empty($demo_id) && empty($random)) { 
 	debug_event('no_song',"Error: No Song UID Specified, nothing to play",'2');
 	exit; 
 }
+
+// If we're XML-RPC and it's enabled, use system user
+if (isset($xml_rpc) AND Config::get('xml_rpc') AND !isset($uid)) { 
+	$uid = '-1'; 
+} 
 
 if (!isset($uid)) { 
 	debug_event('no_user','Error: No User specified','2'); 
@@ -51,7 +60,6 @@ if (!isset($uid)) {
 }
 
 /* Misc Housework */
-$dbh = dbh();
 $user = new User($uid);
 
 /* If the user has been disabled (true value) */
@@ -61,42 +69,36 @@ if (make_bool($GLOBALS['user']->disabled)) {
 	exit; 
 }
 
-/* If we're using auth and we can't find a username for this user */
-if ( conf('use_auth') AND !$GLOBALS['user']->username AND !$GLOBALS['user']->is_xmlrpc() ) {
-	debug_event('user_not_found',"Error $user->username not found, stream access denied",'3');
-	echo "Error: No User Found"; 
-	exit; 
-}
-
-if (conf('xml_rpc')) { 
-	$xml_rpc = $_GET['xml_rpc'];
-}
-
-if (conf('require_session') OR $xml_rpc) { 
-	if(!session_exists($sid,$xml_rpc)) {	
+// If require session is set then we need to make sure we're legit
+if (Config::get('require_session')) { 
+	if(!Stream::session_exists($sid)) {	
 		debug_event('session_expired',"Streaming Access Denied: " . $GLOBALS['user']->username . "'s session has expired",'3');
-    		die(_("Session Expired: please log in again at") . " " . conf('web_path') . "/login.php");
+    		die(_("Session Expired: please log in again at") . " " . Config::get('web_path') . "/login.php");
 	}
 
 	// Now that we've confirmed the session is valid
 	// extend it
-	extend_session($sid);
+	Stream::extend_session($sid,$uid);
 }
 
+
+/* Update the users last seen information */
+$user->update_last_seen();
+
 /* If we are in demo mode.. die here */
-if (conf('demo_mode') || (!$GLOBALS['user']->has_access('25') && !$xml_rpc) ) {
-	debug_event('access_denied',"Streaming Access Denied:" .conf('demo_mode') . "is the value of demo_mode. Current user level is " . $GLOBALS['user']->access,'3');
+if (Config::get('demo_mode') || (!Access::check('interface','25') AND !isset($xml_rpc))) {
+	debug_event('access_denied',"Streaming Access Denied:" .Config::get('demo_mode') . "is the value of demo_mode. Current user level is " . $GLOBALS['user']->access,'3');
 	access_denied();
+	exit; 
 }
 
 /* 
    If they are using access lists let's make sure 
    that they have enough access to play this mojo
 */
-if (conf('access_control')) { 
-	$access = new Access(0);
-	if (!$access->check('stream',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->username,'25') AND
-		!$access->check('network',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->username,'25')) { 
+if (Config::get('access_control')) { 
+	if (!Access::check_network('stream',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->id,'25') AND
+		!Access::check_network('network',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->id,'25')) { 
 		debug_event('access_denied', "Streaming Access Denied: " . $_SERVER['REMOTE_ADDR'] . " does not have stream level access",'3');
 		access_denied();
 		exit; 
@@ -108,15 +110,45 @@ if (conf('access_control')) {
  * current song, and do any other crazyness
  * we need to 
  */
-if ($tmp_id) { 
-	$tmp_playlist = new tmpPlaylist($tmp_id);
-	/* This takes into account votes etc and removes the */
-	$song_id = $tmp_playlist->get_next_object();
-}
+if ($demo_id) { 
+	$democratic = new Democratic($demo_id);
+	$democratic->set_parent(); 
+
+	// If there is a cooldown we need to make sure this song isn't a repeat
+	if (!$democratic->cooldown) { 
+		/* This takes into account votes etc and removes the */
+		$song_id = $democratic->get_next_object();
+	} 
+	else { 
+		// Pull history
+		$song_id = $democratic->get_next_object($song_cool_check);
+		$song_ids = $democratic->get_cool_songs(); 
+		while (in_array($song_id,$song_ids)) { 
+			$song_cool_check++; 
+			$song_id = $democratic->get_next_object($song_cool_check);
+			if ($song_cool_check >= '5') { break; } 
+		}
+		
+	} // end if we've got a cooldown 
+} // if democratic ID passed
+
+/**
+ * if we are doing random let's pull the random object
+ */
+if ($random) { 
+	if (!isset($start)) { 
+		$song_id = Random::get_single_song($_REQUEST['type']); 
+		// Save this one incase we do a seek
+		$_SESSION['random']['last'] = $song_id; 
+	} 
+	else { 
+		$song_id = $_SESSION['random']['last']; 
+	} 
+} // if random 
 
 /* Base Checks passed create the song object */
 $song = new Song($song_id);
-$song->format_song();
+$song->format();
 $catalog = new Catalog($song->catalog);
 
 /* If the song is disabled */
@@ -138,39 +170,36 @@ if (!$song->file OR ( !is_readable($song->file) AND $catalog->catalog_type != 'r
 	echo "Error: Invalid Song Specified, file not found or file unreadable"; 
 	exit; 
 }
-	
-/* Update the users last seen information */
-$GLOBALS['user']->update_last_seen();
 
-/* Run Garbage Collection on Now Playing */
-gc_now_playing();
+	
+// If we are running in Legalize mode, don't play songs already playing
+if (Config::get('lock_songs')) {
+	if (!check_lock_songs($song->id)) { 
+		debug_event('Denied','Song ' . $song->id . ' is currently being played and lock songs is enabled','1'); 
+		exit(); 
+	}
+}
 
 /* Check to see if this is a 'remote' catalog */
 if ($catalog->catalog_type == 'remote') {
-	// redirect to the remote host's play path
-	/* Break Up the Web Path */
-	preg_match("/http:\/\/([^\/]+)\/*(.*)/", conf('web_path'), $match);
-	$server = rawurlencode($match[1]);
-	$path	= rawurlencode($match[2]);
-	$port 	= $_SERVER['SERVER_PORT'];
-	if ($_SERVER['HTTPS'] == 'on') { $ssl='1'; }
-	else { $ssl = '0'; }  
-	$catalog = $catalog->id;
-	
-	$extra_info = "&xml_rpc=1&xml_path=$path&xml_server=$server&xml_port=$port&ssl=$ssl&catalog=$catalog&sid=$sid";
+
+	preg_match("/(.+)\/play\/index.+/",$song->file,$match); 
+
+	$token = xmlRpcClient::ampache_handshake($match['1'],$catalog->key); 
+
+	// If we don't get anything back we failed and should bail now
+	if (!$token) { 
+		debug_event('xmlrpc-stream','Error Unable to get Token from ' . $match['1'] . ' check target servers logs','1'); 
+		exit; 
+	} 
+
+	$sid   = xmlRpcClient::ampache_create_stream_session($match['1'],$token); 
+
+	$extra_info = "&xml_rpc=1&sid=$sid";
 	header("Location: " . $song->file . $extra_info);
 	debug_event('xmlrpc-stream',"Start XML-RPC Stream - " . $song->file . $extra_info,'5');
 	exit;
 } // end if remote catalog
-
-
-// If we are running in Legalize mode, don't play songs already playing
-if (conf('lock_songs')) {
-	if (!check_lock_songs($song->id)) { exit(); }
-}
-
-// Put this song in the now_playing table
-$lastid = insert_now_playing($song->id,$uid,$song->time);
 
 // make fread binary safe
 set_magic_quotes_runtime(0);
@@ -178,28 +207,53 @@ set_magic_quotes_runtime(0);
 // don't abort the script if user skips this song because we need to update now_playing
 ignore_user_abort(TRUE);
 
-/* Format the Song Name */
-if (conf('stream_name_format')) {
-	$song_name = conf('stream_name_format');
-	$song_name = str_replace("%basename",basename($song->file),$song_name);
-	$song_name = str_replace("%filename",$song->file,$song_name);
-	$song_name = str_replace("%type",$song->type,$song_name);
-	$song_name = str_replace("%catalog",$catalog->name,$song_name);
-	$song_name = str_replace("%A",$song->f_album_full,$song_name); // this and next could be truncated version
-	$song_name = str_replace("%a",$song->f_artist_full,$song_name);
-	$song_name = str_replace("%C",$catalog->path,$song_name);
-	$song_name = str_replace("%c",$song->comment,$song_name);
-	$song_name = str_replace("%g",$song->f_genre,$song_name);
-	$song_name = str_replace("%T",$song->track,$song_name);
-	$song_name = str_replace("%t",$song->title,$song_name);
-	$song_name = str_replace("%y",$song->year,$song_name);
-} 
-else {
-	$song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
-}
+// Format the song name
+$song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
+
+/* If they are just trying to download make sure they have rights 
+ * and then present them with the download file
+ */
+if ($_GET['action'] == 'download' AND Config::get('download')) { 
 	
-$startArray = sscanf( $_SERVER[ "HTTP_RANGE" ], "bytes=%d-" );
-$start = $startArray[0];
+	// STUPID IE
+	$song->format_pattern(); 
+	$song_name = str_replace(array('?','/','\\'),"_",$song->f_file);
+
+	// Use Horde's Browser class to send the headers
+	header("Content-Length: " . $song->size); 
+	$browser = new Browser(); 
+	$browser->downloadHeaders($song_name,$song->mime,false,$song->size); 
+	$fp = fopen($song->file,'rb'); 
+
+	if (!is_resource($fp)) { 
+                debug_event('file_read_error',"Error: Unable to open $song->file for downloading",'2');
+		exit(); 
+        }
+		
+	// Check to see if we should be throttling because we can get away with it
+	if (Config::get('rate_limit') > 0) { 
+		while (!feof($fp)) { 
+			echo fread($fp,round(Config::get('rate_limit')*1024)); 
+			flush(); 
+			sleep(1); 
+		} 
+	} 
+	else { 
+		fpassthru($fp); 
+	} 
+
+	// Make sure that a good chunk of the song has been played
+	if ($bytesStreamed > $minBytesStreamed) {
+        	debug_event('Stats','Downloaded, Registering stats for ' . $song->title,'5');
+        
+	        $user->update_stats($song->id);
+        
+	} // if enough bytes are streamed
+		
+	fclose($fp); 
+	exit(); 
+
+} // if they are trying to download and they can
 
 // Generate browser class for sending headers
 $browser = new Browser();
@@ -209,44 +263,58 @@ header("Accept-Ranges: bytes" );
 set_time_limit(0);			
 
 /* We're about to start record this persons IP */
-if (conf('track_user_ip')) { 
+if (Config::get('track_user_ip')) { 
 	$user->insert_ip_history();
 }
 
-/* If access control is on and they aren't local, downsample! */
-if (conf('access_control') AND conf('downsample_remote')) { 
-	if (!$access->check('network',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->username,'25')) { 
+// If we've got downsample remote enabled
+if (Config::get('downsample_remote')) { 
+	if (!Access::check_network('network',$_SERVER['REMOTE_ADDR'],$GLOBALS['user']->id,'25')) { 
 		$not_local = true;
 	}
-} // if access_control
+} // if downsample remote is enabled
 
-
-	
-if ($GLOBALS['user']->prefs['play_type'] == 'downsample' || !$song->native_stream() || $not_local) { 
+// If they are downsampling, or if the song is not a native stream or it's non-local
+if ((Config::get('transcode') == 'always' || !$song->native_stream() || $not_local) && Config::get('transcode') != 'never') { 
 	debug_event('downsample','Starting Downsample...','5');
-	$results = start_downsample($song,$lastid,$song_name);
-	$fp = $results['handle'];
-	$song->size = $results['size'];
-	
+	$fp = Stream::start_downsample($song,$lastid,$song_name,$start);
+	$song_name = $song->f_artist_full . " - " . $song->title . "." . $song->type;
+	// Note that this is downsampling
+	$downsampled_song = true; 
 } // end if downsampling
 else { 
 	// Send file, possible at a byte offset
 	$fp = fopen($song->file, 'rb');
 	
-if (!is_resource($fp)) { 
+	if (!is_resource($fp)) { 
 		debug_event('file_read_error',"Error: Unable to open $song->file for reading",'2');
 		cleanup_and_exit($lastid);
 	}
 } // else not downsampling
 
-if ($start) {
+// Put this song in the now_playing table
+Stream::insert_now_playing($song->id,$uid,$song->time,$sid);
+
+if (isset($start)) {
+
+	// Calculate stream size from byte range
+	if(isset($end)) {
+		$end = min($end,$song->size-1);
+		$stream_size = ($end-$start)+1;
+	} 
+	else {
+		$stream_size = $song->size - $start;
+	}
+	
 	debug_event('seek','Content-Range header recieved, skipping ahead ' . $start . ' bytes out of ' . $song->size,'5');
 	$browser->downloadHeaders($song_name, $song->mime, false, $song->size);
-	fseek( $fp, $start );
-	$range = $start ."-". ($song->size-1) . "/" . $song->size;
+	if (!$downsampled_song) { 
+		fseek( $fp, $start );
+	} 
+	$range = $start ."-". $end . "/" . $song->size;
 	header("HTTP/1.1 206 Partial Content");
-	header("Content-Range: bytes=$range");
-	header("Content-Length: ".($song->size-$start));
+	header("Content-Range: bytes $range");
+	header("Content-Length: ".($stream_size));
 }
 
 /* Last but not least pump em out */
@@ -254,47 +322,60 @@ else {
 	debug_event('stream','Starting stream of ' . $song->file . ' with size ' . $song->size,'5'); 
 	header("Content-Length: $song->size");
 	$browser->downloadHeaders($song_name, $song->mime, false, $song->size);
+	$stream_size = $song->size; 
 }
 	
 
 /* Let's force them to actually play a portion of the song before 
  * we count it in the statistics
- * @author SH
  */
-$bytesStreamed  = 0;
-$minBytesStreamed = $song->size / 2;
-while (!feof($fp) && (connection_status() == 0)) {
-	$buf = fread($fp, 2048);
-        print($buf);
-        $bytesStreamed += strlen($buf);
+$bytes_streamed = 0;
+$min_bytes_streamed = $song->size / 2;
+
+// Actually do the streaming 
+do {
+	$buf = fread($fp, min(2048,$stream_size-$bytes_streamed));
+	print($buf);
+	$bytes_streamed += strlen($buf);
+} while (!feof($fp) && (connection_status() == 0) AND $bytes_streamed < $stream_size);
+
+// Need to make sure enough bytes were sent. Some players (Windows Media Player) won't work if specified content length is not sent.
+if($bytes_streamed < $stream_size AND (connection_status() == 0)) {
+	print(str_repeat(' ',$stream_size - $bytes_streamed));
 }
 
-/* Delete the Now Playing Entry */
-delete_now_playing($lastid);
-
-if ($bytesStreamed > $minBytesStreamed) {
-        $user->update_stats($song_id);
-	/* If this is a voting tmp playlist remove the entry */
-	if (is_object($tmp_playlist)) { 
-		if ($tmp_playlist->type == 'vote') { 
-			$tmp_playlist->delete_track($song_id);
-		}
-	}
-
+// Make sure that a good chunk of the song has been played
+if ($bytes_streamed > $min_bytes_streamed) {
+	debug_event('Stats','Registering stats for ' . $song->title,'5'); 
+	
+        $user->update_stats($song->id);
 	/* Set the Song as Played if it isn't already */
 	$song->set_played();
-} 
+
+} // if enough bytes are streamed
 else { 
-	debug_event('stream',$bytesStreamed .' of ' . $song->size . ' streamed, less than ' . $minBytesStreamed . ' not collecting stats','5');
+	debug_event('stream',$bytes_streamed .' of ' . $song->size . ' streamed, less than ' . $min_bytes_streamed . ' not collecting stats','5'); 
 } 
 
+
+/* If this is a voting tmp playlist remove the entry, we do this regardless of play amount */
+if ($demo_id) {
+	$row_id = $democratic->get_uid_from_object_id($song_id,'song');
+        if ($row_id) {
+		debug_event('Democratic','Removing ' . $song->title . ' from Democratic Playlist','1');
+		$democratic->delete_votes($row_id);
+	}
+} // if tmp_playlist
 
 /* Clean up any open ends */
-if ($GLOBALS['user']->prefs['play_type'] == 'downsample' || !$song->native_stream()) { 
+if (Config::get('play_type') == 'downsample' || !$song->native_stream()) { 
 	@pclose($fp);
 } 
 else { 
 	@fclose($fp);
 }
+
+// Note that the stream has ended
+debug_event('stream','Stream Ended at ' . $bytes_streamed . ' bytes out of ' . $song->size,'5'); 
 
 ?>

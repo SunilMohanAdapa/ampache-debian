@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved.
 
  This program is free software; you can redistribute it and/or
@@ -20,18 +20,19 @@
 */
 
 /*
-
  Show us the stats for the server and this user
-
 */
-require_once('lib/init.php');
+require_once 'lib/init.php';
 
-show_template('header');
-
-$action = scrub_in($_REQUEST['action']); 
+show_header(); 
 
 /* Switch on the action to be performed */
-switch ($action) { 
+switch ($_REQUEST['action']) { 
+	// Show a Users "Profile" page
+	case 'show_user': 
+		$client = new User($_REQUEST['user_id']); 
+		require_once Config::get('prefix') . '/templates/show_user.inc.php'; 
+	break;
 	case 'user_stats':
 		/* Get em! */
 		$working_user = new User($_REQUEST['user_id']); 
@@ -41,39 +42,16 @@ switch ($action) {
                 $favorite_albums        = $working_user->get_favorites('album');
                 $favorite_songs         = $working_user->get_favorites('song');
 
-                require_once(conf('prefix') . '/templates/show_user_stats.inc.php');
+                require_once Config::get('prefix') . '/templates/show_user_stats.inc.php';
 	
 	break;
-	/* Show their stats */
+	// Show stats
 	default: 
-		/* Here's looking at you kid! */
-		$working_user = $GLOBALS['user'];
-
-		/* Pull favs */
-		$favorite_artists	= $working_user->get_favorites('artist');
-		$favorite_albums	= $working_user->get_favorites('album');
-		$favorite_songs		= $working_user->get_favorites('song');
-
-		require_once(conf('prefix') . '/templates/show_user_stats.inc.php');
-
-		// Onlu do this is ratings are on 
-		if (conf('ratings')) { 
-			/* Build Recommendations from Ratings */
-			$recommended_artists	= $working_user->get_recommendations('artist');
-			$recommended_albums	= $working_user->get_recommendations('albums');
-			$recommended_songs	= $working_user->get_recommendations('song');
-	
-			require_once(conf('prefix') . '/templates/show_user_recommendations.inc.php');
-		} // if ratings on 
-
-                show_box_top();
-                /* Show Most Popular artist/album/songs */
-                show_all_popular();
-
-                /* Show Recent Additions */
-                show_all_recent();
-                show_box_bottom();
-		
+		// Global stuff first
+		$stats = Catalog::get_stats(); 
+		require_once Config::get('prefix') . '/templates/show_local_catalog_info.inc.php';
+		require_once Config::get('prefix') . '/templates/show_stats_popular.inc.php'; 
+		require_once Config::get('prefix') . '/templates/show_stats_newest.inc.php'; 
 	break;
 } // end switch on action
 

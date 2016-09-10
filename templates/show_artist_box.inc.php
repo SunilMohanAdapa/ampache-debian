@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) 2001 - 2007 Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -19,24 +19,31 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */ 
-$web_path = conf('web_path');
+$web_path = Config::get('web_path');
 $title = _('Albums by') . " " . $artist->full_name; 
 ?>
-<?php require (conf('prefix') . '/templates/show_box_top.inc.php'); ?>
-<?php 
-if (conf('ratings')) { 
-	echo "<span id=\"rating_" . $artist->id . "_artist\" style=\"display:inline;\">";
+<?php
+show_box_top(_('Albums by') . ' ' . $artist->f_name,'info-box');  
+if (Config::get('ratings')) { 
+	echo "<div id=\"rating_" . $artist->id . "_artist\" style=\"display:inline;\">";
 	show_rating($artist->id, 'artist'); 
-	echo "</span>";
+	echo "</div>";
 } // end if ratings ?>
-<strong><?php echo _('Actions'); ?>:</strong><br />
-&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/artists.php?action=show_all_songs&amp;artist=<?php echo $artist_id; ?>"><?php echo _("Show All Songs By") . " " . $artist->full_name; ?></a><br />
-&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/song.php?action=artist&amp;artist_id=<?php echo $artist_id; ?>"><?php echo _("Play All Songs By") . " " . $artist->full_name; ?></a><br />
-&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/song.php?action=artist_random&amp;artist_id=<?php echo $artist_id; ?>"><?php echo _("Play Random Songs By") . " " . $artist->full_name; ?></a><br />
-<?php  if ($GLOBALS['user']->has_access('100')) { ?>
-	&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/artists.php?action=update_from_tags&amp;artist=<?php echo $artist_id; ?>"><?php echo _("Update from tags"); ?></a><br />
-	&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/artists.php?action=show_rename&amp;artist=<?php echo $artist_id; ?>"><?php echo _("Rename Artist"); ?></a><br />
-	&nbsp;&nbsp;<a href="<?php echo $web_path; ?>/artists.php?action=show_similar&amp;artist=<?php echo $artist_id; ?>"><?php echo _("Find duplicate artists"); ?></a><br />
+<strong><?php echo _('Actions'); ?>:</strong>
+<div id="information_actions">
+<a href="<?php echo $web_path; ?>/artists.php?action=show_all_songs&amp;artist=<?php echo $artist->id; ?>"><?php echo _("Show All Songs By") . " " . $artist->f_name; ?></a><br />
+<?php echo Ajax::text('?action=basket&type=artist&id=' . $artist->id,_('Add All Songs By') . ' ' . $artist->f_name,'play_full_artist'); ?><br />
+<?php echo Ajax::text('?action=basket&type=artist_random&id=' . $artist->id,_('Add Random Songs By') . ' ' . $artist->f_name,'play_random_artist'); ?><br />
+<?php if ($GLOBALS['user']->has_access('50')) { ?>
+	<a href="<?php echo $web_path; ?>/artists.php?action=update_from_tags&amp;artist=<?php echo $artist->id; ?>"><?php echo _("Update from tags"); ?></a><br />
 <?php } ?>
-<?php require (conf('prefix') . '/templates/show_box_bottom.inc.php'); ?>
-<?php unset($title); ?>
+<?php if (Plugin::is_installed('OpenStrands')) { ?>
+<?php echo Ajax::text('?page=stats&action=show_recommend&type=artist&id=' . $artist->id,_('Recommend Similar'),'artist_recommend_similar'); ?>
+<?php } ?>
+</div>
+<?php show_box_bottom(); ?>
+<div id="additional_information">
+&nbsp;
+</div>
+
+

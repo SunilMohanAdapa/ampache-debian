@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -27,87 +27,131 @@
 class Album {
 
 	/* Variables from DB */
-	var $id;
-	var $name;
-	var $year;
-	var $prefix;
+	public $id;
+	public $name;
+	public $full_name; // Prefix + Name, genereated by format(); 
+	public $disk; 
+	public $year;
+	public $prefix;
 
 	/* Art Related Fields */
-	var $art;
-	var $art_mime; 
+	public $art;
+	public $art_mime; 
+	public $thumb; 
+	public $thumb_mime;
 
 	// cached information
-	var $_songs=array(); 
+	public $_songs=array(); 
 
-	/*!
-		@function Album
-		@discussion Album class, for modifing a song.
-		@param $album_id 	The ID of the song
+	/**
+	 * __construct
+	 * Album constructor it loads everything relating
+	 * to this album from the database it does not
+	 * pull the album or thumb art by default or
+	 * get any of the counts.
 	 */
-	function Album($album_id = 0) {
+	public function __construct($album_id='') {
 
 		if (!$album_id) { return false; } 
 
 		/* Assign id for use in get_info() */
-		$this->id = $album_id;
+		$this->id = intval($album_id);
 
 		/* Get the information from the db */
-		if ($info = $this->_get_info()) {
-			$this->name 		= trim($info['prefix'] . " " . $info['album_name']);
-			$this->songs		= $info['song_count'];
-			$this->artist_count	= $info['artist_count'];
-			$this->year		= $info['year'];
-			$this->artist		= trim($info['artist_prefix'] . " " . $info['artist_name']);
-			$this->artist_id	= $info['art_id'];
-			$this->album		= $info['album_name'];
-			$this->has_art		= $info['has_art'];
-			$this->prefix 		= $info['prefix'];
-		} // if info
+		$info = $this->_get_info();
+	
+		// Foreach what we've got
+		foreach ($info as $key=>$value) { 
+			$this->$key = $value; 
+		} 
+
+		// Little bit of formating here
+		$this->full_name = trim($info['prefix'] . ' ' . $info['name']);
 
 		return true; 
 
 	} //constructor
 
-	/*!
-		@function get_info
-		@discussion get's the vars for $this out of the database 
-		@param $this->id	Taken from the object
-	*/
-	function _get_info() {
+	/**
+	 * construct_from_array
+	 * This is often used by the metadata class, it fills out an album object from a
+	 * named array, _fake is set to true
+	 */
+	public static function construct_from_array($data) { 
 
-		$this->id = intval($this->id); 
-	
-		/* Grab the basic information from the catalog and return it */
-		$sql = "SELECT COUNT(DISTINCT(song.artist)) as artist_count,album.prefix,album.year,album.name AS album_name,COUNT(song.id) AS song_count," .
-			"artist.name AS artist_name,artist.id AS art_id,artist.prefix AS artist_prefix,album.art AS has_art ".
-			"FROM song,artist,album WHERE album.id='$this->id' AND song.album=album.id AND song.artist=artist.id GROUP BY song.album";
+		$album = new Album(0); 
+		foreach ($data as $key=>$value) { 
+			$album->$key = $value; 
+		} 
 
-		$db_results = mysql_query($sql, dbh());
+		// Make sure that we tell em it's fake
+		$album->_fake = true; 
 
-		$results = mysql_fetch_assoc($db_results);
+		return $album; 
 
-		// If there is art then set it to 1, if not set it to 0, we don't want to cary
-		// around the full blob with every object because it can be pretty big
-		$results['has_art'] = strlen($results['has_art']) ? '1' : '0'; 
+	} // construct_from_array
+
+	/**
+	 * _get_info
+	 * This is a private function that pulls the album 
+	 * from the database 
+	 */
+	private function _get_info() {
+
+		// Just get the album information
+		$sql = "SELECT * FROM `album` WHERE `id`='" . $this->id . "'"; 
+		$db_results = Dba::query($sql);
+
+		$results = Dba::fetch_assoc($db_results);
 
 		return $results;
 
 	} // _get_info
 
-	/*!
-		@function get_songs
-		@discussion gets the songs for this album
-	*/
-	function get_songs($limit = 0) { 
+	/**
+	 * _get_extra_info
+	 * This pulls the extra information from our tables, this is a 3 table join, which is why we don't normally
+	 * do it
+	 */
+	private function _get_extra_info() { 
+
+		$sql = "SELECT COUNT(DISTINCT(song.artist)) as artist_count,COUNT(song.id) AS song_count,artist.name AS artist_name" . 
+			",artist.prefix AS artist_prefix,album_data.art AS has_art,album_data.thumb AS has_thumb, artist.id AS artist_id ".
+			"FROM `song` " .
+			"INNER JOIN `artist` ON `artist`.`id`=`song`.`artist` " .
+			"LEFT JOIN `album_data` ON `album_data`.`album_id` = `song`.`album` " . 
+			"WHERE `song`.`album`='$this->id' GROUP BY `song`.`album`";
+		$db_results = Dba::query($sql); 
+
+		$results = Dba::fetch_assoc($db_results); 
+
+		if ($results['has_art']) { $results['has_art'] = 1; } 
+		if ($results['has_thumb']) { $results['has_thumb'] = 1; } 
+
+		return $results; 
+
+	} // _get_extra_info
+
+	/**
+	 * get_songs
+	 * gets the songs for this album takes an optional limit
+	 * and an optional artist, if artist is passed it only gets
+	 * songs with this album + specified artist
+	 */
+	public function get_songs($limit = 0,$artist='') { 
 
 		$results = array();
+	
+		if ($artist) { 
+			$artist_sql = "AND `artist`='" . Dba::escape($artist) . "'";
+		} 
 
-		$sql = "SELECT id FROM song WHERE album='$this->id' ORDER BY track, title";
+		$sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' $artist_sql ORDER BY `track`, `title`";
 		if ($limit) { $sql .= " LIMIT $limit"; }
-		$db_results = mysql_query($sql, dbh());
+		$db_results = Dba::query($sql);
 
-		while ($r = mysql_fetch_object($db_results)) { 
-			$results[] = new Song($r->id);
+		while ($r = Dba::fetch_assoc($db_results)) { 
+			$results[] = $r['id'];
 		}
 
 		return $results;
@@ -115,29 +159,40 @@ class Album {
 	} // get_songs
 
 	/**
-	 * get_song_ids
-	 * This returns an array of the song id's that are on this album. This is used by the
-	 * show_songs function and can be pased and artist if you so desire to limit it to that
+	 * has_art
+	 * This returns true or false depending on if we find any art for this 
+	 * album. 
 	 */
-	function get_song_ids($artist='') { 
+	public function has_art() { 
 
-		/* If they pass an artist then constrain it based on the artist as well */
-		if ($artist) { 
-			$artist_sql = " AND artist='" . sql_escape($artist) . "'";
-		}
-		
-		$sql = "SELECT id FROM song WHERE album='" . sql_escape($this->id) . "' $artist_sql ORDER BY track";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "SELECT `album_id` FROM `album_data` WHERE `album_id`='" . $this->id . "' AND art IS NOT NULL"; 
+		$db_results = Dba::query($sql); 
 
-		$results = array();
+		if (Dba::fetch_assoc($db_results)) { 
+			$this->has_art = true; 
+			return true; 
+		} 
 
-		while ($r = mysql_fetch_assoc($db_results)) { 
-			$results[] = $r['id'];
-		}
+		return false; 
 
-		return $results;
+	} // has_art
 
-	} // get_song_ids
+	/**
+	 * has_track
+	 * This checks to see if this album has a track of the specified title
+	 */
+	public function has_track($title) { 
+
+		$title = Dba::escape($title); 
+
+		$sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' AND `title`='$title'"; 
+		$db_results = Dba::query($sql); 
+
+		$data = Dba::fetch_assoc($db_results); 
+
+		return $data; 
+
+	} // has_track
 
 	/**
 	 * format
@@ -145,21 +200,33 @@ class Album {
 	 * album information with the base required
 	 * f_link, f_name
 	 */
-	function format() { 
+	public function format() { 
 
-	        $web_path = conf('web_path');
+	        $web_path = Config::get('web_path');
 
+		/* Pull the advanced information */
+		$data = $this->_get_extra_info(); 
+		foreach ($data as $key=>$value) { $this->$key = $value; } 
+		
 		/* Truncate the string if it's to long */
-		$name 		= scrub_out(truncate_with_ellipse($this->name,conf('ellipse_threshold_album')));
-		$artist		= scrub_out($this->artist);
-	        $this->f_name	= "<a href=\"$web_path/albums.php?action=show&amp;album=" . $this->id . "\" title=\"" . scrub_out($this->name) . "\">" . $name . "</a>";
-		$this->f_link	= "<a href=\"$web_path/albums.php?action=show&amp;album=" . scrub_out($this->id) . "\" title=\"" . scrub_out($this->name) . "\">" . $name . "</a>";
-	        $this->f_songs	= "<div align=\"center\">" . $this->songs . "</div>";
-		$this->f_title	= $name; 
+	  	$this->f_name		= truncate_with_ellipsis($this->full_name,Config::get('ellipse_threshold_album'));
+
+		$this->f_name_link	= "<a href=\"$web_path/albums.php?action=show&amp;album=" . scrub_out($this->id) . "\" title=\"" . scrub_out($this->full_name) . "\">" . $this->f_name;
+		// If we've got a disk append it
+		if ($this->disk) { 
+			$this->f_name_link .= " <span class=\"discnb disc" .$this->disk. "\">[" . _('Disk') . " " . $this->disk . "]</span>";
+		} 
+		$this->f_name_link .="</a>";
+		
+		$this->f_link 		= $this->f_name_link; 
+		$this->f_title		= $full_name; 
 		if ($this->artist_count == '1') { 
-		        $this->f_artist	= "<a href=\"$web_path/artists.php?action=show&amp;artist=" . $this->artist_id . "\">" . $artist . "</a>";
+			$artist = scrub_out(truncate_with_ellipsis(trim($this->artist_prefix . ' ' . $this->artist_name),Config::get('ellipse_threshold_artist')));
+		        $this->f_artist_link = "<a href=\"$web_path/artists.php?action=show&amp;artist=" . $this->artist_id . "\" title=\"" . scrub_out($this->artist_name) . "\">" . $artist . "</a>";
+			$this->f_artist = $artist; 
 		}
 		else {
+			$this->f_artist_link = "<span title=\"$this->artist_count " . _('Artists') . "\">" . _('Various') . "</span>"; 
 			$this->f_artist = _('Various');
 		}
 
@@ -167,27 +234,27 @@ class Album {
 			$this->year = "N/A";
 		}
 
+		// Format the artist name to include the prefix
+		$this->f_artist_name = trim($this->artist_prefix . ' ' . $this->artist_name); 
+
 	} // format
 
 	/**
-	 * format_album
-	 * DEPRECIATED DO NOT USE!
-	 */
-	function format_album() { 
-	
-		// Call the real function 
-		$this->format(); 
-
-	} // format_album
-
-	/**
 	 * get_art
-	 * This function only pulls art from the database, nothing else
-	 * It should not be called when trying to find new art
+	 * This function only pulls art from the database, if thumb is passed
+	 * it trys to pull the resized art instead, if resized art is found then
+	 * it returns an additional resized=true in the array
 	 */
-	function get_art() { 
+	public function get_art() { 
 
-		return $this->get_db_art(); 
+		// Attempt to get the resized art first
+		//$art = $this->get_resized_db_art(); 
+		
+		if (!is_array($art)) { 
+			$art = $this->get_db_art(); 
+		}
+
+		return $art['0'];
 
 	} // get_art
 
@@ -201,13 +268,13 @@ class Album {
 	 * ['artist']  		= STRING
 	 * ['album_name']	= STRING
 	 */
-	function find_art($options=array(),$limit='') { 
+	public function find_art($options=array(),$limit='') { 
 
 		/* Create Base Vars */
 		$results = array(); 
 
 		/* Attempt to retrive the album art order */
-		$config_value = conf('album_art_order');
+		$config_value = Config::get('album_art_order');
                 $class_methods = get_class_methods('Album');		
 		
 		/* If it's not set */
@@ -230,15 +297,11 @@ class Album {
 					case 'get_amazon_art':
 						$data = $this->{$method_name}($options['keyword'],$limit); 
 					break;
-					case 'get_lastfm_art': 
-						$data = $this->{$method_name}($limit); 
+					case 'get_lastfm_art':
+						$data = $this->{$method_name}($limit,$options); 
 					break;
-					case 'get_id3_art':
-						if ($options['skip_id3']) { break; } 
-						$data = $this->{$method_name}($limit); 
-					break; 
 					default:
-						$data = $this->{$method_name}(); 
+						$data = $this->{$method_name}($limit); 
 					break; 
 				} 
 
@@ -259,29 +322,47 @@ class Album {
 	} // find_art
 
 	/**
- 	 * get_lastfm_art
-	 * This trys to pull the album art from LastFM
+	 * get_lastfm_art
+	 * This returns the art as pulled from lastFM. This doesn't require
+	 * a special account, we just parse and run with it. 
 	 */
-	function get_lastfm_art($limit='') { 
+	public function get_lastfm_art($limit,$options='') { 
 
 		// Create the parser object
 		$lastfm = new LastFMSearch(); 
 
-		$raw_data = $lastfm->search($this->artist,$this->name); 
-		
+		if (is_array($options)) { 
+			$artist	= $options['artist'];
+			$album	= $options['album_name']; 
+		} 
+		else { 
+			$artist = $this->artist_name; 
+			$album = $this->full_name; 
+		} 
+
+		$raw_data = $lastfm->search($artist,$album); 
+
+		if (!count($raw_data)) { return array(); } 
+
 		$coverart = $raw_data['coverart']; 
 
-		if (!count($coverart)) { return array(); } 
-
 		ksort($coverart); 
-		foreach ($coverart as $key=>$value) { 			
+		
+		foreach ($coverart as $key=>$value) { 
 			$i++; 
-			$url = $coverart[$key];
+			$url = $coverart[$key]; 
+
+			// We need to check the URL for the /noimage/ stuff
+			if (strstr($url,"/noimage/")) { 
+				debug_event('LastFM','Detected as noimage, skipped ' . $url,'3'); 
+				continue; 
+			} 
+
 			$results = pathinfo($url); 
-			$mime = 'image/' . $results['extension'];
+			$mime = 'image/' . $results['extension']; 
 			$data[] = array('url'=>$url,'mime'=>$mime); 
-			if ($i >= $limit) { return $data; } 	
-		} 
+			if ($i >= $limit) { return $data; } 
+		} // end foreach
 
 		return $data; 
 
@@ -300,20 +381,23 @@ class Album {
 		$data = array(); 
 
 		// Foreach songs in this album
-		foreach ($this->_songs as $song) {
-
+		foreach ($this->_songs as $song_id) { 
+			$song = new Song($song_id); 
 			// If we find a good one, stop looking
 		        $getID3 = new getID3();
-		        $id3 = $getID3->analyze($song->file);
+			try { $id3 = $getID3->analyze($song->file); } 
+			catch (Exception $error) { 
+				debug_event('getid3',$error->message,'1'); 
+			} 
 
 			if ($id3['format_name'] == "WMA") { 
 				$image = $id3['asf']['extended_content_description_object']['content_descriptors']['13'];
-				$data[] = array('raw'=>$image['data'],'mime'=>$image['mime']);
+				$data[] = array('song'=>$song->file,'raw'=>$image['data'],'mime'=>$image['mime']);
 			}
 			elseif (isset($id3['id3v2']['APIC'])) { 
 				// Foreach incase they have more then one 
 				foreach ($id3['id3v2']['APIC'] as $image) { 
-					$data[] = array('raw'=>$image['data'],'mime'=>$image['mime']);
+					$data[] = array('song'=>$song->file,'raw'=>$image['data'],'mime'=>$image['mime']);
 				} 
 			}
 
@@ -341,23 +425,15 @@ class Album {
 		$data = array(); 
 
 		/* See if we are looking for a specific filename */
-		$preferred_filename = conf('album_art_preferred_filename');
-
-		// Check to see if they've fuzzyed this one up
-		$fuzzyness = substr_count($preferred_filename,'%'); 
-	
-		if ($fuzzyness) { 
-			$pattern = preg_quote($preferred_filename,'/'); 
-			$pattern = '/' . str_replace("%",".*",$pattern) . '/'; 
-		} 
-
+		$preferred_filename = Config::get('album_art_preferred_filename');
 
 		// Init a horrible hack array of lameness
 		$cache =array(); 
 		
 		/* Thanks to dromio for origional code */
 		/* Added search for any .jpg, png or .gif - Vollmer */
-		foreach($this->_songs as $song) { 
+		foreach($this->_songs as $song_id) { 
+			$song = new Song($song_id);
 			$dir = dirname($song->file);
 
 			debug_event('folder_art',"Opening $dir and checking for Album Art",'3'); 
@@ -366,10 +442,9 @@ class Album {
 	                $handle = @opendir($dir);
 
                 	if (!is_resource($handle)) {
-	                        echo "<font class=\"error\">" . _("Error: Unable to open") . " $dir</font><br />\n";
+				Error::add('general',_('Error: Unable to open') . ' ' . $dir); 
 				debug_event('read',"Error: Unable to open $dir for album art read",'2');
 	                }
-
 
 	                /* Recurse through this dir and create the files array */
 	                while ( FALSE !== ($file = @readdir($handle)) ) {
@@ -378,6 +453,8 @@ class Album {
 				/* If it's an image file */
 				if ($extension == "jpg" || $extension == "gif" || $extension == "png" || $extension == "jp2") { 
 
+					if ($extension == 'jpg') { $extension = 'jpeg'; } 
+
 					// HACK ALERT this is to prevent duplicate filenames
 					$full_filename	= $dir . '/' . $file; 
 					$index		= md5($full_filename); 
@@ -385,15 +462,7 @@ class Album {
 					/* Make sure it's got something in it */
 					if (!filesize($dir . '/' . $file)) { continue; } 
 
-					// Are we fuzzy enough? 
-					if ($fuzzyness) { 
-						// check to see if it matches our pattern
-						if (preg_match($pattern,$file)) { 
-							$data = array(array('file'=>$full_filename,'mime'=>'image/' . $extension)); 
-							return $data;
-						} 
-					} 
-					elseif ($file == $preferred_filename) { 
+					if ($file == $preferred_filename) { 
 						// If we found the preferred filename we're done, wipe out previous results
 						$data = array(array('file' => $full_filename, 'mime' => 'image/' . $extension));
 						return $data;
@@ -417,22 +486,48 @@ class Album {
 
 		return $data;
 
-	} // get_folder_art()
+	} // get_folder_art
 
 	/**
-	 * get_db_art()
+	 * get_resized_db_art
+	 * This looks to see if we have a resized thumbnail that we can load rather then taking
+	 * the fullsized and resizing that
+	 */
+	public function get_resized_db_art() { 
+
+		$id = Dba::escape($this->id); 
+
+		$sql = "SELECT `thumb` AS `art`,`thumb_mime` AS `art_mime` FROM `album_data` WHERE `album_id`='$id'";
+		$db_results = Dba::query($sql); 
+		
+		$results = Dba::fetch_assoc($db_results); 
+		if (strlen($results['art_mime'])) { 
+			$results['resized'] = true; 
+		} 
+		else { return false; } 
+
+		$data = array(array('db_resized'=>$this->id,'raw'=>$results['art'],'mime'=>$results['art_mime']));
+
+		return $data;
+
+	} // get_resized_db_art
+
+	/**
+	 * get_db_art
 	 * returns the album art from the db along with the mime type
 	 */
-	function get_db_art() {
+	public function get_db_art() {
 
-		$sql = "SELECT art,art_mime FROM album WHERE id='$this->id' AND art_mime IS NOT NULL";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "SELECT `art`,`art_mime` FROM `album_data` WHERE `album_id`='$this->id'";
+		$db_results = Dba::query($sql);
 
-		$results = mysql_fetch_assoc($db_results);
+		$results = Dba::fetch_assoc($db_results);
+
+		if (!$results['art']) { return array(); } 
+
+		$data = array(array('db'=>$this->id,'raw'=>$results['art'],'mime'=>$results['art_mime'])); 
 		
-		if (!$results['art_mime']) { return array(); } 
-		
-		return $results;
+		return $data;
 
 	} // get_db_art
 
@@ -441,7 +536,7 @@ class Album {
 	 * This takes keywords and performs a search of the Amazon website
 	 * for album art. It returns an array of found objects with mime/url keys
 	 */
-	function get_amazon_art($keywords = '',$limit='') {
+	public function get_amazon_art($keywords = '',$limit='') {
 
 		$images 	= array();
 		$final_results 	= array();
@@ -451,7 +546,7 @@ class Album {
 		set_time_limit(0);
 
 		if (empty($keywords)) { 		
-			$keywords = $this->name;
+			$keywords = $this->full_name;
 			/* If this isn't a various album combine with artist name */
 			if ($this->artist_count == '1') { $keywords .= ' ' . $this->artist; }
 		}
@@ -460,7 +555,7 @@ class Album {
 		$amazon_base_urls = array();
 
 		/* Attempt to retrive the album art order */
-		$config_value = conf('amazon_base_urls');
+		$config_value = Config::get('amazon_base_urls');
                
 		/* If it's not set */
 		if (empty($config_value)) { 
@@ -470,18 +565,18 @@ class Album {
 	        	array_push($amazon_base_urls,$config_value);
 		}
 		else { 
-			$amazon_base_urls = array_merge($amazon_base_urls, conf('amazon_base_urls'));
+			$amazon_base_urls = array_merge($amazon_base_urls, Config::get('amazon_base_urls'));
 		}
 
 	       /* Foreach through the base urls that we should check */
                foreach ($amazon_base_urls AS $amazon_base) { 
 
 		    	// Create the Search Object
-	        	$amazon = new AmazonSearch(conf('amazon_developer_key'), $amazon_base);
+	        	$amazon = new AmazonSearch(Config::get('amazon_developer_key'), $amazon_base);
 			$search_results = array();
 
 			/* Setup the needed variables */
-			$max_pages_to_search = max(conf('max_amazon_results_pages'),$amazon->_default_results_pages);
+			$max_pages_to_search = max(Config::get('max_amazon_results_pages'),$amazon->_default_results_pages);
 			$pages_to_search = $max_pages_to_search; //init to max until we know better.
 
 			// while we have pages to search 
@@ -519,7 +614,7 @@ class Album {
 			}
 
 			/* Log this if we're doin debug */
-			debug_event('amazon-xml',"Searched using $keywords with " . conf('amazon_developer_key') . " as key " . count($final_results) . " results found",'5');
+			debug_event('amazon-xml',"Searched using $keywords with " . Config::get('amazon_developer_key') . " as key " . count($final_results) . " results found",'5');
 
 			// If we've hit our limit
 			if (!empty($limit) && count($final_results) >= $limit) { 
@@ -540,7 +635,7 @@ class Album {
 
 			// Rudimentary image type detection, only JPG and GIF allowed.
 			if (substr($result[$key], -4 == '.jpg')) {
-				$mime = "image/jpg";
+				$mime = "image/jpeg";
 			}
 			elseif (substr($result[$key], -4 == '.gif')) { 
 				$mime = "image/gif";
@@ -568,72 +663,142 @@ class Album {
 	
 		return $images;
 
-	} // get_amazon_art() 
+	} // get_amazon_art 
 
-
-	/*!
-		@function get_random_songs
-		@discussion gets a random number, and 
-			a random assortment of songs from this 
-			album
-	*/
+	/**
+	 * get_random_songs
+	 * gets a random number, and a random assortment of songs from this album
+	 */
 	function get_random_songs() { 
 
-		$results = array();
+		$sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' ORDER BY RAND()";
+		$db_results = Dba::query($sql);
 
-		$sql = "SELECT id FROM song WHERE album='$this->id' ORDER BY RAND()";
-		$db_results = mysql_query($sql, dbh());
-
-		while ($r = mysql_fetch_array($db_results)) { 
-			$results[] = $r[0];
+		while ($r = Dba::fetch_row($db_results)) { 
+			$results[] = $r['0'];
 		}
 
 		return $results;
 
 	} // get_random_songs
 
-	/*!
-		@function clear_art
-		@discussion clears the album art from the DB
-	*/
-	function clear_art() { 
+	/**
+	 * update
+	 * This function takes a key'd array of data and updates this object
+	 * as needed, and then throws down with a flag
+	 */
+	public function update($data) { 
+
+
+		$year 		= $data['year']; 
+		$artist		= $data['artist']; 
+		$name		= $data['name']; 
+		$disk		= $data['disk'];
+
+		$current_id = $this->id; 
+
+		if ($artist != $this->artist_id AND $artist > 0) { 
+			// Update every song
+			$songs = $this->get_songs(); 
+			foreach ($songs as $song_id) { 
+				Song::update_artist($artist,$song_id); 
+			} 
+			$updated = 1; 
+			Catalog::clean_artists(); 
+		} 
+
+		$album_id = Catalog::check_album($name,$year,$disk); 
+		if ($album_id != $this->id) { 
+			if (!is_array($songs)) { $songs = $this->get_songs(); } 
+			foreach ($songs as $song_id) { 
+				Song::update_album($album_id,$song_id); 
+				Song::update_year($year,$song_id);
+			} 
+			$current_id = $album_id; 
+			$updated = 1; 
+			Catalog::clean_albums(); 
+		} 
+
+		if ($updated) { 
+			// Flag all songs
+			foreach ($songs as $song_id) { 
+				Flag::add($song_id,'song','retag','Interface Album Update'); 
+				Song::update_utime($song_id); 
+			} // foreach song of album
+			Catalog::clean_stats(); 
+		} // if updated
+
+
+		return $current_id; 
+
+	} // update
+
+	/**
+	 * clear_art
+	 * clears the album art from the DB
+	 */
+	public function clear_art() { 
 	
-		$sql = "UPDATE album SET art=NULL, art_mime=NULL WHERE id='$this->id'";
-		$db_results = mysql_query($sql, dbh());
+		$sql = "UPDATE `album_data` SET `art`=NULL, `art_mime`=NULL, `thumb`=NULL, `thumb_mime`=NULL WHERE `album_id`='$this->id'";
+		$db_results = Dba::query($sql);
 
 	} // clear_art
 
-	/*!
-		@function insert_art
-		@discussion this takes a string representation of an image
-			and inserts it into the database. You must pass the
-			mime type as well
-	*/
-	function insert_art($image, $mime) { 
+	/**
+	 * insert_art
+	 * this takes a string representation of an image
+	 * and inserts it into the database. You must pass the mime type as well
+	 */
+	public function insert_art($image, $mime) { 
 
 		/* Have to disable this for Demo because people suck and try to
  		 * insert PORN :( 
 		 */
-		if (conf('demo_mode')) { return false; } 
+		if (Config::get('demo_mode')) { return false; } 
 
                 // Check for PHP:GD and if we have it make sure this image is of some size
         	if (function_exists('ImageCreateFromString')) {
-			$im = @ImageCreateFromString($image);
-			if (@imagesx($im) == 1 || @imagesy($im) == 1 && $im) {
+			$im = ImageCreateFromString($image);
+			if (imagesx($im) <= 5 || imagesy($im) <= 5 || !$im) {
 	                	return false;
 	               	}
 		} // if we have PHP:GD
+		elseif (strlen($image) < 5) { 
+			return false; 
+		} 
+
+		// Default to image/jpeg as a guess if there is no passed mime type
+		$mime = $mime ? $mime : 'image/jpeg'; 
 
                 // Push the image into the database
-                $sql = "UPDATE album SET art = '" . sql_escape($image) . "'," .
-                        " art_mime = '" . sql_escape($mime) . "'" .
-        	        " WHERE id = '$this->id'";
-	        $db_results = mysql_query($sql, dbh());
+                $sql = "REPLACE INTO `album_data` SET `art` = '" . Dba::escape($image) . "'," .
+                        " `art_mime` = '" . Dba::escape($mime) . "'" .
+        	        ", `album_id` = '$this->id'";
+	        $db_results = Dba::query($sql);
 
 		return true;
 
 	} // insert_art
 
+	/**
+	 * save_resized_art
+	 * This takes data from a gd resize operation and saves
+	 * it back into the database as a thumbnail
+	 */
+	public static function save_resized_art($data,$mime,$album) { 
+
+		// Make sure there's actually something to save
+		if (strlen($data) < '5') { return false; } 
+
+		$data = Dba::escape($data); 
+		$mime = Dba::escape($mime); 
+		$album = Dba::escape($album); 
+
+		$sql = "UPDATE `album_data` SET `thumb`='$data',`thumb_mime`='$mime' " . 
+			"WHERE `album_data`.`album_id`='$album'";
+		$db_results = Dba::query($sql); 
+
+	} // save_resized_art
 
 } //end of album class
 

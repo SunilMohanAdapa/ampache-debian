@@ -1,13 +1,12 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
+ modify it under the terms of the GNU General Public License v2
+ as published by the Free Software Foundation.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,22 +20,14 @@
 */
 
 
-/*!
-	@header Admin Catalog
-	This document handles actions for catalog creation and passes them off to the catalog class
-*/
+require_once '../lib/init.php';
 
-require('../lib/init.php');
-
-if (!$GLOBALS['user']->has_access(100)) {
+if (!Access::check('interface','100')) {
 	access_denied();
+	exit; 
 }
 
-
-/* Set any vars we are going to need */
-$catalog = new Catalog($_REQUEST['catalog_id']);
-
-show_template('header');
+show_header(); 
 
 /* Big switch statement to handle various actions */
 switch ($_REQUEST['action']) {
@@ -49,82 +40,82 @@ switch ($_REQUEST['action']) {
 		$catalog = new Catalog();
 		$_REQUEST['catalogs'] = $catalog->get_catalog_ids();
 	case 'add_to_catalog':
-	    	if (conf('demo_mode')) { break; }
+		toggle_visible('ajax-loading'); 
+		ob_end_flush(); 
+	    	if (Config::get('demo_mode')) { break; }
 		if ($_REQUEST['catalogs'] ) {
 			foreach ($_REQUEST['catalogs'] as $catalog_id) {
-				echo "<div class=\"confirmation-box\">";
 				$catalog = new Catalog($catalog_id);
 				$catalog->add_to_catalog();
-				echo "</div>";
 			}
 	       	}
-		$url 	= conf('web_path') . '/admin/index.php';
+		$url 	= Config::get('web_path') . '/admin/index.php';
 		$title 	= _('Catalog Updated');
 		$body	= '';
 		show_confirmation($title,$body,$url);
+		toggle_visible('ajax-loading'); 
 	break;
 	case 'update_all_catalogs':
-		$catalog = new Catalog();
-		$_REQUEST['catalogs'] = $catalog->get_catalog_ids();
+		$_REQUEST['catalogs'] = Catalog::get_catalog_ids();
 	case 'update_catalog':
+		toggle_visible('ajax-loading'); 
+		ob_end_flush(); 
 	    	/* If they are in demo mode stop here */
-	        if (conf('demo_mode')) { break; }
+	        if (Config::get('demo_mode')) { break; }
 
 		if (isset($_REQUEST['catalogs'])) {
 			foreach ($_REQUEST['catalogs'] as $catalog_id) {
-				echo "<div class=\"confirmation-box\">";
-				$catalog = new Catalog($catalog_id);
-				$catalog->verify_catalog($catalog_id->id);
-				echo "</div>\n";
+				$catalog = new Catalog($catalog_id); 
+				$catalog->verify_catalog($catalog_id);
 			}
 		}
-		$url	= conf('web_path') . '/admin/index.php';
+		$url	= Config::get('web_path') . '/admin/index.php';
 		$title	= _('Catalog Updated');
 		$body	= '';
 		show_confirmation($title,$body,$url);
+		toggle_visible('ajax-loading'); 
 	break;
 	case 'full_service':
-		$catalog = new Catalog();
+		toggle_visible('ajax-loading'); 
+		ob_end_flush(); 
 		/* Make sure they aren't in demo mode */
-		if (conf('demo_mode')) { break; } 
+		if (Config::get('demo_mode')) { access_denied(); break; } 
 
 		if (!$_REQUEST['catalogs']) { 
-			$_REQUEST['catalogs'] = $catalog->get_catalog_ids();
+			$_REQUEST['catalogs'] = Catalog::get_catalog_ids();
 		}
 
 		/* This runs the clean/verify/add in that order */
 		foreach ($_REQUEST['catalogs'] as $catalog_id) { 
-			echo "<div class=\"confirmation-box\">";
 			$catalog = new Catalog($catalog_id);
-			$catalog->clean_catalog();
+			$catalog->clean_catalog($catalog_id);
 			$catalog->count = 0;
-			$catalog->verify_catalog();
+			$catalog->verify_catalog($catalog_id);
 			$catalog->count = 0;
-			$catalog->add_to_catalog();
-			echo "</div>";
+			$catalog->add_to_catalog($catalog_id);
 		} 		
-		$url	= conf('web_path') . '/admin/index.php';
+		$url	= Config::get('web_path') . '/admin/index.php';
 		$title	= _('Catalog Updated');
 		$body	= '';
 		show_confirmation($title,$body,$url);
+		toggle_visible('ajax-loading'); 
 	break;
 	case 'delete_catalog':
 		/* Make sure they aren't in demo mode */
-	        if (conf('demo_mode')) { break; }
+	        if (Config::get('demo_mode')) { break; }
 	
 		/* Delete the sucker, we don't need to check perms as thats done above */
-		$catalog = new Catalog($_REQUEST['catalog_id']);
-		$catalog->delete_catalog();
-		$next_url = conf('web_path') . '/admin/index.php';
-		show_confirmation(_('Catalog Deleted'),_('The Catalog and all associated records has been deleted'),$nexturl);
+		Catalog::delete($_REQUEST['catalog_id']); 
+		$next_url = Config::get('web_path') . '/admin/index.php';
+		show_confirmation(_('Catalog Deleted'),_('The Catalog and all associated records have been deleted'),$nexturl);
 	break;
 	case 'remove_disabled':
 	        if (conf('demo_mode')) { break; }
 
-		$songs = $_REQUEST['items'];
+		$song = $_REQUEST['song'];
 
-		if (count($songs)) { 
-			$catalog->remove_songs($songs);
+		if (count($song)) { 
+			$catalog->remove_songs($song);
 			$body = _('Songs Removed');
 		}
 		else {
@@ -136,106 +127,115 @@ switch ($_REQUEST['action']) {
 	break;
 	case 'clean_all_catalogs':
 		$catalog = new Catalog(); 
-		$_REQUEST['catalogs'] = $catalog->get_catalog_ids();
+		$_REQUEST['catalogs'] = Catalog::get_catalog_ids();
 	case 'clean_catalog':
+		toggle_visible('ajax-loading'); 
+		ob_end_flush(); 
 	    	/* If they are in demo mode stop them here */
-	        if (conf('demo_mode')) { break; }
+	        if (Config::get('demo_mode')) { break; }
 	
 		// Make sure they checked something
 		if (isset($_REQUEST['catalogs'])) {	
 			foreach($_REQUEST['catalogs'] as $catalog_id) { 
-				echo "<div class=\"confirmation-box\">";
 				$catalog = new Catalog($catalog_id);
 				$catalog->clean_catalog(0,1);
-				echo "</div>";
 			} // end foreach catalogs
 		}
 		
-		$url 	= conf('web_path') . '/admin/index.php';
+		$url 	= Config::get('web_path') . '/admin/index.php';
 		$title	= _('Catalog Cleaned');
 		$body	= '';
 		show_confirmation($title,$body,$url);
+		toggle_visible('ajax-loading'); 
 	break;
 	case 'update_catalog_settings':
 		/* No Demo Here! */
-        	if (conf('demo_mode')) { break; }
+        	if (Config::get('demo_mode')) { break; }
 
 		/* Update the catalog */
-		$catalog = new Catalog();
-		$catalog->update_settings($_REQUEST);
+		Catalog::update_settings($_REQUEST);
 		
-		$url 	= conf('web_path') . '/admin/index.php';
+		$url 	= Config::get('web_path') . '/admin/index.php';
 		$title 	= _('Catalog Updated');
 		$body	= '';
 		show_confirmation($title,$body,$url);
 	break;
-	// FIXME!
 	case 'add_catalog':
 		/* Wah Demo! */
-		if (conf('demo_mode')) { break; }
+		if (Config::get('demo_mode')) { break; }
+
+		ob_end_flush(); 
+
+		if (!strlen($_REQUEST['path']) || !strlen($_REQUEST['name'])) { 
+			Error::add('general','Error Name and path not specified'); 
+		} 
+
+		if (substr($_REQUEST['path'],0,7) != 'http://' && $_REQUEST['type'] == 'remote') { 
+			Error::add('general','Error Remote selected, but path is not a URL'); 
+		} 
 		
-		if ($_REQUEST['path'] AND $_REQUEST['name']) { 
-			/* Throw all of the album art types into an array */
-			$art = array('id3'=>$_REQUEST['art_id3v2'],'amazon'=>$_REQUEST['art_amazon'],'folder'=>$_REQUEST['art_folder']);
+		if ($_REQUEST['type'] == 'remote' && !strlen($_REQUEST['key'])) { 
+			Error::add('general','Error Remote Catalog specified, but no key provided'); 
+		} 
 
-			/* Enclose it in a purrty box! */
-			echo "<div class=\"confirmation-box\">";
+		// If an error hasn't occured
+		if (!Error::$state) { 
+
+			$catalog_id = Catalog::Create($_REQUEST); 
+
+			if (!$catalog_id) { 
+				require Config::get('prefix') . '/templates/show_add_catalog.inc.php'; 
+				break; 
+			} 
+
+			$catalog = new Catalog($catalog_id); 
 			
-			/* Create the Catalog */
-			$catalog->new_catalog($_REQUEST['path'],
-					$_REQUEST['name'],
-					$_REQUEST['key'],
-					$_REQUEST['rename_pattern'],
-					$_REQUEST['sort_pattern'],
-					$_REQUEST['type'],
-					$_REQUEST['gather_art'],
-					$_REQUEST['parse_m3u'],
-					$art);
+			// Run our initial add
+			$catalog->run_add($_REQUEST); 
 
-			echo "</div>\n";
+			show_box_top(); 
+			echo "<h2>" .  _('Catalog Created') . "</h2>";
+			Error::display('general'); 
+			Error::display('catalog_add'); 
+			show_box_bottom(); 
 
-			$url = conf('web_path') . '/admin/index.php';
-			$title = _('Catalog Created');
-			$body  = _('Catalog Created and Songs Indexed');
-			show_confirmation($title,$body,$url);
+			show_confirmation('','','/admin/index.php'); 
+
 		}
 		else {
-			$error = "Please complete the form.";
-			include(conf('prefix') . '/templates/show_add_catalog.inc.php');
+			require Config::get('prefix') . '/templates/show_add_catalog.inc.php';
 		}
 	break;
 	case 'clear_stats':
-    		if (conf('demo_mode')) { break; }
+    		if (Config::get('demo_mode')) { access_denied(); break; }
 		
-		clear_catalog_stats();
-		$url	= conf('web_path') . '/admin/index.php';
+		Catalog::clear_stats(); 
+		$url	= Config::get('web_path') . '/admin/index.php';
 		$title	= _('Catalog statistics cleared');
 		$body	= '';
 		show_confirmation($title,$body,$url);
 	break;
+	case 'show_catalogs': 
+		$catalog_ids = Catalog::get_catalogs(); 
+		Browse::set_type('catalog'); 
+		Browse::set_static_content(1); 
+		Browse::save_objects($catalog_ids); 
+		Browse::show_objects($catalog_ids); 
+	break;
 	case 'show_add_catalog':
-		include(conf('prefix') . '/templates/show_add_catalog.inc.php');
+		require Config::get('prefix') . '/templates/show_add_catalog.inc.php';
 	break;
 	case 'clear_now_playing':
-	        if (conf('demo_mode')) { break; }
-	    	clear_now_playing();
-		show_confirmation(_('Now Playing Cleared'),_('All now playing data has been cleared'),conf('web_path') . '/admin/index.php');
-	break;
-	case 'show_clear_stats':
-		/* Demo Bad! */
-	        if (conf('demo_mode')) { break; }
-
-		$url 	= conf('web_path') . '/admin/catalog.php?action=clear_stats';
-		$body	= _('Do you really want to clear the statistics for this catalog?');
-		$title	= _('Clear Catalog Stats'); 
-		show_confirmation($title,$body,$url,1);
+	        if (Config::get('demo_mode')) { access_denied(); break; }
+	    	Stream::clear_now_playing();
+		show_confirmation(_('Now Playing Cleared'),_('All now playing data has been cleared'),Config::get('web_path') . '/admin/index.php');
 	break;
 	case 'show_disabled':
 	        if (conf('demo_mode')) { break; }
 		
 		$songs = $catalog->get_disabled();
 		if (count($songs)) { 
-			require (conf('prefix') . '/templates/show_disabled_songs.inc');
+			require (conf('prefix') . '/templates/show_disabled_songs.inc.php');
 		}
 		else {
 			echo "<div class=\"error\" align=\"center\">" . _('No Disabled songs found') . "</div>";
@@ -243,24 +243,30 @@ switch ($_REQUEST['action']) {
 	break;
 	case 'show_delete_catalog':
 		/* Stop the demo hippies */
-	        if (conf('demo_mode')) { break; }
+	        if (Config::get('demo_mode')) { access_denied(); break; } 
+
 		$catalog = new Catalog($_REQUEST['catalog_id']); 	
-		$nexturl = conf('web_path') . '/admin/catalog.php?action=delete_catalog&amp;catalog_id=' . scrub_out($_REQUEST['catalog_id']);
+		$nexturl = Config::get('web_path') . '/admin/catalog.php?action=delete_catalog&amp;catalog_id=' . scrub_out($_REQUEST['catalog_id']);
 		show_confirmation(_('Delete Catalog'),_('Do you really want to delete this catalog?') . " -- $catalog->name ($catalog->path)",$nexturl,1);
 	break;
 	case 'show_customize_catalog':
-		include(conf('prefix') . '/templates/show_edit_catalog.inc.php');
+		$catalog = new Catalog($_REQUEST['catalog_id']); 
+		require_once Config::get('prefix') . '/templates/show_edit_catalog.inc.php';
 	break;
 	case 'gather_album_art':
-	        flush();
-		$catalogs = $catalog->get_catalogs();
-		foreach ($catalogs as $data) { 
-	        	echo "<div class=\"confirmation-box\"><b>" . _('Starting Album Art Search') . ". . .</b><br /><br />\n";
-			echo _('Searched') . ": <span id=\"count_art_" . $data->id . "\">" . _('None') . "</span><br />";
-			$data->get_album_art(0,1);
-			echo "<b>" . _('Album Art Search Finished') . ". . .</b></div>\n";
+		toggle_visible('ajax-loading'); 
+		ob_end_flush(); 
+
+		$catalogs = $_REQUEST['catalogs'] ? $_REQUEST['catalogs'] : Catalog::get_catalogs();
+
+		// Itterate throught the catalogs and gather as needed
+		foreach ($catalogs as $catalog_id) { 
+			$catalog = new Catalog($catalog_id);
+			require Config::get('prefix') . '/templates/show_gather_art.inc.php'; 
+			flush(); 
+			$catalog->get_album_art('',1);
 		}
-		$url 	= conf('web_path') . '/admin/index.php';
+		$url 	= Config::get('web_path') . '/admin/index.php';
 		$title 	= _('Album Art Search Finished');
 		$body	= '';
 		show_confirmation($title,$body,$url);

@@ -1,7 +1,7 @@
 <?php
 /*
 
- Copyright (c) 2001 - 2006 Ampache.org
+ Copyright (c) Ampache.org
  All rights reserved.
 
  This program is free software; you can redistribute it and/or
@@ -32,23 +32,24 @@ while ($i <= $rows) {
 	$j=0;
 	while ($j < 4) { 
 		$key = $i*4+$j;
-		$image_url = conf('web_path') . '/image.php?type=session&amp;image_index=' . $key; 
+		$image_url = Config::get('web_path') . '/image.php?type=session&amp;image_index=' . $key; 
 		if (!isset($images[$key])) { echo "<td>&nbsp;</td>\n"; } 
 		else { 
 ?>
 			<td align="center">
 				<a href="<?php echo $image_url; ?>" target="_blank">
-				<img src="<?php echo $image_url; ?>" border="0" height="175" width="175" /><br />
+				<img src="<?php echo $image_url; ?>" alt="Album Art" border="0" height="175" width="175" /><br />
 				</a>
 				<p align="center">
-				[<a href="<?php echo conf('web_path'); ?>/albums.php?action=select_art&amp;image=<?php echo $key; ?>&amp;album_id=<?php echo urlencode($_REQUEST['album_id']); ?>">Select</a>]
+				[<a href="<?php echo Config::get('web_path'); ?>/albums.php?action=select_art&amp;image=<?php echo $key; ?>&amp;album_id=<?php echo urlencode($_REQUEST['album_id']); ?>">Select</a>]
 				</p>
 			</td>
 <?php 
 		} // end else
 		$j++;
 	} // end while cells
-	echo "</tr>\n<tr>";
+	if($i < $rows) { echo "</tr>\n<tr>"; }
+        else { echo "</tr>"; }
 	$i++;
 } // end while
 ?>

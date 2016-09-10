@@ -1,6 +1,6 @@
 <?php
 /*
- Copyright 2001 - 2006 Ampache.org
+ Copyright 2001 - 2008 Ampache.org
  All Rights Reserved
 
  This program is free software; you can redistribute it and/or
@@ -19,47 +19,33 @@
 */
 
 /* Create some variables we are going to need */
-$web_path = conf('web_path');
-$base_url = conf('ajax_url') . '?action=set_rating&amp;rating_type=' . $rating->type . '&amp;object_id=' . $rating->id . conf('ajax_info');
-
-
-//set the background to no stars
-echo "<ul class=\"star-rating\">\n";
-
-/* Handle the "Not rated" possibility */
-if ($rating->rating == '-1') { 
-	echo "<li class=\"zero-stars\"><span onclick=\"ajaxPut('" . $base_url . "&amp;rating=-1');return true;\" title=\"don't play\" class=\"zero-stars\"></span></li>\n";
-}
-else { 
-	echo "<li class=\"zero-stars\"><span onclick=\"ajaxPut('" . $base_url . "&amp;rating=-1');return true;\" title=\"remove rating\" class=\"zero-stars\"></span></li>\n";
-}
-// decide width of rating. image is 16 px wide
-$width = $rating->rating*16;
-if ($width < 0) $width = 0;
-
-//set the current rating background 
-echo "<li class=\"current-rating\" style=\"width:${width}px\" >Current rating: ";
-if ($rating->rating <= 0) {
-	echo "not rated yet </li>\n";
-}
-else echo "$rating->rating of 5</li>\n";
-
-//it did not like my "1-star", "2-star" ... css styles, and I changed it to this after I realized star1... would have worked :\
+$web_path = Config::get('web_path');
+$base_url = '?action=set_rating&rating_type=' . $rating->type . '&object_id=' . $rating->id;
 ?>
-<li>
-	<span onclick="ajaxPut('<?php echo $base_url; ?>&amp;rating=1');return true;" class="one-stars" title="1 <?php echo _('out of'); ?> 5"></span>
-</li>
-<li>
-	<span onclick="ajaxPut('<?php echo $base_url; ?>&amp;rating=2');return true;" class="two-stars" title="2 <?php echo _('out of'); ?> 5"></span>
-</li>
-<li>
-	<span onclick="ajaxPut('<?php echo $base_url; ?>&amp;rating=3');return true;" class="three-stars" title="3 <?php echo _('out of'); ?> 5"></span>
-</li>
-<li>
-	<span onclick="ajaxPut('<?php echo $base_url; ?>&amp;rating=4');return true;" class="four-stars" title="4 <?php echo _('out of'); ?> 5"></span>
-</li>
-<li>
-	<span onclick="ajaxPut('<?php echo $base_url; ?>&amp;rating=5');return true;" class="five-stars" title="5 <?php echo _('out of'); ?> 5"></span>
-</li>
-</ul>
 
+<div class="star-rating dynamic-star-rating">
+  <ul>
+    <?php
+    // decide width of rating (5 stars -> 20% per star)
+    $width = $rating->preciserating*20;
+    if ($width < 0) $width = 0;
+    
+    //set the current rating background 
+    echo "<li class=\"current-rating\" style=\"width:${width}%\" >Current rating: ";
+    if ($rating->rating <= 0) {
+    	echo "not rated yet </li>\n";
+    }
+    else echo "$rating->preciserating of 5</li>\n";
+    
+    for ($i=1; $i<6; $i++)
+    {
+    ?>
+      <li>
+      	<?php echo Ajax::text($base_url . '&rating='.$i,'','rating'.$i.'_' . $rating->id,'','star'.$i); ?>
+      </li>
+    <?php
+    }
+    ?>
+  </ul>
+   	<?php echo Ajax::text($base_url . '&rating=-1','','rating0_' . $rating->id,'','star0'); ?>
+</div>

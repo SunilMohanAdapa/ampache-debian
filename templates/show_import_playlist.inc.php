@@ -20,9 +20,9 @@
 
 */
 ?>
-<form method="post" name="import_playlist" action="<?php echo conf('web_path'); ?>/playlist.php" enctype="multipart/form-data">
 <?php show_box_top(_('Importing a Playlist from a File')); ?>
-<table border="0" cellpadding="0" cellspacing="0">
+<form method="post" name="import_playlist" action="<?php echo conf('web_path'); ?>/playlist.php" enctype="multipart/form-data">
+<table cellpadding="0" cellspacing="0">
 <tr>
         <td>
 		<?php echo _('Filename'); ?>:
@@ -41,13 +41,11 @@
 		</select>
 	</td>
 </tr>
-<tr>
-	<td>&nbsp;</td>
-	<td>
+</table>
+<div class="formValidation">
 		<input type="hidden" name="action" value="import_playlist" />
 		<input type="submit" value="<?php echo _('Import Playlist'); ?>" />
-	</td>
-</tr>
-</table>
-<?php show_box_bottom(); ?>
+</div>
 </form>
+<?php show_box_bottom(); ?>
+

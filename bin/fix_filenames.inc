@@ -2,21 +2,21 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -48,7 +48,7 @@ if (!function_exists('iconv')) {
 $source_encoding = iconv_get_encoding('output_encoding');
 
 // Attempt a simple translation
-$string = sprintf(T_('%s For the Love of Music'), iconv(Config::get('site_charset'),Config::get('site_charset')));
+$string = sprintf(T_('%s For the Love of Music'), iconv(AmpConfig::get('site_charset'),AmpConfig::get('site_charset')));
 echo T_('Testing Basic Translation, the two strings below should look the same');
 echo "\n";
 echo T_('Original: For the Love of Music');
@@ -63,18 +63,19 @@ if (strlen($input) > 0) { $source_encoding = trim($input); }
 printf (T_('Using %s as source character set'), $source_encoding);
 echo "\n";
 
-$sql = "SELECT * FROM `catalog` WHERE `catalog_type`='local'";
+$sql = "SELECT id FROM `catalog` WHERE `catalog_type`='local'";
 $db_results = Dba::read($sql);
 
 while ($row = Dba::fetch_assoc($db_results)) {
 
-    printf(T_('Checking %s (%s)'), $row['name'], $row['path']);
+    $catalog = Catalog::create_from_id($row['0']);
+    printf(T_('Checking %s (%s)'), $catalog->name, $catalog->path);
     echo "\n";
-    charset_directory_correct($row['path']);
+    charset_directory_correct($catalog->path);
 
 } // end of the catalogs
 
-echo T_('Finished checking filenames for valid chacters');
+echo T_('Finished checking file names for valid characters');
 echo "\n";
 
 /**************************************************
@@ -122,19 +123,19 @@ function charset_directory_correct($path) {
             continue;
         }
 
-        $verify_filename = iconv(Config::get('site_charset'),Config::get('site_charset') . '//IGNORE',$full_file);
+        $verify_filename = iconv(AmpConfig::get('site_charset'),AmpConfig::get('site_charset') . '//IGNORE',$full_file);
 
         if (strcmp($full_file,$verify_filename) != '0') {
-            $translated_filename = iconv($source_encoding,Config::get('site_charset') . '//TRANSLIT',$full_file);
+            $translated_filename = iconv($source_encoding,AmpConfig::get('site_charset') . '//TRANSLIT',$full_file);
 
             // Make sure the extension stayed the same
             if (substr($translated_filename,strlen($translated_filename)-3,3) != substr($full_file,strlen($full_file)-3,3)) {
                 echo T_("Translation failure, stripping non-valid characters");
                 echo "\n";
-                $translated_filename = iconv($source_encoding,Config::get('site_charset') . '//IGNORE',$full_file);
+                $translated_filename = iconv($source_encoding,AmpConfig::get('site_charset') . '//IGNORE',$full_file);
             }
 
-            printf (T_('Attempting to Transcode to %s'), Config::get('site_charset'));
+            printf (T_('Attempting to Transcode to %s'), AmpConfig::get('site_charset'));
             echo "\n";
             echo "--------------------------------------------------------------------------------------------\n";
             printf (T_('OLD: %s has invalid chars'), $full_file);
@@ -190,13 +191,13 @@ function charset_rename_file($full_file,$translated_filename) {
     $results = copy($full_file,$translated_filename);
 
     if (!$results) {
-        echo T_('Error: Copy Failed, not deleteing old file');
+        echo T_('Error: Copy Failed, not deleting old file');
         echo "\n";
         return false;
     }
 
-    $old_sum = filesize($full_file);
-    $new_sum = filesize($translated_filename);
+    $old_sum = Core::get_filesize($full_file);
+    $new_sum = Core::get_filesize($translated_filename);
 
     if ($old_sum != $new_sum OR !$new_sum) {
         printf (T_('Error: Size Inconsistency, not deleting %s'), $full_file);

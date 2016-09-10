@@ -2,36 +2,49 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 ?>
-<td class="cel_add">
-    <?php echo Ajax::button('?action=basket&type=live_stream&id=' . $radio->id,'add', T_('Add'),'add_radio_' . $radio->id); ?>
+<td class="cel_play">
+    <span class="cel_play_content">&nbsp;</span>
+    <div class="cel_play_hover">
+    <?php
+        if (AmpConfig::get('directplay')) {
+            echo Ajax::button('?page=stream&action=directplay&object_type=live_stream&object_id=' . $libitem->id, 'play', T_('Play live stream'),'play_live_stream_' . $libitem->id);
+        }
+    ?>
+    </div>
 </td>
-<td class="cel_streamname"><?php echo $radio->f_name_link; ?></td>
-<td class="cel_callsign"><?php echo $radio->f_callsign; ?></td>
-<td class="cel_frequency"><?php echo $radio->f_frequency; ?></td>
-<td class="cel_tag"><?php echo $radio->f_tag; ?></td>
+<td class="cel_streamname"><?php echo $libitem->f_link; ?></td>
+<td class="cel_streamurl"><?php echo $libitem->f_url_link; ?></td>
+<td class="cel_codec"><?php echo $libitem->codec; ?></td>
 <td class="cel_action">
-    <?php if (Access::check('interface','50')) { ?>
-        <?php echo Ajax::button('?action=show_edit_object&type=live_stream_row&id=' . $radio->id,'edit', T_('Edit'),'edit_radio_' . $radio->id); ?>
-    <?php } ?>
-    <?php if (Access::check('interface','75')) { ?>
-        <?php echo Ajax::button('?page=browse&action=delete_object&type=live_stream&id=' . $radio->id,'delete', T_('Delete'),'delete_radio_' . $radio->id); ?>
-    <?php } ?>
+    <?php
+        if (Access::check('interface','50')) {
+            ?>
+        <a id="<?php echo 'edit_live_stream_' . $libitem->id ?>" onclick="showEditDialog('live_stream_row', '<?php echo $libitem->id ?>', '<?php echo 'edit_live_stream_' . $libitem->id ?>', '<?php echo T_('Live Stream edit') ?>',  'live_stream_')">
+            <?php echo UI::get_icon('edit', T_('Edit'));
+            ?>
+        </a>
+        <?php 
+        }
+        if (Access::check('interface','75')) {
+            echo Ajax::button('?page=browse&action=delete_object&type=live_stream&id=' . $libitem->id,'delete', T_('Delete'),'delete_live_stream_' . $libitem->id);
+        }
+    ?>
 </td>

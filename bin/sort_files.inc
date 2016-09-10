@@ -2,21 +2,21 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -55,7 +55,7 @@ $catalogs = array();
 
 while ($r = Dba::fetch_row($db_results)) {
 
-    $catalog = new Catalog($r['0']);
+    $catalog = Catalog::create_from_id($r['0']);
     $songs = $catalog->get_songs();
 
     printf (T_('Starting Catalog: %s'), stripslashes($catalog->name));
@@ -65,7 +65,6 @@ while ($r = Dba::fetch_row($db_results)) {
     foreach ($songs as $song) {
         /* Find this poor song a home */
         $song->format();
-        $song->format_pattern();
         $directory     = sort_find_home($song,$catalog->sort_pattern,$catalog->path);
         $filename     = $song->f_file;
         $fullpath = $directory . "/" . $filename;
@@ -267,13 +266,13 @@ function sort_move_file($song,$fullname) {
         debug_event('copy','Copied ' . $song->file . ' to ' . $fullname,'5');
 
         /* Look for the folder art and copy that as well */
-        if (!Config::get('album_art_preferred_filename') OR strstr(Config::get('album_art_preferred_filename'),"%")) {
-            $folder_art     = $directory . '/folder.jpg';
-            $old_art     = $old_dir . '/folder.jpg';
+        if (!AmpConfig::get('album_art_preferred_filename') OR strstr(AmpConfig::get('album_art_preferred_filename'),"%")) {
+            $folder_art     = $directory . DIRECTORY_SEPARATOR . 'folder.jpg';
+            $old_art     = $old_dir . DIRECTORY_SEPARATOR . 'folder.jpg';
         }
         else {
-            $folder_art     = $directory . "/" . sort_clean_name(Config::get('album_art_preferred_filename'));
-            $old_art     = $old_dir . "/" . sort_clean_name(Config::get('album_art_preferred_filename'));
+            $folder_art     = $directory . DIRECTORY_SEPARATOR . sort_clean_name(AmpConfig::get('album_art_preferred_filename'));
+            $old_art     = $old_dir . DIRECTORY_SEPARATOR . sort_clean_name(AmpConfig::get('album_art_preferred_filename'));
         }
 
         debug_event('copy_art','Copied ' . $old_art . ' to ' . $folder_art,'5');
@@ -282,8 +281,8 @@ function sort_move_file($song,$fullname) {
         if (!$results) { printf (T_('Error: Unable to copy file to %s'), $fullname); echo "\n"; return false; }
 
         /* Check the filesize */
-        $new_sum = filesize($fullname);
-        $old_sum = filesize($song->file);
+        $new_sum = Core::get_filesize($fullname);
+        $old_sum = Core::get_filesize($song->file);
 
         if ($new_sum != $old_sum OR !$new_sum) {
             printf (T_('Error: Size Inconsistency, not deleting %s'), $song->file);

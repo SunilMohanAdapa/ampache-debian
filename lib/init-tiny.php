@@ -2,64 +2,79 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 // Minimal init for use in install
 
-// Do a check for PHP5 because nothing will work without it
-if (floatval(phpversion()) < 5) {
-    echo "ERROR: Ampache requires PHP5";
+// Do a check for PHP5.4 because nothing will work without it
+if (version_compare(phpversion(), '5.4.0', '<')) {
+    echo "ERROR: Ampache requires PHP version >= 5.4";
     exit;
 }
 
 error_reporting(E_ERROR); // Only show fatal errors in production
 
+$load_time_begin = microtime(true);
+
 $ampache_path = dirname(__FILE__);
-$prefix = realpath($ampache_path . "/../");
-$configfile = $prefix . '/config/ampache.cfg.php';
+$prefix       = realpath($ampache_path . "/../");
+$configfile   = $prefix . '/config/ampache.cfg.php';
+
+// We still allow scripts to run (it could be the purpose of the maintenance)
+if (!defined('CLI')) {
+    if (file_exists($prefix . '/.maintenance')) {
+        require_once($prefix . '/.maintenance');
+    }
+}
+
 require_once $prefix . '/lib/general.lib.php';
-require_once $prefix . '/lib/class/config.class.php';
+require_once $prefix . '/lib/class/ampconfig.class.php';
 require_once $prefix . '/lib/class/core.class.php';
-require_once $prefix . '/modules/php-gettext/gettext.inc';
 
 // Define some base level config options
-Config::set('prefix', $prefix);
+AmpConfig::set('prefix', $prefix);
 
-// Register the autoloader
+// Register autoloaders
 spl_autoload_register(array('Core', 'autoload'), true, true);
+$composer_autoload = $prefix . '/lib/vendor/autoload.php';
+if (file_exists($composer_autoload)) {
+    require_once $composer_autoload;
+    require_once $prefix . '/lib/vendor/Afterster/php-echonest-api/lib/EchoNest/Autoloader.php';
+    EchoNest_Autoloader::register();
+}
 
 // Check to see if this is http or https
-if ((isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' ) 
+if ((isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' )
     || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')) {
     $http_type = 'https://';
-}
-else {
+} else {
     $http_type = 'http://';
 }
 
 if (isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
     $http_port = $_SERVER['HTTP_X_FORWARDED_PORT'];
+} else {
+    if (isset($_SERVER['SERVER_PORT'])) {
+        $http_port = $_SERVER['SERVER_PORT'];
+    }
 }
-else if (isset($_SERVER['SERVER_PORT'])) {
-    $http_port = $_SERVER['SERVER_PORT'];
-}
-if (!isset($http_port) || !$http_port) {
+if (!isset($http_port) || empty($http_port)) {
     $http_port = 80;
 }
 
@@ -76,8 +91,10 @@ require_once $prefix . '/lib/batch.lib.php';
 require_once $prefix . '/lib/themes.php';
 require_once $prefix . '/lib/class/localplay_controller.abstract.php';
 require_once $prefix . '/lib/class/database_object.abstract.php';
-require_once $prefix . '/lib/class/playlist_object.abstract.php';
 require_once $prefix . '/lib/class/media.interface.php';
+require_once $prefix . '/lib/class/playable_item.interface.php';
+require_once $prefix . '/lib/class/library_item.interface.php';
+require_once $prefix . '/lib/class/playlist_object.abstract.php';
 require_once $prefix . '/modules/horde/Browser.php';
 
 /* Set up the flip class */
@@ -86,4 +103,3 @@ UI::flip_class(array('odd', 'even'));
 // Merge GET then POST into REQUEST effectively stripping COOKIE without
 // depending on a PHP setting change for the effect
 $_REQUEST = array_merge($_GET, $_POST);
-?>

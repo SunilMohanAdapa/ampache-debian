@@ -2,32 +2,36 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 /**
  * Sub-Ajax page, requires AJAX_INCLUDE
  */
-if (!defined('AJAX_INCLUDE')) { exit; }
+if (!defined('AJAX_INCLUDE')) {
+    exit;
+}
 
 $democratic = Democratic::get_current_playlist();
 $democratic->set_parent();
 
+$show_browse = false;
+$results     = array();
 switch ($_REQUEST['action']) {
     case 'delete_vote':
         $democratic->remove_vote($_REQUEST['row_id']);
@@ -44,7 +48,7 @@ switch ($_REQUEST['action']) {
     break;
     case 'delete':
         if (!$GLOBALS['user']->has_access('75')) {
-            echo xml_from_array(array('rfc3514' => '0x1'));
+            echo xoutput_from_array(array('rfc3514' => '0x1'));
             exit;
         }
 
@@ -53,16 +57,16 @@ switch ($_REQUEST['action']) {
     break;
     case 'send_playlist':
         if (!Access::check('interface','75')) {
-            echo xml_from_array(array('rfc3514' => '0x1'));
+            echo xoutput_from_array(array('rfc3514' => '0x1'));
             exit;
         }
 
-        $_SESSION['iframe']['target'] = Config::get('web_path') . '/stream.php?action=democratic&democratic_id=' . scrub_out($_REQUEST['democratic_id']);
-        $results['rfc3514'] = '<script type="text/javascript">reloadUtil("'.$_SESSION['iframe']['target'].'")</script>';
+        $_SESSION['iframe']['target'] = AmpConfig::get('web_path') . '/stream.php?action=democratic&democratic_id=' . scrub_out($_REQUEST['democratic_id']);
+        $results['rfc3514']           = '<script type="text/javascript">' . Core::get_reloadutil() . '("' . $_SESSION['iframe']['target'] . '")</script>';
     break;
     case 'clear_playlist':
         if (!Access::check('interface','100')) {
-            echo xml_from_array(array('rfc3514' => '0x1'));
+            echo xoutput_from_array(array('rfc3514' => '0x1'));
             exit;
         }
 
@@ -80,15 +84,14 @@ switch ($_REQUEST['action']) {
 if ($show_browse) {
     ob_start();
     $object_ids = $democratic->get_items();
-    $browse = new Browse();
+    $browse     = new Browse();
     $browse->set_type('democratic');
-    $browse->set_static_content(true);
+    $browse->set_static_content(false);
     $browse->show_objects($object_ids);
     $browse->store();
-    $results['browse_content'] = ob_get_contents();
+    $results[$browse->get_content_div()] = ob_get_contents();
     ob_end_clean();
 }
 
 // We always do this
-echo xml_from_array($results);
-?>
+echo xoutput_from_array($results);

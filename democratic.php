@@ -2,28 +2,28 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 require_once 'lib/init.php';
 
 /* Make sure they have access to this */
-if (!Config::get('allow_democratic_playback')) {
+if (!AmpConfig::get('allow_democratic_playback')) {
     UI::access_denied();
     exit;
 }
@@ -43,7 +43,7 @@ switch ($_REQUEST['action']) {
         }
 
         // Show the create page
-        require_once Config::get('prefix') . '/templates/show_create_democratic.inc.php';
+        require_once AmpConfig::get('prefix') . UI::find_template('show_create_democratic.inc.php');
     break;
     case 'delete':
         if (!Access::check('interface','75')) {
@@ -54,8 +54,8 @@ switch ($_REQUEST['action']) {
         Democratic::delete($_REQUEST['democratic_id']);
 
         $title = '';
-        $text = T_('The Requested Playlist has been deleted.');
-        $url = Config::get('web_path') . '/democratic.php?action=manage_playlists';
+        $text  = T_('The Requested Playlist has been deleted.');
+        $url   = AmpConfig::get('web_path') . '/democratic.php?action=manage_playlists';
         show_confirmation($title,$text,$url);
     break;
     case 'create':
@@ -77,8 +77,7 @@ switch ($_REQUEST['action']) {
             // Create the playlist
             Democratic::create($_POST);
             $democratic = Democratic::get_current_playlist();
-        }
-        else {
+        } else {
             $democratic->update($_POST);
         }
 
@@ -87,7 +86,7 @@ switch ($_REQUEST['action']) {
             Democratic::set_user_preferences();
         }
 
-        header("Location: " . Config::get('web_path') . "/democratic.php?action=show");
+        header("Location: " . AmpConfig::get('web_path') . "/democratic.php?action=show");
     break;
     case 'manage_playlists':
         if (!Access::check('interface','75')) {
@@ -97,31 +96,30 @@ switch ($_REQUEST['action']) {
         // Get all of the non-user playlists
         $playlists = Democratic::get_playlists();
 
-        require_once Config::get('prefix') . '/templates/show_manage_democratic.inc.php';
+        require_once AmpConfig::get('prefix') . UI::find_template('show_manage_democratic.inc.php');
 
     break;
     case 'show_playlist':
     default:
         $democratic = Democratic::get_current_playlist();
         if (!$democratic->id) {
-            require_once Config::get('prefix') . '/templates/show_democratic.inc.php';
+            require_once AmpConfig::get('prefix') . UI::find_template('show_democratic.inc.php');
             break;
         }
 
         $democratic->set_parent();
         $democratic->format();
-        require_once Config::get('prefix') . '/templates/show_democratic.inc.php';
+        require_once AmpConfig::get('prefix') . UI::find_template('show_democratic.inc.php');
         $objects = $democratic->get_items();
         Song::build_cache($democratic->object_ids);
         Democratic::build_vote_cache($democratic->vote_ids);
         $browse = new Browse();
         $browse->set_type('democratic');
-        $browse->set_static_content(true);
-        $browse->show_objects($objects);
+        $browse->set_static_content(false);
+        $browse->save_objects($objects);
+        $browse->show_objects();
         $browse->store();
     break;
 } // end switch on action
 
 UI::show_footer();
-
-?>

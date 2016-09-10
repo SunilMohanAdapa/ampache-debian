@@ -2,27 +2,28 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html lang="en-US">
 <head>
+<!-- Propulsed by Ampache | ampache.org -->
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Ampache -- Config Debug Page</title>
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
@@ -45,7 +46,7 @@ body {
 <p>You've been redirected to this page because your <strong>/config/ampache.cfg.php</strong> was not parsable.
 If you are upgrading from 3.3.x please see the directions below.</p>
 
-<h3>Migrating from 3.3.x to 3.4.x</h3>
+<h3>Migrating from 3.3.x to >= 3.4.x</h3>
 <p>Ampache 3.4 uses a different config parser that is over 10x faster then the previous version. Unfortunately the new parser is
 unable to read the old config files. From inside the Ampache root directory you must run <strong>php bin/migrate_config.inc</strong> from the command line to create your
 new config file.</p>
@@ -75,7 +76,7 @@ This variable no longer exists, all downsampling/transcoding is handled by the t
 </div>
 <div id="bottom">
 <p><strong>Ampache Debug.</strong><br />
-Pour l'Amour de la Musique.</p>
+For the love of Music.</p>
 </div>
 </body>
 </html>

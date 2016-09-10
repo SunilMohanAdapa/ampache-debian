@@ -2,26 +2,28 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 /* Make sure they aren't directly accessing it */
-if (!defined('INIT_LOADED') || INIT_LOADED != '1') { exit; }
+if (!defined('INIT_LOADED') || INIT_LOADED != '1') {
+    exit;
+}
 
 /**
  * Dba Class
@@ -34,28 +36,27 @@ if (!defined('INIT_LOADED') || INIT_LOADED != '1') { exit; }
  * database simplifying queries in most cases.
  *
  */
-class Dba {
-
+class Dba
+{
     public static $stats = array('query'=>0);
 
     private static $_sql;
     private static $_error;
-    private static $config;
 
     /**
      * constructor
      * This does nothing with the DBA class
      */
-    private function __construct() {
-
+    private function __construct()
+    {
         // Rien a faire
-
     } // construct
 
     /**
      * query
      */
-    public static function query($sql, $params) {
+    public static function query($sql, $params = array())
+    {
         // json_encode throws errors about UTF-8 cleanliness, which we don't
         // care about here.
         debug_event('Query', $sql . ' ' . @json_encode($params), 6);
@@ -69,7 +70,8 @@ class Dba {
         return $stmt;
     }
 
-    private static function _query($sql, $params) {
+    private static function _query($sql, $params)
+    {
         $dbh = self::dbh();
         if (!$dbh) {
             debug_event('Dba', 'Error: failed to get database handle', 1);
@@ -80,8 +82,7 @@ class Dba {
         if ($params) {
             $stmt = $dbh->prepare($sql);
             $stmt->execute($params);
-        }
-        else {
+        } else {
             $stmt = $dbh->query($sql);
         }
 
@@ -93,12 +94,14 @@ class Dba {
             self::$_error = json_encode($dbh->errorInfo());
             debug_event('Dba', 'Error: ' . json_encode($dbh->errorInfo()), 1);
             self::disconnect();
-        }
-        else if ($stmt->errorCode() && $stmt->errorCode() != '00000') {
-            self::$_error = json_encode($stmt->errorInfo());
-            debug_event('Dba', 'Error: ' . json_encode($stmt->errorInfo()), 1);
-            self::disconnect();
-            return false;
+        } else {
+            if ($stmt->errorCode() && $stmt->errorCode() != '00000') {
+                self::$_error = json_encode($stmt->errorInfo());
+                debug_event('Dba', 'Error: ' . json_encode($stmt->errorInfo()), 1);
+                self::finish($stmt);
+                self::disconnect();
+                return false;
+            }
         }
 
         return $stmt;
@@ -107,14 +110,16 @@ class Dba {
     /**
      * read
      */
-    public static function read($sql, $params = null) {
+    public static function read($sql, $params = null)
+    {
         return self::query($sql, $params);
     }
 
     /**
      * write
      */
-    public static function write($sql, $params = null) {
+    public static function write($sql, $params = null)
+    {
         return self::query($sql, $params);
     }
 
@@ -124,7 +129,8 @@ class Dba {
      * This runs a escape on a variable so that it can be safely inserted
      * into the sql
      */
-    public static function escape($var) {
+    public static function escape($var)
+    {
         $var = self::dbh()->quote($var);
         // This is slightly less ugly than it was, but still ugly
         return substr($var, 1, -1);
@@ -138,7 +144,8 @@ class Dba {
      * The optional finish parameter affects whether we automatically clean
      * up the result set after the last row is read.
      */
-    public static function fetch_assoc($resource, $finish = true) {
+    public static function fetch_assoc($resource, $finish = true)
+    {
         if (!$resource) {
             return array();
         }
@@ -163,12 +170,31 @@ class Dba {
      * The optional finish parameter affects whether we automatically clean
      * up the result set after the last row is read.
      */
-    public static function fetch_row($resource, $finish = true) {
+    public static function fetch_row($resource, $finish = true)
+    {
         if (!$resource) {
             return array();
         }
 
-        $result = $resource->fetch(PDO::FETCH_NUM);;
+        $result = $resource->fetch(PDO::FETCH_NUM);
+
+        if (!$result) {
+            if ($finish) {
+                self::finish($resource);
+            }
+            return array();
+        }
+
+        return $result;
+    }
+
+    public static function fetch_object($resource, $class = 'stdClass', $finish = true)
+    {
+        if (!$resource) {
+            return array();
+        }
+
+        $result = $resource->fetchObject($class);
 
         if (!$result) {
             if ($finish) {
@@ -187,7 +213,8 @@ class Dba {
      * just a count of rows returned by our select statement, this
      * doesn't work for updates or inserts.
      */
-    public static function num_rows($resource) {
+    public static function num_rows($resource)
+    {
         if ($resource) {
             $result = $resource->rowCount();
             if ($result) {
@@ -203,7 +230,8 @@ class Dba {
      *
      * This closes a result handle and clears the memory associated with it
      */
-    public static function finish($resource) {
+    public static function finish($resource)
+    {
         if ($resource) {
             $resource->closeCursor();
         }
@@ -214,7 +242,8 @@ class Dba {
      *
      * This emulates the mysql_affected_rows function
      */
-    public static function affected_rows($resource) {
+    public static function affected_rows($resource)
+    {
         if ($resource) {
             $result = $resource->rowCount();
             if ($result) {
@@ -230,17 +259,17 @@ class Dba {
      *
      * This connects to the database, used by the DBH function
      */
-    private static function _connect() {
-        $username = Config::get('database_username');
-        $hostname = Config::get('database_hostname');
-        $password = Config::get('database_password');
-        $port = Config::get('database_port');
+    private static function _connect()
+    {
+        $username = AmpConfig::get('database_username');
+        $hostname = AmpConfig::get('database_hostname');
+        $password = AmpConfig::get('database_password');
+        $port     = AmpConfig::get('database_port');
 
         // Build the data source name
         if (strpos($hostname, '/') === 0) {
             $dsn = 'mysql:unix_socket=' . $hostname;
-        }
-        else {
+        } else {
             $dsn = 'mysql:host=' . $hostname ?: 'localhost';
         }
         if ($port) {
@@ -248,9 +277,9 @@ class Dba {
         }
 
         try {
+            debug_event('Dba', 'Database connection...', 6);
             $dbh = new PDO($dsn, $username, $password);
-        }
-        catch (PDOException $e) {
+        } catch (PDOException $e) {
             self::$_error = $e->getMessage();
             debug_event('Dba', 'Connection failed: ' . $e->getMessage(), 1);
             return null;
@@ -259,12 +288,13 @@ class Dba {
         return $dbh;
     }
 
-    private static function _setup_dbh($dbh, $database) {
+    private static function _setup_dbh($dbh, $database)
+    {
         if (!$dbh) {
             return false;
         }
 
-        $charset = self::translate_to_mysqlcharset(Config::get('site_charset'));
+        $charset = self::translate_to_mysqlcharset(AmpConfig::get('site_charset'));
         $charset = $charset['charset'];
         if ($dbh->exec('SET NAMES ' . $charset) === false) {
             debug_event('Dba', 'Unable to set connection charset to ' . $charset, 1);
@@ -275,7 +305,7 @@ class Dba {
             debug_event('Dba', 'Unable to select database ' . $database . ': ' . json_encode($dbh->errorInfo()), 1);
         }
 
-        if (Config::get('sql_profiling')) {
+        if (AmpConfig::get('sql_profiling')) {
             $dbh->exec('SET profiling=1');
             $dbh->exec('SET profiling_history_size=50');
             $dbh->exec('SET query_cache_type=0');
@@ -287,7 +317,8 @@ class Dba {
      *
      * Make sure that we can connect to the database
      */
-    public static function check_database() {
+    public static function check_database()
+    {
         $dbh = self::_connect();
 
         if (!$dbh || $dbh->errorCode()) {
@@ -306,16 +337,17 @@ class Dba {
      * Checks to make sure that you have inserted the database
      * and that the user you are using has access to it.
      */
-    public static function check_database_inserted() {
-        $sql = "DESCRIBE session";
+    public static function check_database_inserted()
+    {
+        $sql        = "DESCRIBE session";
         $db_results = Dba::read($sql);
 
         if (!$db_results) {
             return false;
         }
 
-        // Make sure the whole table is there
-        if (Dba::num_rows($db_results) != '7') {
+        // Make sure the table is there
+        if (Dba::num_rows($db_results) < 1) {
             return false;
         }
 
@@ -327,8 +359,9 @@ class Dba {
      *
      * This function is used for debug, helps with profiling
      */
-    public static function show_profile() {
-        if (Config::get('sql_profiling')) {
+    public static function show_profile()
+    {
+        if (AmpConfig::get('sql_profiling')) {
             print '<br/>Profiling data: <br/>';
             $res = Dba::read('SHOW PROFILES');
             print '<table>';
@@ -345,22 +378,22 @@ class Dba {
      * This is called by the class to return the database handle
      * for the specified database, if none is found it connects
      */
-    public static function dbh($database='') {
+    public static function dbh($database='')
+    {
         if (!$database) {
-            $database = Config::get('database_name');
+            $database = AmpConfig::get('database_name');
         }
 
         // Assign the Handle name that we are going to store
         $handle = 'dbh_' . $database;
 
-        if (!is_object(Config::get($handle))) {
+        if (!is_object(AmpConfig::get($handle))) {
             $dbh = self::_connect();
             self::_setup_dbh($dbh, $database);
-            Config::set($handle, $dbh, true);
+            AmpConfig::set($handle, $dbh, true);
             return $dbh;
-        }
-        else {
-            return Config::get($handle);
+        } else {
+            return AmpConfig::get($handle);
         }
     }
 
@@ -369,15 +402,17 @@ class Dba {
      *
      * This nukes the dbh connection, this isn't used very often...
      */
-    public static function disconnect($database = '') {
+    public static function disconnect($database = '')
+    {
         if (!$database) {
-            $database = Config::get('database_name'); 
+            $database = AmpConfig::get('database_name');
         }
 
         $handle = 'dbh_' . $database;
 
         // Nuke it
-        Config::set($handle, false, true);
+        debug_event('Dba', 'Database disconnection.', 6);
+        AmpConfig::set($handle, null, true);
 
         return true;
     }
@@ -385,7 +420,8 @@ class Dba {
     /**
      * insert_id
      */
-    public static function insert_id() {
+    public static function insert_id()
+    {
         $dbh = self::dbh();
         if ($dbh) {
             return $dbh->lastInsertId();
@@ -397,7 +433,8 @@ class Dba {
      * error
      * this returns the error of the db
      */
-    public static function error() {
+    public static function error()
+    {
         return self::$_error;
     }
 
@@ -406,44 +443,45 @@ class Dba {
      *
      * This translates the specified charset to a mysql charset.
      */
-    public static function translate_to_mysqlcharset($charset) {
+    public static function translate_to_mysqlcharset($charset)
+    {
         // Translate real charset names into fancy MySQL land names
         switch (strtoupper($charset)) {
             case 'CP1250':
             case 'WINDOWS-1250':
-                $target_charset = 'cp1250';
+                $target_charset   = 'cp1250';
                 $target_collation = 'cp1250_general_ci';
                 break;
             case 'ISO-8859':
             case 'ISO-8859-2':
-                $target_charset = 'latin2';
+                $target_charset   = 'latin2';
                 $target_collation = 'latin2_general_ci';
                 break;
             case 'ISO-8859-1':
             case 'CP1252':
             case 'WINDOWS-1252':
-                $target_charset = 'latin1';
+                $target_charset   = 'latin1';
                 $target_collation = 'latin1_general_ci';
                 break;
             case 'EUC-KR':
-                $target_charset = 'euckr';
+                $target_charset   = 'euckr';
                 $target_collation = 'euckr_korean_ci';
                 break;
             case 'CP932':
-                $target_charset = 'sjis';
+                $target_charset   = 'sjis';
                 $target_collation = 'sjis_japanese_ci';
                 break;
             case 'KOI8-U':
-                $target_charset = 'koi8u';
+                $target_charset   = 'koi8u';
                 $target_collation = 'koi8u_general_ci';
                 break;
             case 'KOI8-R':
-                $target_charset = 'koi8r';
+                $target_charset   = 'koi8r';
                 $target_collation = 'koi8r_general_ci';
                 break;
-            default;
             case 'UTF-8':
-                $target_charset = 'utf8';
+            default:
+                $target_charset   = 'utf8';
                 $target_collation = 'utf8_unicode_ci';
                 break;
         }
@@ -462,26 +500,27 @@ class Dba {
      * administrator only. This can mess up data if you switch between charsets
      * that are not overlapping.
      */
-    public static function reset_db_charset() {
-        $translated_charset = self::translate_to_mysqlcharset(Config::get('site_charset'));
-        $target_charset = $translated_charset['charset'];
-        $target_collation = $translated_charset['collation'];
+    public static function reset_db_charset()
+    {
+        $translated_charset = self::translate_to_mysqlcharset(AmpConfig::get('site_charset'));
+        $target_charset     = $translated_charset['charset'];
+        $target_collation   = $translated_charset['collation'];
 
         // Alter the charset for the entire database
-        $sql = "ALTER DATABASE `" . Config::get('database_name') . "` DEFAULT CHARACTER SET $target_charset COLLATE $target_collation";
-        $db_results = Dba::write($sql);
+        $sql = "ALTER DATABASE `" . AmpConfig::get('database_name') . "` DEFAULT CHARACTER SET $target_charset COLLATE $target_collation";
+        Dba::write($sql);
 
-        $sql = "SHOW TABLES";
+        $sql        = "SHOW TABLES";
         $db_results = Dba::read($sql);
 
         // Go through the tables!
         while ($row = Dba::fetch_row($db_results)) {
-            $sql = "DESCRIBE `" . $row['0'] . "`";
+            $sql              = "DESCRIBE `" . $row['0'] . "`";
             $describe_results = Dba::read($sql);
 
             // Change the tables default charset and colliation
             $sql = "ALTER TABLE `" . $row['0'] . "`  DEFAULT CHARACTER SET $target_charset COLLATE $target_collation";
-            $alter_table = Dba::write($sql);
+            Dba::write($sql);
 
             // Iterate through the columns of the table
             while ($table = Dba::fetch_assoc($describe_results)) {
@@ -489,14 +528,14 @@ class Dba {
                 (strpos($table['Type'], 'varchar') !== false) ||
                 (strpos($table['Type'], 'enum') !== false) ||
                 (strpos($table['Table'],'text') !== false)) {
-                    $sql = "ALTER TABLE `" . $row['0'] . "` MODIFY `" . $table['Field'] . "` " . $table['Type'] . " CHARACTER SET " . $target_charset;
+                    $sql             = "ALTER TABLE `" . $row['0'] . "` MODIFY `" . $table['Field'] . "` " . $table['Type'] . " CHARACTER SET " . $target_charset;
                     $charset_results = Dba::write($sql);
                     if (!$charset_results) {
                         debug_event('CHARSET','Unable to update the charset of ' . $table['Field'] . '.' . $table['Type'] . ' to ' . $target_charset,'3');
                     } // if it fails
                 }
             }
-        } 
+        }
     }
 
     /**
@@ -504,21 +543,21 @@ class Dba {
      *
      * This runs an optimize on the tables and updates the stats to improve
      * join speed.
-     * This can be slow, but is a good idea to do from time to time. We do 
+     * This can be slow, but is a good idea to do from time to time. We do
      * it in case the dba isn't doing it... which we're going to assume they
      * aren't.
      */
-    public static function optimize_tables() {
-        $sql = "SHOW TABLES";
+    public static function optimize_tables()
+    {
+        $sql        = "SHOW TABLES";
         $db_results = Dba::read($sql);
 
-        while($row = Dba::fetch_row($db_results)) {
+        while ($row = Dba::fetch_row($db_results)) {
             $sql = "OPTIMIZE TABLE `" . $row[0] . "`";
-            $db_results_inner = Dba::write($sql);
+            Dba::write($sql);
 
             $sql = "ANALYZE TABLE `" . $row[0] . "`";
-            $db_results_inner = Dba::write($sql);
+            Dba::write($sql);
         }
     }
 }
-?>

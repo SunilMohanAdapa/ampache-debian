@@ -2,65 +2,83 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
-$localplay = new Localplay(Config::get('localplay_controller'));
+$localplay = new Localplay(AmpConfig::get('localplay_controller'));
 $localplay->connect();
 $status = $localplay->status();
 ?>
-<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
+<?php if ($browse->get_show_header()) {
+    require AmpConfig::get('prefix') . UI::find_template('list_header.inc.php');
+} ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
-<colgroup>
-  <col id="col_track" />
-  <col id="col_name" />
-  <col id="col_action" />
-</colgroup>
-<tr class="th-top">
-    <th class="cel_track"><?php echo T_('Track'); ?></th>
-    <th class="cel_name"><?php echo T_('Name'); ?></th>
-    <th class="cel_action"><?php echo T_('Action'); ?></th>
-</tr>
-<?php
-foreach ($object_ids as $object) {
-    $class = ' class="cel_name"';
-    if ($status['track'] == $object['track']) { $class=' class="cel_name lp_current"'; }
-?>
-<tr class="<?php echo UI::flip_class(); ?>" id="localplay_playlist_<?php echo $object['id']; ?>">
-    <td class="cel_track">
-        <?php echo scrub_out($object['track']); ?>
-    </td>
-    <td<?php echo $class; ?>>
-        <?php echo $localplay->format_name($object['name'],$object['id']); ?>
-    </td>
-    <td class="cel_action">
-    <?php echo Ajax::button('?page=localplay&action=delete_track&id=' . intval($object['id']),'delete', T_('Delete'),'localplay_delete_' . intval($object['id'])); ?>
-    </td>
-</tr>
-<?php } if (!count($object_ids)) { ?>
-<tr class="<?php echo UI::flip_class(); ?>">
-    <td colspan="3"><span class="error"><?php echo T_('No Records Found'); ?></span></td>
-</tr>
-<?php } ?>
-<tr class="th-bottom">
-    <th class="cel_track"><?php echo T_('Track'); ?></th>
-    <th class="cel_name"><?php echo T_('Name'); ?></th>
-    <th class="cel_action"><?php echo T_('Action'); ?></th>
-</tr>
+    <thead>
+        <tr class="th-top">
+            <th class="cel_track"><?php echo T_('Track'); ?></th>
+            <th class="cel_name"><?php echo T_('Name'); ?></th>
+            <th class="cel_action"><?php echo T_('Action'); ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        foreach ($object_ids as $object) {
+            $class = ' class="cel_name"';
+            if ($status['track'] == $object['track']) {
+                $class=' class="cel_name lp_current"';
+            }
+            ?>
+        <tr class="<?php echo UI::flip_class();
+            ?>" id="localplay_playlist_<?php echo $object['id'];
+            ?>">
+            <td class="cel_track">
+                <?php echo scrub_out($object['track']);
+            ?>
+            </td>
+            <td<?php echo $class;
+            ?>>
+                <?php echo $localplay->format_name($object['name'],$object['id']);
+            ?>
+            </td>
+            <td class="cel_action">
+            <?php echo Ajax::button('?page=localplay&action=delete_track&id=' . intval($object['id']),'delete', T_('Delete'),'localplay_delete_' . intval($object['id']));
+            ?>
+            </td>
+        </tr>
+        <?php 
+        } if (!count($object_ids)) {
+            ?>
+        <tr class="<?php echo UI::flip_class();
+            ?>">
+            <td colspan="3"><span class="error"><?php echo T_('No Records Found');
+            ?></span></td>
+        </tr>
+        <?php 
+        } ?>
+    </tbody>
+    <tfoot>
+        <tr class="th-bottom">
+            <th class="cel_track"><?php echo T_('Track'); ?></th>
+            <th class="cel_name"><?php echo T_('Name'); ?></th>
+            <th class="cel_action"><?php echo T_('Action'); ?></th>
+        </tr>
+    </tfoot>
 </table>
-<?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>
+<?php if ($browse->get_show_header()) {
+    require AmpConfig::get('prefix') . UI::find_template('list_header.inc.php');
+} ?>

@@ -2,21 +2,21 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -25,28 +25,24 @@
  * This class handles all of the session related stuff in Ampache
  *
  */
-class Session {
-
+class Session
+{
     /**
      * Constructor
      * This should never be called
      */
-    private function __construct() {
+    private function __construct()
+    {
         // Rien a faire
     } // __construct
 
     /**
      * open
      *
-     * This function is for opening a new session so we just verify that we
-     * have a database connection, nothing more is needed.
+     * This is run on the beginning of a session, nothing to do here for now.
      */
-    public static function open($save_path, $session_name) {
-        if (!Dba::dbh()) {
-            debug_event('session', 'Could not start session, no database connection', 1);
-            return false;
-        }
-
+    public static function open()
+    {
         return true;
     }
 
@@ -55,7 +51,8 @@ class Session {
      *
      * This is run on the end of a session, nothing to do here for now.
      */
-    public static function close() {
+    public static function close()
+    {
         return true;
     }
 
@@ -64,21 +61,15 @@ class Session {
      *
      * This saves the session information into the database.
      */
-    public static function write($key, $value) {
+    public static function write($key, $value)
+    {
         if (defined('NO_SESSION_UPDATE')) {
             return true;
         }
 
-        $length = Config::get('session_length');
-
-        // Check to see if remember me cookie is set, if so use remember
-        // length, otherwise use the session length
-        $expire = isset($_COOKIE[Config::get('session_name') . '_remember']) 
-            ? time() + Config::get('remember_length') 
-            : time() + Config::get('session_length');
-
-        $sql = 'UPDATE `session` SET `value` = ?, `expire` = ? WHERE `id` = ?';
-        $db_results = Dba::read($sql, array($value, $expire, $key));
+        $expire = time() + AmpConfig::get('session_length');
+        $sql    = 'UPDATE `session` SET `value` = ?, `expire` = ? WHERE `id` = ?';
+        Dba::write($sql, array($value, $expire, $key));
 
         debug_event('session', 'Writing to ' . $key . ' with expiration ' . $expire, 6);
 
@@ -90,18 +81,26 @@ class Session {
      *
      * This removes the specified session from the database.
      */
-    public static function destroy($key) {
-
-        if (!strlen($key)) { return false; }
+    public static function destroy($key)
+    {
+        if (!strlen($key)) {
+            return false;
+        }
 
         // Remove anything and EVERYTHING
         $sql = 'DELETE FROM `session` WHERE `id` = ?';
-        $db_results = Dba::write($sql, array($key));
+        Dba::write($sql, array($key));
 
         debug_event('SESSION', 'Deleting Session with key:' . $key, 6);
 
+        $session_name  = AmpConfig::get('session_name');
+        $cookie_path   = AmpConfig::get('cookie_path');
+        $cookie_domain = null;
+        $cookie_secure = AmpConfig::get('cookie_secure');
+
         // Destroy our cookie!
-        setcookie(Config::get('session_name'), '', time() - 86400);
+        setcookie($session_name, null, -1, $cookie_path, $cookie_domain, $cookie_secure);
+        setcookie($session_name . '_user', null, -1, $cookie_path, $cookie_domain, $cookie_secure);
 
         return true;
     }
@@ -111,14 +110,19 @@ class Session {
      *
      * This function is randomly called and it cleans up the spoo
      */
-    public static function gc($maxlifetime) {
+    public static function gc()
+    {
         $sql = 'DELETE FROM `session` WHERE `expire` < ?';
-        $db_results = Dba::write($sql, array(time()));
+        Dba::write($sql, array(time()));
+
+        $sql = 'DELETE FROM `session_remember` WHERE `expire` < ?';
+        Dba::write($sql, array(time()));
 
         // Also clean up things that use sessions as keys
         Query::gc();
         Tmp_Playlist::gc();
         Stream_Playlist::gc();
+        Song_Preview::gc();
 
         return true;
     }
@@ -128,7 +132,8 @@ class Session {
      *
      * This takes a key and returns the data from the database.
      */
-    public static function read($key) {
+    public static function read($key)
+    {
         return self::_read($key, 'value');
     }
 
@@ -137,14 +142,15 @@ class Session {
      *
      * This returns the specified column from the session row.
      */
-    private static function _read($key, $column) {
-        $sql = 'SELECT * FROM `session` WHERE `id` = ? AND `expire` > ?';
+    private static function _read($key, $column)
+    {
+        $sql        = 'SELECT * FROM `session` WHERE `id` = ? AND `expire` > ?';
         $db_results = Dba::read($sql, array($key, time()));
 
         if ($results = Dba::fetch_assoc($db_results)) {
             return $results[$column];
         }
-        
+
         debug_event('session', 'Unable to read session from key ' . $key . ' no data found', 5);
 
         return '';
@@ -155,8 +161,19 @@ class Session {
      *
      * This returns the username associated with a session ID, if any
      */
-    public static function username($key) {
+    public static function username($key)
+    {
         return self::_read($key, 'username');
+    }
+
+    /**
+     * username
+     *
+     * This returns the agent associated with a session ID, if any
+     */
+    public static function agent($key)
+    {
+        return self::_read($key, 'agent');
     }
 
     /**
@@ -165,13 +182,13 @@ class Session {
      * it takes care of setting the initial cookie, and inserting the first
      * chunk of data, nifty ain't it!
      */
-    public static function create($data) {
-
+    public static function create($data)
+    {
         // Regenerate the session ID to prevent fixation
         switch ($data['type']) {
             case 'api':
             case 'stream':
-                $key = isset($data['sid']) 
+                $key = isset($data['sid'])
                     ? $data['sid']
                     : md5(uniqid(rand(), true));
             break;
@@ -185,32 +202,52 @@ class Session {
             break;
         } // end switch on data type
 
-        $username = $data['username'];
-        $ip = $_SERVER['REMOTE_ADDR'] ? inet_pton($_SERVER['REMOTE_ADDR']) : '0';
-        $type = $data['type'];
-        $value = $data['value'];
-        $agent = substr($_SERVER['HTTP_USER_AGENT'], 0, 254);
+        $username = '';
+        if (isset($data['username'])) {
+            $username = $data['username'];
+        }
+        $ip    = $_SERVER['REMOTE_ADDR'] ? inet_pton($_SERVER['REMOTE_ADDR']) : '0';
+        $type  = $data['type'];
+        $value = '';
+        if (isset($data['value'])) {
+            $value = $data['value'];
+        }
+        $agent = (!empty($data['agent'])) ? $data['agent'] : substr($_SERVER['HTTP_USER_AGENT'], 0, 254);
 
         if ($type == 'stream') {
-            $expire = time() + Config::get('stream_length');
-        }
-        else {
-            $expire = time() + Config::get('session_length');
+            $expire = time() + AmpConfig::get('stream_length');
+        } else {
+            $expire = time() + AmpConfig::get('session_length');
         }
 
-        if (!strlen($value)) { $value = ' '; }
+        $latitude = null;
+        if (isset($data['geo_latitude'])) {
+            $latitude = $data['geo_latitude'];
+        }
+        $longitude = null;
+        if (isset($data['geo_longitude'])) {
+            $longitude = $data['geo_longitude'];
+        }
+        $geoname = null;
+        if (isset($data['geo_name'])) {
+            $geoname = $data['geo_name'];
+        }
+
+        if (!strlen($value)) {
+            $value = ' ';
+        }
 
         /* Insert the row */
-        $sql = 'INSERT INTO `session` (`id`,`username`,`ip`,`type`,`agent`,`value`,`expire`) ' .
-            'VALUES (?, ?, ?, ?, ?, ?, ?)';
-        $db_results = Dba::write($sql, array($key, $username, $ip, $type, $agent, $value, $expire));
+        $sql = 'INSERT INTO `session` (`id`,`username`,`ip`,`type`,`agent`,`value`,`expire`,`geo_latitude`,`geo_longitude`, `geo_name`) ' .
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $db_results = Dba::write($sql, array($key, $username, $ip, $type, $agent, $value, $expire, $latitude, $longitude, $geoname));
 
         if (!$db_results) {
-            debug_event('session', 'Session creation failed', 1);
+            debug_event('session', 'Session creation failed', '1');
             return false;
         }
 
-        debug_event('session', 'Session created:' . $key, 5);
+        debug_event('session', 'Session created: ' . $key, '5');
 
         return $key;
     }
@@ -221,25 +258,22 @@ class Session {
      * This checks for an existing session. If it's still valid we go ahead
      * and start it and return true.
      */
-    public static function check() {
-
-        $session_name = Config::get('session_name');
+    public static function check()
+    {
+        $session_name = AmpConfig::get('session_name');
 
         // No cookie no go!
-        if (!isset($_COOKIE[$session_name])) { return false; }
-
-        // Check for a remember me
-        if (isset($_COOKIE[$session_name . '_remember'])) {
-            self::create_remember_cookie();
+        if (!isset($_COOKIE[$session_name])) {
+            return false;
         }
 
         // Set up the cookie params before we start the session.
         // This is vital
         session_set_cookie_params(
-            Config::get('cookie_life'),
-            Config::get('cookie_path'),
-            Config::get('cookie_domain'),
-            Config::get('cookie_secure'));
+            AmpConfig::get('cookie_life'),
+            AmpConfig::get('cookie_path'),
+            AmpConfig::get('cookie_domain'),
+            AmpConfig::get('cookie_secure'));
 
         // Set name
         session_name($session_name);
@@ -255,10 +289,11 @@ class Session {
      * exists
      *
      * This checks to see if the specified session of the specified type
-     * exists, it also provides an array of keyed data that may be required
+     * exists
      * based on the type.
      */
-    public static function exists($type, $key, $data=array()) {
+    public static function exists($type, $key)
+    {
         // Switch on the type they pass
         switch ($type) {
             case 'api':
@@ -273,9 +308,9 @@ class Session {
             break;
             case 'interface':
                 $sql = 'SELECT * FROM `session` WHERE `id` = ? AND `expire` > ?';
-                if (Config::get('use_auth')) {
+                if (AmpConfig::get('use_auth')) {
                     // Build a list of enabled authentication types
-                    $types = Config::get('auth_methods');
+                    $types         = AmpConfig::get('auth_methods');
                     $enabled_types = implode("','", $types);
                     $sql .= " AND `type` IN('$enabled_types')";
                 }
@@ -287,7 +322,6 @@ class Session {
             break;
             default:
                 return false;
-            break;
         }
 
         // Default to false
@@ -299,22 +333,72 @@ class Session {
      *
      * This takes a SID and extends its expiration.
      */
-    public static function extend($sid, $type = null) {
+    public static function extend($sid, $type = null)
+    {
         $time = time();
-        $expire = isset($_COOKIE[Config::get('session_name') . '_remember']) 
-            ? $time + Config::get('remember_length') 
-            : $time + Config::get('session_length');
-
         if ($type == 'stream') {
-            $expire = $time + Config::get('stream_length');
+            $expire = $time + AmpConfig::get('stream_length');
+        } else {
+            $expire = $time + AmpConfig::get('session_length');
         }
 
         $sql = 'UPDATE `session` SET `expire` = ? WHERE `id`= ?';
         if ($db_results = Dba::write($sql, array($expire, $sid))) {
-            debug_event('session', $sid . ' has been extended to ' . date('r', $expire) . ' extension length ' . ($expire - $time), 5);
+            debug_event('session', $sid . ' has been extended to ' . @date('r', $expire) . ' extension length ' . ($expire - $time), 5);
         }
 
         return $db_results;
+    }
+
+    /**
+     * update_username
+     *
+     * This takes a SID and update associated username.
+     */
+    public static function update_username($sid, $username)
+    {
+        $sql = 'UPDATE `session` SET `username` = ? WHERE `id`= ?';
+        return Dba::write($sql, array($username, $sid));
+    }
+
+    /**
+     * update_geolocation
+     * Update session geolocation.
+     * @param string $sid
+     * @param float $latitude
+     * @param float $longitude
+     */
+    public static function update_geolocation($sid, $latitude, $longitude, $name)
+    {
+        if ($sid) {
+            $sql = "UPDATE `session` SET `geo_latitude` = ?, `geo_longitude` = ?, `geo_name` = ? WHERE `id` = ?";
+            Dba::write($sql, array($latitude, $longitude, $name, $sid));
+        } else {
+            debug_event('session', 'Missing session id to update geolocation.', 3);
+        }
+    }
+
+    /**
+     * get_geolocation
+     * Get session geolocation.
+     * @param string $sid
+     * @return array
+     */
+    public static function get_geolocation($sid)
+    {
+        $location = array();
+
+        if ($sid) {
+            $sql        = "SELECT `geo_latitude`, `geo_longitude`, `geo_name` FROM `session` WHERE `id` = ?";
+            $db_results = Dba::read($sql, array($sid));
+            if ($row = Dba::fetch_assoc($db_results)) {
+                $location['latitude']  = $row['geo_latitude'];
+                $location['longitude'] = $row['geo_longitude'];
+                $location['name']      = $row['geo_name'];
+            }
+        }
+
+        return $location;
     }
 
     /**
@@ -323,9 +407,10 @@ class Session {
      * This function is called when the object is included, this sets up the
      * session_save_handler
      */
-    public static function _auto_init() {
+    public static function _auto_init()
+    {
         if (!function_exists('session_start')) {
-            header("Location:" . Config::get('web_path') . "/test.php");
+            header("Location:" . AmpConfig::get('web_path') . "/test.php");
             exit;
         }
 
@@ -350,16 +435,17 @@ class Session {
      * a cookie at the same time as a header redirect. As such on view of a
      * login a cookie is set with the proper name.
      */
-    public static function create_cookie() {
+    public static function create_cookie()
+    {
         // Set up the cookie prefs before we throw down, this is very important
-        $cookie_life = Config::get('cookie_life');
-        $cookie_path = Config::get('cookie_path');
-        $cookie_domain = false;
-        $cookie_secure = Config::get('cookie_secure');
+        $cookie_life   = AmpConfig::get('cookie_life');
+        $cookie_path   = AmpConfig::get('cookie_path');
+        $cookie_domain = null;
+        $cookie_secure = AmpConfig::get('cookie_secure');
 
         session_set_cookie_params($cookie_life, $cookie_path, $cookie_domain, $cookie_secure);
 
-        session_name(Config::get('session_name'));
+        session_name(AmpConfig::get('session_name'));
 
         /* Start the session */
         self::ungimp_ie();
@@ -367,16 +453,78 @@ class Session {
     }
 
     /**
+     * create_user_cookie
+     *
+     * This function just creates the user cookie wich contains current username.
+     * It must be used for information only.
+     */
+    public static function create_user_cookie($username)
+    {
+        $cookie_life   = AmpConfig::get('cookie_life');
+        $session_name  = AmpConfig::get('session_name');
+        $cookie_path   = AmpConfig::get('cookie_path');
+        $cookie_domain = null;
+        $cookie_secure = AmpConfig::get('cookie_secure');
+
+        setcookie($session_name . '_user', $username, $cookie_life, $cookie_path, $cookie_domain, $cookie_secure);
+    }
+
+    /**
      * create_remember_cookie
      *
      * This function just creates the remember me cookie, nothing special.
      */
-    public static function create_remember_cookie() {
-        $remember_length = Config::get('remember_length');
-        $session_name = Config::get('session_name');
+    public static function create_remember_cookie($username)
+    {
+        $remember_length = AmpConfig::get('remember_length');
+        $session_name    = AmpConfig::get('session_name');
 
-        Config::set('cookie_life', $remember_length, true);
-        setcookie($session_name . '_remember', "Rappelez-vous, rappelez-vous le 27 mars", time() + $remember_length, '/');  
+        $token = self::generateRandomToken(); // generate a token, should be 128 - 256 bit
+        self::storeTokenForUser($username, $token, $remember_length);
+        $cookie = $username . ':' . $token;
+        $mac    = hash_hmac('sha256', $cookie, AmpConfig::get('secret_key'));
+        $cookie .= ':' . $mac;
+
+        setcookie($session_name . '_remember', $cookie, time() + $remember_length);
+    }
+
+    /**
+     * Generate a random token.
+     * @return string
+     */
+    public static function generateRandomToken()
+    {
+        return md5(uniqid(mt_rand(), true));
+    }
+
+    public static function storeTokenForUser($username, $token, $remember_length)
+    {
+        $sql = "INSERT INTO session_remember (`username`, `token`, `expire`) VALUES (?, ?, ?)";
+        return Dba::write($sql, array($username, $token, time() + $remember_length));
+    }
+
+    public static function auth_remember()
+    {
+        $auth  = false;
+        $cname = AmpConfig::get('session_name') . '_remember';
+        if (isset($_COOKIE[$cname])) {
+            list ($username, $token, $mac) = explode(':', $_COOKIE[$cname]);
+            if ($mac === hash_hmac('sha256', $username . ':' . $token, AmpConfig::get('secret_key'))) {
+                $sql        = "SELECT * FROM `session_remember` WHERE `username` = ? AND `token` = ? AND `expire` >= ?";
+                $db_results = Dba::read($sql, array($username, $token, time()));
+                if (Dba::num_rows($db_results) > 0) {
+                    Session::create_cookie();
+                    self::create(array(
+                        'type' => 'mysql',
+                        'username' => $username
+                    ));
+                    $_SESSION['userdata']['username'] = $username;
+                    $auth                             = true;
+                }
+            }
+        }
+
+        return $auth;
     }
 
     /**
@@ -385,7 +533,8 @@ class Session {
      * This function sets the cache limiting to public if you are running
      * some flavor of IE and not using HTTPS.
      */
-    public static function ungimp_ie() {
+    public static function ungimp_ie()
+    {
         // If no https, no ungimpage required
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'on') {
             return true;
@@ -398,6 +547,4 @@ class Session {
 
         return true;
     }
-
-} 
-?>
+}

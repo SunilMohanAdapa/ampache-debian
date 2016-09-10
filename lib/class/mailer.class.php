@@ -2,21 +2,21 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -26,8 +26,8 @@
  * This class handles the Mail
  *
  */
-class Mailer {
-
+class Mailer
+{
     // The message, recipient and from
     public $message;
     public $subject;
@@ -41,10 +41,9 @@ class Mailer {
      *
      * This does nothing. Much like goggles.
      */
-    public function __construct() {
-
+    public function __construct()
+    {
         // Eh bien.
-
     } // Constructor
 
     /**
@@ -52,7 +51,8 @@ class Mailer {
      *
      * Checks whether what we have looks like a valid address.
      */
-    public static function validate_address($address) {
+    public static function validate_address($address)
+    {
         return PHPMailer::ValidateAddress($address);
     }
 
@@ -62,23 +62,24 @@ class Mailer {
      * Does the config magic to figure out the "system" email sender and
      * sets it as the sender.
      */
-    public function set_default_sender() {
-        $user = Config::get('mail_user');
+    public function set_default_sender()
+    {
+        $user = AmpConfig::get('mail_user');
         if (!$user) {
             $user = 'info';
         }
 
-        $domain = Config::get('mail_domain');
+        $domain = AmpConfig::get('mail_domain');
         if (!$domain) {
             $domain = 'example.com';
         }
-        
-        $fromname = Config::get('mail_name');
+
+        $fromname = AmpConfig::get('mail_name');
         if (!$fromname) {
             $fromname = 'Ampache';
         }
 
-        $this->sender = $user . '@' . $domain;
+        $this->sender      = $user . '@' . $domain;
         $this->sender_name = $fromname;
     } // set_default_sender
 
@@ -87,13 +88,9 @@ class Mailer {
      * This returns an array of userids for people who have e-mail
      * addresses based on the passed filter
      */
-    public static function get_users($filter) {
-
+    public static function get_users($filter)
+    {
         switch ($filter) {
-            default:
-            case 'all':
-                $sql = "SELECT * FROM `user` WHERE `email` IS NOT NULL";
-            break;
             case 'users':
                 $sql = "SELECT * FROM `user` WHERE `access`='25' AND `email` IS NOT NULL";
             break;
@@ -102,7 +99,11 @@ class Mailer {
             break ;
             case 'inactive':
                 $inactive = time() - (30 * 86400);
-                $sql = 'SELECT * FROM `user` WHERE `last_seen` <= ? AND `email` IS NOT NULL';
+                $sql      = 'SELECT * FROM `user` WHERE `last_seen` <= ? AND `email` IS NOT NULL';
+            break;
+            case 'all':
+            default:
+                $sql = "SELECT * FROM `user` WHERE `email` IS NOT NULL";
             break;
         } // end filter switch
 
@@ -115,76 +116,63 @@ class Mailer {
         }
 
         return $results;
-
     } // get_users
-
-    /**
-     * add_statistics
-     * This should be run if we want to add some statistics to this e-mail,
-     * appends to self::$message
-     */
-    public function add_statistics($methods) {
-
-
-
-    } // add_statistics
 
     /**
      * send
      * This actually sends the mail, how amazing
      */
-    public function send($phpmailer = null) {
+    public function send($phpmailer = null)
+    {
+        $mailtype = AmpConfig::get('mail_type');
 
-        $mailtype = Config::get('mail_type');
-        
         if ($phpmailer == null) {
             $mail = new PHPMailer();
 
             $recipient_name = $this->recipient_name;
-            if(function_exists('mb_encode_mimeheader')) {
+            if (function_exists('mb_encode_mimeheader')) {
                 $recipient_name = mb_encode_mimeheader($recipient_name);
             }
             $mail->AddAddress($this->recipient, $recipient_name);
-        }
-        else {
+        } else {
             $mail = $phpmailer;
         }
 
-        $mail->CharSet    = Config::get('site_charset');
+        $mail->CharSet     = AmpConfig::get('site_charset');
         $mail->Encoding    = 'base64';
-        $mail->From    = $this->sender;
-        $mail->Sender    = $this->sender;
+        $mail->From        = $this->sender;
+        $mail->Sender      = $this->sender;
         $mail->FromName    = $this->sender_name;
-        $mail->Subject    = $this->subject;
+        $mail->Subject     = $this->subject;
 
-        if(function_exists('mb_eregi_replace')) {
+        if (function_exists('mb_eregi_replace')) {
             $this->message = mb_eregi_replace("\r\n", "\n", $this->message);
         }
         $mail->Body    = $this->message;
 
-        $sendmail       = Config::get('sendmail_path');
+        $sendmail    = AmpConfig::get('sendmail_path');
         $sendmail    = $sendmail ? $sendmail : '/usr/sbin/sendmail';
-        $mailhost    = Config::get('mail_host');
+        $mailhost    = AmpConfig::get('mail_host');
         $mailhost    = $mailhost ? $mailhost : 'localhost';
-        $mailport    = Config::get('mail_port');
+        $mailport    = AmpConfig::get('mail_port');
         $mailport    = $mailport ? $mailport : 25;
-        $mailauth    = Config::get('mail_auth');
-        $mailuser       = Config::get('mail_auth_user');
+        $mailauth    = AmpConfig::get('mail_auth');
+        $mailuser    = AmpConfig::get('mail_auth_user');
         $mailuser    = $mailuser ? $mailuser : '';
-        $mailpass       = Config::get('mail_auth_pass');
+        $mailpass    = AmpConfig::get('mail_auth_pass');
         $mailpass    = $mailpass ? $mailpass : '';
 
-        switch($mailtype) {
+        switch ($mailtype) {
             case 'smtp':
                 $mail->IsSMTP();
                 $mail->Host = $mailhost;
                 $mail->Port = $mailport;
-                if($mailauth == true) {
+                if ($mailauth === true) {
                     $mail->SMTPAuth = true;
                     $mail->Username = $mailuser;
                     $mail->Password = $mailpass;
                 }
-                if ($mailsecure = Config::get('mail_secure_smtp')) {
+                if ($mailsecure = AmpConfig::get('mail_secure_smtp')) {
                     $mail->SMTPSecure = ($mailsecure == 'ssl') ? 'ssl' : 'tls';
                 }
             break;
@@ -199,18 +187,19 @@ class Mailer {
         }
 
         $retval = $mail->send();
-        if( $retval == true ) {
+        if ($retval === true) {
             return true;
         } else {
             return false;
         }
     } // send
 
-    public function send_to_group($group_name) {
+    public function send_to_group($group_name)
+    {
         $mail = new PHPMailer();
 
-        foreach(self::get_users($group_name) as $member) {
-            if(function_exists('mb_encode_mimeheader')) {
+        foreach (self::get_users($group_name) as $member) {
+            if (function_exists('mb_encode_mimeheader')) {
                 $member['fullname'] = mb_encode_mimeheader($member['fullname']);
             }
             $mail->AddBCC($member['email'], $member['fullname']);
@@ -218,6 +207,5 @@ class Mailer {
 
         return $this->send($mail);
     }
-
 } // Mailer class
-?>
+

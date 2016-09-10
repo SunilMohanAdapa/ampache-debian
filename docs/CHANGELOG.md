@@ -1,8 +1,428 @@
 CHANGELOG
 =========
 
+3.8.2
+----------
+- Fixed potential security vulnerability on smartplaylist search rule and catalog management actions (thanks Roman Ammann)
+- Fixed song comparison issue on arrays (genre ...) when updating from tag
+- Fixed song insertion issue if track year is out of range
+- Fixed unexpected artist summary autoupdate
+- Improved generated playlist filename (thanks yam655)
+- Fixed user avatar upload (thanks vader083)
+- Fixed waveform temporary file deletion issue if GD library is unavailable
+- Fixed max number of items returned from Subsonic getStarred.view (thanks zerodogg)
+- Fixed video update from tags (thanks stebe)
+- Reverted PHP 5.5.9 dependency to PHP 5.4
+- Added video playlist support (thanks SurvivalHive)
+- Added preference subcategory
+- Added prompt for new playlist name
+- Fixed page refresh when canceling album art change (thanks EvilLivesHere)
+- Added /play htaccess rewrite rule to avoid default max limit redirection 
+- Fixed Subsonic artist/album/song name JSON parsing if the name is numeric only
+- Added ignored articles and cover art to Subsonic getArtists.view function
+- Fixed MySQL requests to support ONLY_FULL_GROUP_BY mode
+- Fixed Ajax art refresh after changing it (thanks gnujeremie)
+- Fixed playlist creation from smartplaylist (thanks stebe)
+- Added SQL unique constraint on tag map
+- Fixed Subsonic genres with JSON format
+- Added Bookmarks feature on Subsonic API
+- Fixed thumb art regeneration if entry found in database without data (thanks s4astliv)
+- Added Podcast feature
+- Added large view / grid view option on artist and albums collection
+- Moved from php-gettext to oscarotero/Gettext
+- Added `Access-Control-Allow-Origin: *` header on Subsonic images & streams
+- Fixed Subsonic item identifier parsing
+- Added logic for external plugin directories (ampache-*)
+- Added Discogs metadata plugin
+
+3.8.1
+----------
+- Fixed PHP7 Error class conflict (thanks trampi)
+- Fixed user password with special characters at install time (thanks jagerman)
+- Moved Ampache project license from GPLv2 to AGPLv3
+- Added Ampache specific information on Subsonic API getAlbum using a new `ampache` parameter (thanks nicklan)
+- Added 'album tag' option in song search (thanks DanielMaly)
+- Added Message of the Day plugin to display MOTD at home page
+- Moved AmpacheApi class to a separate ampacheapi-php git repository
+- Added timeline / friends timeline feature
+- Fixed disabled song display to regular users (thanks shangril)
+- Fixed random albums art size (thanks Bidules079)
+- Moved tag cloud to artist browsing by default
+- Fixed utf8 BOM empty string on song comparison
+- Improved recently played and user stats queries performance (thanks thinca)
+- Renamed SAMPLE_RATE to TRANSCODE_BITRATE on transcoding
+- Fixed tag deletion sql error (thanks stebe)
+- Moved to PNG default blank image instead of JPG (thanks Psy-Virus)
+- Fixed temporary playlist initial position when scrolling down (thanks RobertoCarlo)
+- Added Radio stations to UPnP backend
+- Fixed Subsonic API art to use album art if song doesn't have a custom art (thanks hypfvieh)
+- Fixed Subsonic API search when object count parameter is 0 (thanks hypfvieh)
+- Fixed UPnP UUID to be based on host information
+- Moved to Composer for dependencies management
+- Fixed catalog action when not using Ajax page loading (thanks Razrael)
+- Fixed unrated song default value (thanks Combustible)
+- Added custom metadata support from files (thanks Razrael)
+- Improved Subsonic API getArtists performance (thanks nicklan)
+- Fixed theme color setting behavior
+- Moved audioscrobbler API to v2
+- Added m3u8 playlist import
+- Fixed utf8 id3v2 comments support
+- Added write_playlists script to export playlists to file
+- Fixed Tvdb and Tmdb plugins (thanks wagnered)
+- Improved Video filename parsing (thanks wagnered)
+- Fixed non scalar settings value printing on debug page
+- Improved Subsonic API getAlbumList error handling
+- Fixed user login with browser used during the installation
+- Fixed iTunes 12 browsing when using DAAP (thanks Chattaway83)
+- Moved http_port user preference to ampache.cfg.php
+- Upgraded last.fm and libre.fm scrobbling to latest API version (thanks nioc)
+- Added missing space between track and album in localplay playlist (thanks arnaudbey)
+- Added check fo mbstring.func_overload support before using id3 write functionality (thanks anonymous2ch)
+- Fixed file size calculation when using id3v2 tag (thanks hypfvieh)
+- Added rating from id3 tag (thanks nioc)
+- Added track number on streaming playlist (thanks Fondor1)
+- Fixed catalog export (thanks shellshocker)
+- Fixed file change detection
+- Improved XML API with more information and new functions (advanced_search, toggle_follow, last_shouts, rate, timeline, friends_timeline)
+- Fixed 'Next' button when browsing start offset is aligned to offset limit (thanks wagnered)
+- Fixed stream kill OS detection (thanks nan4k7)
+- Fixed calculate_art_size script to support storage on disk (thanks nan4k7)
+- Fixed sql script semicolon typo (thanks jack)
+- Added support for .opus files (thanks mrpi)
+- Fixed podcast owner xml information
+- Fixed ldap filter parameter check (thanks ChrGeiss)
+- Fixed 'Add to existing playlist' link for regular users (thanks Niols)
+
+3.8.0
+----------
+- Added Portuguese (Brasil) language (thanks Ione Souza Junior)
+- Updated PHPMailer version to 5.2.10
+- Fixed user stats clear
+- Added user, followers and last shouts XML API functions
+- Fixed transcoded process end on some systems (thanks nan4k7)
+- Added ogg channel streaming support (thanks Deathcow)
+- Fixed sql connection close before stream (thanks fufroma)
+- Added support for several ldap filters (thanks T-Rock)
+- Fixed 'Add to existing playlist' button on web player (thanks RyanCopley)
+- Added 'add to existing playlist' link on album page (thanks RyanCopley)
+- Added option to hide user fullname from other users
+- Added playlist track information in Apache XML API (thanks RyanCopley)
+- Fixed playlist remove song in Apache XML API (thanks RyanCopley)
+- Fixed SubSonic API ifModifiedSince information
+- Added Podcast links to albums / artists
+- Added Piwik and Google Analytics plugins
+- Added Apache 2.4 access control declaration in htaccess files
+- Fixed performance issues on user preferences
+- Added artist search by year and place
+- Fixed search by comment (thanks malkavi)
+- Added Paypal and Flattr plugins
+- Added .maintenance page
+- Fixed captcha
+- Added private messages between users
+- Fixed SubSonic API rating information on albums and songs
+- Added latest artists and shouts RSS feeds
+- Fixed tag cloud ordering
+- Added Label entities associated to artists / users
+- Added WebDAV backend
+- Fixed SubSonic API requests with musicFolderId parameter (thanks dhsc19)
+- Added footer text edition setting
+- Added uploaded artist list on user page
+- Added custom Ampache login logo and favicon support
+- Added edition support on shared objects (thanks dhsc19)
+- Fixed share feature on videos (thanks RobertoCarlo)
+- Removed album year display from album name if unset
+- Fixed Subsonic API Album/Artist song's link (thanks dhsc19 and daneren2005)
+- Added mysql database socket authentication support on web setup (thanks AsavarTzeth)
+- Fixed artist art url for mobile use (thanks dhsc19)
+- Added Shoutbox home plugin
+- Added catalog favorites home plugin
+- Fixed search by rating (thanks iamnumbersix)
+- Added UPnP localplay (thanks SeregaPru)
+- Changed preferences to return the global value if preference is missing for the searched user
+- Fixed special chars in songs names and tags (thanks SeregaPru) 
+- Fixed Subsonic API playlist edition/delation (thanks dhsc19)
+- Fixed integer default value in Apache XML API
+- Fixed image thumb on webplayer and search preview (thanks RobertoCarlo and eephyne)
+- Fixed proxy setting on all external http requests (thanks brendankearney)
+- Added QRCode view of user API key 
+- Fixed http status code on Subsonic API streams when using curl (thanks nicklan)
+- Added Server-Sent Events on catalog actions
+- Added option to enable/disable channel and live stream features
+- Removed official PHP 5.3 support
+- Added option to show/hide footer statistics (thanks brownl)
+- Added delete from disk option on user uploaded files
+- Added installation type and players helper at installation process
+- Added tv_episode tag on quicktime files (thanks wagnered)
+- Added new option to disable deferred extended metadata, e.g. artist details
+- Added Subsonic API getAvatar function
+- Fixed unsynced lyrics tags
+- Fixed ldap_filter setting deactivation on ampache.cfg.php update (thanks Rouzax)
+- Added Subsonic API similar artists & songs functions
+- Added Subsonic API getLyrics function
+- Fixed disk number and album artist metadata on quicktime files (thanks JoeDat)
+- Fixed Ampache API playlist_add_song function
+- Added ability to store images on disk
+- Added new setting to define album art min and max width/height
+- Fixed Subsonic API getAlbum returned artist id on songs
+- Fixed Subsonic API cover art when PHP-GD unavailable
+- Fixed localplay playlist refresh on volume changes (thanks essagl)
+- Fixed web player equalizer option if visualizer is not enabled (thanks brownl)
+- Fixed asx file mime type (thanks thinca)
+- Added song genre parsing options (thanks Razrael and lotan)
+- Added sort on languages list (thanks brownl)
+- Added placeholder text to search box (thanks brownl)
+- Added web player Play Next feature (thanks tan-ce)
+- Fixed Plex backend administration page uri (thanks a9k)
+- Fixed expired shared objects clean (thanks eephyne)
+- Added missing artist search results (thanks bliptec)
+- Fixed song genre id parsing (thanks lotan)
+- Added Scrobble method to Subsonic API
+- Added an option to add tags to child without overwriting
+- Added image dimension info to image tables (thanks tsquare66)
+- Replaced ArchiveLib by StreamZip-PHP to avoid temporary zip file
+- Added Year field in song details and edition
+- Added Subsonic API create/delete user, jukebox control and search auto suggestion
+- Added few optional install tests
+- Improved Share features with modal dialog choices
+- Added new action on playlists to remove duplicates
+- Fixed playlist addition to another playlist (thanks kszulc)
+- Fixed Various Artist link on album page (thanks Jucgshu)
+- Added session_destroy call when a session should be destroyed
+- Added HTML5 ReplayGain track feature
+- Added display and mandatory user registration fields settings
+- Added .htaccess IfModule mod_access.c directives
+- Fixed SmartPlayer results per user (thanks nakinigit)
+- Fixed XSS vulnerability CVE-2014-8620 (thanks g0blin)
+- Fixed playlist import setting on catalog update to be disabled by default (thanks DaPike)
+- Added ability to browse my tags other library items than songs
+- Added Stream Control plugins
+- Added transcode settings per player type
+- Added ability to write directly the new configuration file when it version changed
+- Added `quick play url` to have permanent authenticated stream link without session
+- Fixed unresponsive website on batch download (thanks Rouzax)
+- Added batch download item granularity
+- Fixed 'guest' user site rendering
+- Added Aurora.js support in webplayer
+- Added Google Maps geolocation analyze plugin
+- Added statistical graphs
+- Added user geolocation
+- Added 'Missing Artist' search
+- Fixed Ampache installation with FastCGI
+- Added a new RSS Feed plugin
+- Added a new 'display home' plugin type
+- Added Favorite and Rating features to playlists
+- Added user feedback near mouse cursor on democratic votes
+- Changed header page position to be fixed
+- Added external links on song page details
+- Fixed Subsonic API getAlbumList2 byGenre and byYear order (thanks rrjk)
+- Added html5 desktop notification
+- Added album group order setting
+- Fixed unwanted album merge when one of the album doesn't have mbid
+- Changed video player to go outside the footer
+- Added ip address in authentication failure for fail2ban scripts (thanks popindavibe)
+- Added parameter to hide directplay button if number of items is above a limit
+- Added Tag split (thanks jcwmoore)
+- Fixed album/artist arts and stats migration on rename (thanks jcwmoore)
+- Fixed get lyrics from files (thanks apastuszak)
+- Fixed verify local catalog (thanks JoeDat)
+- Removed Twitter code
+- Added optional cookie disclaimer for the EU Cookie Law
+- Replaced catalog action links to action dropdown list (thanks Psy-Virus)
+- Fixed `remember me` feature (thanks ainola)
+- Added email when registered user must be enabled by administrators
+- Fixed local catalog clean on Windows (thanks Rouzax)
+- Added Subsonic API maxBitRate parameter support (thanks philipl)
+- Fixed SubSonic API special characters encode (thanks nan4k7)
+- Added Beets local and remote catalog support (thanks Razrael)
+- Fixed XML error code returned with invalid Ampache API handshake (thanks funkygaddafi)
+- Replaced iframe to Ajax dynamic page loading
+- Changed `Albums of the moment` to not necessarily have a cover
+- Added Plex backend items edition support
+- Added hls stream support
+- Added X-Content-Duration header support on streams
+- Removed Toogle Art from artist page
+- Fixed track numbers when removing a song from playlist (thanks stonie08)
+- Added Plex backend playlist support
+- Added gather art from video files (thanks wagnered)
+- Added Plex backend movie / tvshow support
+- Added release group on albums
+- Added Smart Playlist songs list
+- Added zlib test
+- Removed old Ampache themes
+- Fixed SubSonic API lastModified element (thanks bikkuri10)
+- Disabled `beautiful url` on XML-API for retro-compatibility
+- Fixed image resource allocation (thanks greengeek1)
+- Added setting to write id3 metadata to files (thanks tsquare66)
+- Added check for large files manipulation
+- Added video subtitle support
+- Fixed Google arts to use real arts and not the small size preview
+- Added Tmdb metadata plugin
+- Added Omdb metadata plugin
+- Added Music Clips, Movies and TV Shows support
+- Added media type information on catalog
+- Fixed get SmartPlaylist in XML-API (thanks opencrf)
+- Added beautiful url on arts
+- Improved browse list header (thanks Psy-Virus)
+- Fixed user online/offline information on Reborn theme (thanks thorsforge)
+- Added UPnP backend (thanks SeregaPru)
+- Added DAAP backend
+- Added sort options on playlists (thanks Shdwdrgn)
+- Fixed XML-API tag information (thanks jcwmoore)
+- Fixed multiple broadcast play (thanks uk3gaus)
+- Added SmartPlaylists to Subsonic API
+- Added limit option on SmartPlaylists
+- Added random option on SmartPlaylists
+- Added 'item count' on browse
+- Added direct typed links on items tags
+- Fixed SubSonic API compatibility with few players requesting information on library -1
+- Added license information on songs
+- Added upload feature on web interface
+- Added albumartist information on songs (thanks tsquare66)
+- Fixed errors on sql table exists check
+- Fixed play/pause on broadcasts (thanks uk3gaus)
+- Added donation button
+- Added democratic page automatic refresh
+- Fixed distinct random albums
+- Added collapsing menu (thanks Kaivo)
+- Added 'save to playlist' feature on web player (thanks Kaivo)
+- Added tag merge feature
+- Fixed democratic vote with automatic logins (thanks M4DM4NZ)
+- Added git pull update from web interface for development versions
+- Fixed http-rang requests on streaming (thanks thejk)
+- Improved installation process
+- Improved French translation (thanks arnaudbey)
+- Improved German translation (thanks Psy-Virus and meandor)
+
+3.7.0
+----------
+- Added Scrutinizer analyze
+- Fixed playlist play with disabled songs (reported by stebe)
+- Improved user auto-registration to optionally avoid email validation
+- Fixed date.timezone php warnings breaking Ampache API (reported by redcap1)
+- Fixed playlist browse with items > 1000 (reported by Tetram67)
+- Fixed Amazon API Image support (thanks jbrain)
+- Fixed id3v2 multiples genres (reported by Rouzax)
+- Improved democratic playlist view to select the first one by default
+- Improved German translation (thanks Psy-Virus)
+- Fixed playlist view of all users for administrator accounts (reported by stonie08)
+- Added option to regroup album disks to one album view
+- Changed Ampache logo
+- Fixed email validation on user registration (reported by redcap1)
+- Added local charset setting
+- Improved installation steps and design (thanks changi67)
+- Improved Recently Played to not filter songs to one display only
+- Fixed Subsonic transcoding support
+- Fixed Subsonic offline storage file path (reported by Tetram76)
+- Added optional top dock menu
+- Added html5 web audio api visualizer and equalizer
+- Added `Play List` to localplay mode
+- Fixed encoding issue in batch download
+- Added pagination to democratic playlists
+- Added an option to group albums discs to an unique album
+- Added alphabeticalByName and alphabeticalByArtist browse view in Subsonic API
+- Fixed album art on xspf generated playlist
+- Added stats, playlist and new authentication method to Ampache XML API
+- Added responsive tables to automatically hide optional information on small screen
+- Added song action buttons (user favorite, rating, ...) to the web player
+- Added sortable capability to the web player playlist
+- Added Growl notification/scrobbler plugin
+- Added artist slideshow photos plugin from Flickr
+- Added setting to change Ampache log file name
+- Added playlists to Quick and Advanced search
+- Added pls, asx and xspf playlist file format import
+- Fixed playlist import with song file absolute path (reported by ricksorensen)
+- Fixed playlist import with same song file names (reported by captainark)
+- Added shoutcast notification at specific time when playing a song with a waveform
+- Added Tag edit/delete capability
+- Added several search engine links
+- Added myPlex support on Plex API
+- Added cache on LastFM data
+- Added custom buttons play actions
+- Added artist pictures slideshow for current playing artist
+- Added Broadcast feature
+- Added Channel feature with Icecast compatibility
+- Replaced Muses Radio Player by jPlayer to keep one web player for all
+- Added missing artists in similar artists for Wanted feature
+- Added concerts information from LastFM
+- Added tabs on artist information
+- Added 'add to playlist' direct button on browse items
+- Added avatar on users and Gravatar/Libravatar plugins
+- Fixed playlist visibility (reported by stonie08)
+- Added OpenID authentication
+- Fixed m3u import to playlist on catalog creation (reported by jaydoes)
+- Improved missing/wanted albums with the capability to browse missing artists
+- Added share feature
+- Updated French translation
+- Added options per browse view (alphabetic, infinite scroll, number of items per page...)
+- Fixed several Subsonic players (SubHub, Jamstash...)
+- Added option to get beautiful stream url with url rewriting
+- Added check to use a new thread for scrobbling if available
+- Added confirmation option when closing the currently playing web player
+- Added auto-pause web player option between several browse tabs
+- Fixed similar artists list with disabled catalogs (reported by stebe)
+- Improved Shoutbox (css fix, real time notifications...)
+- Fixed iframe basket play action reload
+- Fixed wanted album auto-remove
+- Fixed MusicBrainz get album art from releases
+- Added Waveform feature on songs
+- Added AutoUpdate Ampache version check
+- Added auto-completion in global Ampache search
+- Added option to 'lock' header/sidebars UI
+- Fixed catalog export when 'All' selected
+- Fixed XBMC Local Play (reported by nakinigit)
+- Fixed artist search
+- Fixed Random Advanced (reported by stebe)
+- Changed song preview directplay icons
+- Added Headphones Automatic Music Downloader support as a 'Wanted Process' plugin
+- Updated PHPMailer to version 5.2.7
+- Updated getID3 to version 1.9.7
+- Added 'Song Preview' feature on missing albums tracks, with EchoNest api
+- Added 'Missing Albums' / 'Wanted List' feature
+- Upgraded to MusicBrainz api v2
+- Replaced Snoopy project with Requests project
+- Added user-agent on recently played
+- Added option to show/hide recently played, time and user-agent per user
+- Updated French language
+- Added option for iframe or popup web player mode
+- Improved Song/Video web player with jPlayer, Radio player with Muse Radio Player
+- Added 'add media' to the currently played playlist on web player
+- Added dedicated 'Recently Played' page
+- Added enable/disable feature on catalogs
+- Fixed Config class conflict with PEAR
+- Improved recommended artists/songs loading using ajax
+- Added a new modern 'Reborn' theme
+- Improved Subsonic api backend support (json, ...)
+- Added Plex api backend support
+- Added artist art/summary when using LastFM api
+- Added 'all' link when browsing
+- Added option to enable/disable web player technology (flash / html5)
+- Fixed artist/song edition
+- Improved tag edition
+- Added song re-order on album / playlists
+- Replaced Prototype with jQuery
+- Added 'Favorite' feature on songs/albums/artists
+- Added 'Direct Play' feature to play songs without using a playlist
+- Added Lyrics plugins (ChartLyrics and LyricWiki)
+- Fixed ShoutBox enable/disable (reported by cipriant)
+- Added SoundCloud, Dropbox, Subsonic and Google Music catalog plugins
+- Improved Catalogs using plug-ins
+- Added browse paging to all information pages
+- Fixed LDAP authentication with password containing '&' (reported by bruth2)
+- Added directories to zip archives
+- Improved project code style and added Travis builds
+- Added albums default sort preference
+- Added number of times an artist/album/song was played
+- Fixed installation process without database creation
+- Removed administrative flags
+
 3.6-FUTURE
 ----------
+- Fixed issue with long session IDs that affected OS X Mavericks and possibly
+  other newer PHP installations (reported by yebo29)
+- Fixed some sort issues (patch by Afterster) 
+- Fixed Fresh theme display on large screens (patch by Afterster)
+- Fixed bug that allowed guests to add radio stations
+- Added support for aacp transcoding
 - Improved storage efficiency for large browse results
 - Fixed unnecessary growth of the tmp_browse table from API usage (reported
   by Ondalf)

@@ -2,21 +2,21 @@
 /* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
  *
- * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright 2001 - 2013 Ampache.org
+ * LICENSE: GNU Affero General Public License, version 3 (AGPLv3)
+ * Copyright 2001 - 2015 Ampache.org
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License v2
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -26,18 +26,19 @@
  * and then runs throught $_REQUEST looking for those
  * values and updates them for this user
  */
-function update_preferences($pref_id=0) {
-
-    $pref_user = new User($pref_id);
-
+function update_preferences($pref_id=0)
+{
     /* Get current keys */
     $sql = "SELECT `id`,`name`,`type` FROM `preference`";
 
     /* If it isn't the System Account's preferences */
-    if ($pref_id != '-1') { $sql .= " WHERE `catagory` != 'system'"; }
+    if ($pref_id != '-1') {
+        $sql .= " WHERE `catagory` != 'system'";
+    }
 
     $db_results = Dba::read($sql);
 
+    $results = array();
     // Collect the current possible keys
     while ($r = Dba::fetch_assoc($db_results)) {
         $results[] = array('id' => $r['id'], 'name' => $r['name'],'type' => $r['type']);
@@ -46,16 +47,15 @@ function update_preferences($pref_id=0) {
     /* Foreach through possible keys and assign them */
     foreach ($results as $data) {
         /* Get the Value from POST/GET var called $data */
-        $type         = $data['type'];
-        $name         = $data['name'];
+        $name            = $data['name'];
         $apply_to_all    = 'check_' . $data['name'];
-        $new_level    = 'level_' . $data['name'];
-        $id        = $data['id'];
-        $value         = scrub_in($_REQUEST[$name]);
+        $new_level       = 'level_' . $data['name'];
+        $id              = $data['id'];
+        $value           = scrub_in($_REQUEST[$name]);
 
         /* Some preferences require some extra checks to be performed */
         switch ($name) {
-            case 'sample_rate':
+            case 'transcode_bitrate':
                 $value = Stream::validate_bitrate($value);
             break;
             default:
@@ -63,9 +63,12 @@ function update_preferences($pref_id=0) {
         }
 
         if (preg_match('/_pass$/', $name)) {
-            if ($value == '******') { unset($_REQUEST[$name]); }
-            else if (preg_match('/md5_pass$/', $name)) {
-                $value = md5($value);
+            if ($value == '******') {
+                unset($_REQUEST[$name]);
+            } else {
+                if (preg_match('/md5_pass$/', $name)) {
+                    $value = md5($value);
+                }
             }
         }
 
@@ -74,79 +77,67 @@ function update_preferences($pref_id=0) {
             Preference::update($id,$pref_id,$value,$_REQUEST[$apply_to_all]);
         }
 
-        if (Access::check('interface','100') AND $_REQUEST[$new_level]) {
+        if (Access::check('interface','100') && $_REQUEST[$new_level]) {
             Preference::update_level($id,$_REQUEST[$new_level]);
         }
-
     } // end foreach preferences
 
     // Now that we've done that we need to invalidate the cached preverences
     Preference::clear_from_session();
-
 } // update_preferences
 
 /**
  * update_preference
  * This function updates a single preference and is called by the update_preferences function
  */
-function update_preference($user_id,$name,$pref_id,$value) {
-
+function update_preference($user_id,$name,$pref_id,$value)
+{
     $apply_check = "check_" . $name;
     $level_check = "level_" . $name;
 
     /* First see if they are an administrator and we are applying this to everything */
-    if ($GLOBALS['user']->has_access(100) AND make_bool($_REQUEST[$apply_check])) {
+    if ($GLOBALS['user']->has_access(100) and make_bool($_REQUEST[$apply_check])) {
         Preference::update_all($pref_id,$value);
         return true;
     }
 
     /* Check and see if they are an admin and the level def is set */
-    if ($GLOBALS['user']->has_access(100) AND make_bool($_REQUEST[$level_check])) {
+    if ($GLOBALS['user']->has_access(100) and make_bool($_REQUEST[$level_check])) {
         Preference::update_level($pref_id,$_REQUEST[$level_check]);
     }
 
     /* Else make sure that the current users has the right to do this */
     if (Preference::has_access($name)) {
-        $sql = "UPDATE `user_preference` SET `value`='$value' WHERE `preference`='$pref_id' AND `user`='$user_id'";
-        $db_results = Dba::write($sql);
+        $sql = "UPDATE `user_preference` SET `value` = ? WHERE `preference` = ? AND `user` = ?";
+        Dba::write($sql, array($value, $pref_id, $user_id));
         return true;
     }
 
     return false;
-
 } // update_preference
 
 /**
  * create_preference_input
  * takes the key and then creates the correct type of input for updating it
  */
-function create_preference_input($name,$value) {
-
-    // Escape it for output
-    $value = scrub_out($value);
-
-    $len = strlen($value);
-    if ($len <= 1) { $len = 8; }
-
+function create_preference_input($name,$value)
+{
     if (!Preference::has_access($name)) {
         if ($value == '1') {
             echo "Enabled";
-        }
-        elseif ($value == '0') {
+        } elseif ($value == '0') {
             echo "Disabled";
-        }
-        else {
-            if (preg_match('/_pass$/', $name)) {
+        } else {
+            if (preg_match('/_pass$/', $name) || preg_match('/_api_key$/', $name)) {
                 echo "******";
-            }
-            else {
+            } else {
                 echo $value;
             }
         }
         return;
     } // if we don't have access to it
 
-    switch($name) {
+    switch ($name) {
         case 'display_menu':
         case 'download':
         case 'quarantine':
@@ -166,34 +157,93 @@ function create_preference_input($name,$value) {
         case 'rio_track_stats':
         case 'rio_global_stats':
         case 'direct_link':
-            if ($value == '1') { $is_true = "selected=\"selected\""; }
-            else { $is_false = "selected=\"selected\""; }
+        case 'ajax_load':
+        case 'now_playing_per_user':
+        case 'show_played_times':
+        case 'song_page_title':
+        case 'subsonic_backend':
+        case 'plex_backend':
+        case 'webplayer_flash':
+        case 'webplayer_html5':
+        case 'allow_personal_info_now':
+        case 'allow_personal_info_recent':
+        case 'allow_personal_info_time':
+        case 'allow_personal_info_agent':
+        case 'ui_fixed':
+        case 'autoupdate':
+        case 'webplayer_confirmclose':
+        case 'webplayer_pausetabs':
+        case 'stream_beautiful_url':
+        case 'share':
+        case 'share_social':
+        case 'broadcast_by_default':
+        case 'album_group':
+        case 'topmenu':
+        case 'demo_clear_sessions':
+        case 'show_donate':
+        case 'allow_upload':
+        case 'upload_subdir':
+        case 'upload_user_artist':
+        case 'upload_allow_edit':
+        case 'daap_backend':
+        case 'upnp_backend':
+        case 'album_release_type':
+        case 'home_moment_albums':
+        case 'home_moment_videos':
+        case 'home_recently_played':
+        case 'home_now_playing':
+        case 'browser_notify':
+        case 'allow_video':
+        case 'geolocation':
+        case 'webplayer_aurora':
+        case 'upload_allow_remove':
+        case 'webdav_backend':
+        case 'notify_email':
+            $is_true  = '';
+            $is_false = '';
+            if ($value == '1') {
+                $is_true = "selected=\"selected\"";
+            } else {
+                $is_false = "selected=\"selected\"";
+            }
             echo "<select name=\"$name\">\n";
             echo "\t<option value=\"1\" $is_true>" . T_("Enable") . "</option>\n";
             echo "\t<option value=\"0\" $is_false>" . T_("Disable") . "</option>\n";
             echo "</select>\n";
         break;
+        case 'upload_catalog':
+            show_catalog_select('upload_catalog', $value, '', true);
+        break;
         case 'play_type':
-            if ($value == 'localplay') { $is_local = 'selected="selected"'; }
-            elseif ($value == 'democratic') { $is_vote = 'selected="selected"'; }
-            elseif ($value == 'html5_player') { $is_html5_player = 'selected="selected"'; }
-            else { $is_stream = "selected=\"selected\""; }
+            $is_localplay  = '';
+            $is_democratic = '';
+            $is_web_player = '';
+            $is_stream     = '';
+            if ($value == 'localplay') {
+                $is_localplay = 'selected="selected"';
+            } elseif ($value == 'democratic') {
+                $is_democratic = 'selected="selected"';
+            } elseif ($value == 'web_player') {
+                $is_web_player = 'selected="selected"';
+            } else {
+                $is_stream = "selected=\"selected\"";
+            }
             echo "<select name=\"$name\">\n";
             echo "\t<option value=\"\">" . T_('None') . "</option>\n";
-            if (Config::get('allow_stream_playback')) {
+            if (AmpConfig::get('allow_stream_playback')) {
                 echo "\t<option value=\"stream\" $is_stream>" . T_('Stream') . "</option>\n";
             }
-            if (Config::get('allow_democratic_playback')) {
-                echo "\t<option value=\"democratic\" $is_vote>" . T_('Democratic') . "</option>\n";
+            if (AmpConfig::get('allow_democratic_playback')) {
+                echo "\t<option value=\"democratic\" $is_democratic>" . T_('Democratic') . "</option>\n";
             }
-            if (Config::get('allow_localplay_playback')) {
-                echo "\t<option value=\"localplay\" $is_local>" . T_('Localplay') . "</option>\n";
+            if (AmpConfig::get('allow_localplay_playback')) {
+                echo "\t<option value=\"localplay\" $is_localplay>" . T_('Localplay') . "</option>\n";
             }
-            echo "\t<option value=\"html5_player\" $is_html5_player>" . _('HTML5 Player') . "</option>\n";
+            echo "\t<option value=\"web_player\" $is_web_player>" . _('Web Player') . "</option>\n";
             echo "</select>\n";
         break;
         case 'playlist_type':
-            $var_name = $value . "_type";
+            $var_name    = $value . "_type";
             ${$var_name} = "selected=\"selected\"";
             echo "<select name=\"$name\">\n";
             echo "\t<option value=\"m3u\" $m3u_type>" . T_('M3U') . "</option>\n";
@@ -218,17 +268,28 @@ function create_preference_input($name,$value) {
             echo "<select name=\"$name\">\n";
             echo "\t<option value=\"\">" . T_('None') . "</option>\n";
             foreach ($controllers as $controller) {
-                if (!Localplay::is_enabled($controller)) { continue; }
+                if (!Localplay::is_enabled($controller)) {
+                    continue;
+                }
                 $is_selected = '';
-                if ($value == $controller) { $is_selected = 'selected="selected"'; }
+                if ($value == $controller) {
+                    $is_selected = 'selected="selected"';
+                }
                 echo "\t<option value=\"" . $controller . "\" $is_selected>" . ucfirst($controller) . "</option>\n";
             } // end foreach
             echo "</select>\n";
         break;
         case 'localplay_level':
-            if ($value == '25') { $is_user = 'selected="selected"'; }
-            elseif ($value == '100') { $is_admin = 'selected="selected"'; }
-            elseif ($value == '50') { $is_manager = 'selected="selected"'; }
+            $is_user    = '';
+            $is_admin   = '';
+            $is_manager = '';
+            if ($value == '25') {
+                $is_user = 'selected="selected"';
+            } elseif ($value == '100') {
+                $is_admin = 'selected="selected"';
+            } elseif ($value == '50') {
+                $is_manager = 'selected="selected"';
+            }
             echo "<select name=\"$name\">\n";
             echo "<option value=\"0\">" . T_('Disabled') . "</option>\n";
             echo "<option value=\"25\" $is_user>" . T_('User') . "</option>\n";
@@ -241,10 +302,27 @@ function create_preference_input($name,$value) {
             echo "<select name=\"$name\">\n";
             foreach ($themes as $theme) {
                 $is_selected = "";
-                if ($value == $theme['path']) { $is_selected = "selected=\"selected\""; }
+                if ($value == $theme['path']) {
+                    $is_selected = "selected=\"selected\"";
+                }
                 echo "\t<option value=\"" . $theme['path'] . "\" $is_selected>" . $theme['name'] . "</option>\n";
             } // foreach themes
             echo "</select>\n";
+        break;
+        case 'theme_color':
+            // This include a two-step configuration (first change theme and save, then change theme color and save)
+            $theme_cfg = get_theme(AmpConfig::get('theme_name'));
+            if ($theme_cfg !== null) {
+                echo "<select name=\"$name\">\n";
+                foreach ($theme_cfg['colors'] as $color) {
+                    $is_selected = "";
+                    if ($value == strtolower($color)) {
+                        $is_selected = "selected=\"selected\"";
+                    }
+                    echo "\t<option value=\"" . strtolower($color) . "\" $is_selected>" . $color . "</option>\n";
+                } // foreach themes
+                echo "</select>\n";
+            }
         break;
         case 'playlist_method':
             ${$value} = ' selected="selected"';
@@ -255,22 +333,6 @@ function create_preference_input($name,$value) {
             echo "\t<option value=\"default\"$default>" . T_('Default') . "</option>\n";
             echo "</select>\n";
         break;
-        case 'bandwidth':
-            ${"bandwidth_$value"} = ' selected="selected"';
-            echo "<select name=\"$name\">\n";
-            echo "\t<option value=\"25\"$bandwidth_25>" . T_('Low') . "</option>\n";
-            echo "\t<option value=\"50\"$bandwidth_50>" . T_('Medium') . "</option>\n";
-            echo "\t<option value=\"75\"$bandwidth_75>" . T_('High') . "</option>\n";
-            echo "</select>\n";
-        break;
-        case 'features':
-            ${"features_$value"} = ' selected="selected"';
-            echo "<select name=\"$name\">\n";
-                        echo "\t<option value=\"25\"$features_25>" . T_('Low') . "</option>\n";
-                        echo "\t<option value=\"50\"$features_50>" . T_('Medium') . "</option>\n";
-                        echo "\t<option value=\"75\"$features_75>" . T_('High') . "</option>\n";
-                        echo "</select>\n";
-        break;
         case 'transcode':
             ${$value} = ' selected="selected"';
             echo "<select name=\"$name\">\n";
@@ -280,24 +342,72 @@ function create_preference_input($name,$value) {
             echo "</select>\n";
         break;
         case 'show_lyrics':
-            if ($value == '1') { $is_true = "selected=\"selected\""; }
-            else { $is_false = "selected=\"selected\""; }
+            $is_true  = '';
+            $is_false = '';
+            if ($value == '1') {
+                $is_true = "selected=\"selected\"";
+            } else {
+                $is_false = "selected=\"selected\"";
+            }
             echo "<select name=\"$name\">\n";
             echo "\t<option value=\"1\" $is_true>" . T_("Enable") . "</option>\n";
             echo "\t<option value=\"0\" $is_false>" . T_("Disable") . "</option>\n";
             echo "</select>\n";
         break;
+        case 'album_sort':
+            $is_sort_year_asc  = '';
+            $is_sort_year_desc = '';
+            $is_sort_name_asc  = '';
+            $is_sort_name_desc = '';
+            $is_sort_default   = '';
+            if ($value == 'year_asc') {
+                $is_sort_year_asc = 'selected="selected"';
+            } elseif ($value == 'year_desc') {
+                $is_sort_year_desc = 'selected="selected"';
+            } elseif ($value == 'name_asc') {
+                $is_sort_name_asc = 'selected="selected"';
+            } elseif ($value == 'name_desc') {
+                $is_sort_name_desc = 'selected="selected"';
+            } else {
+                $is_sort_default = 'selected="selected"';
+            }
+
+            echo "<select name=\"$name\">\n";
+            echo "\t<option value=\"default\" $is_sort_default>" . T_('Default') . "</option>\n";
+            echo "\t<option value=\"year_asc\" $is_sort_year_asc>" . T_('Year ascending') . "</option>\n";
+            echo "\t<option value=\"year_desc\" $is_sort_year_desc>" . T_('Year descending') . "</option>\n";
+            echo "\t<option value=\"name_asc\" $is_sort_name_asc>" . T_('Name ascending') . "</option>\n";
+            echo "\t<option value=\"name_desc\" $is_sort_name_desc>" . T_('Name descending') . "</option>\n";
+            echo "</select>\n";
+        break;
+        case 'disabled_custom_metadata_fields':
+            $ids             = explode(',', $value);
+            $options         = array();
+            $fieldRepository = new \Lib\Metadata\Repository\MetadataField();
+            foreach ($fieldRepository->findAll() as $field) {
+                $selected  = in_array($field->getId(), $ids) ? ' selected="selected"' : '';
+                $options[] = '<option value="' . $field->getId() . '"' . $selected . '>' . $field->getName() . '</option>';
+            }
+            echo '<select multiple size="5" name="' . $name . '[]">' . implode("\n", $options) . '</select>';
+            break;
+        case 'lastfm_grant_link':
+        case 'librefm_grant_link':
+            // construct links for granting access Ampache application to Last.fm and Libre.fm
+            $plugin_name = ucfirst(str_replace('_grant_link', '', $name));
+            $plugin      = new Plugin($plugin_name);
+            $url         = $plugin->_plugin->url;
+            $api_key     = rawurlencode(AmpConfig::get('lastfm_api_key'));
+            $callback    = rawurlencode(AmpConfig::get('web_path') . '/preferences.php?tab=plugins&action=grant&plugin=' . $plugin_name);
+            echo "<a href='$url/api/auth/?api_key=$api_key&cb=$callback'>" . UI::get_icon('plugin', T_("Click for grant Ampache to ") . $plugin_name) . '</a>';
+        break;
         default:
             if (preg_match('/_pass$/', $name)) {
-                echo '<input type="password" size="16" name="' . $name . '" value="******" />';
-            }
-            else {
-                echo '<input type="text" size="' . $len . '" name="' . $name . '" value="' . $value .'" />';
+                echo '<input type="password" name="' . $name . '" value="******" />';
+            } else {
+                echo '<input type="text" name="' . $name . '" value="' . $value . '" />';
             }
         break;
 
     }
-
 } // create_preference_input
 
-?>

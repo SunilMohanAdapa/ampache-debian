@@ -1,13 +1,9 @@
 <?php 
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * VlcPlayer Class
- *
- * Written by snuffels and adjusted for vlc by dave
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -22,30 +18,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @category	VlcPlayer
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
  * VlcPlayer Class
  *
  * This player controls an instance of Vlc webinterface 
- * which in turn controls vlc all functions 
- * return null on failure
+ * which in turn controls vlc. All functions 
+ * return null on failure.
  *
- * @category	VlcPlayer
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 class VlcPlayer {
 
-      public $host;
-      public $port;
+    public $host;
+    public $port;
     public $password;
 
     /**
@@ -68,19 +54,16 @@ class VlcPlayer {
      * $name    Name to be shown in the playlist
      * $url        URL of the song
      */      
-      public function add($name, $url) {
-
-      
-                   $aurl = urlencode($url); 
-                   $aurl .= "&";
-                   $aurl .= urlencode($name);
+    public function add($name, $url) {
+        $aurl = urlencode($url); 
+        $aurl .= "&";
+        $aurl .= urlencode($name);
                    
         $args = array('command'=>'in_enqueue','&input'=>$aurl);
         $results = $this->sendCommand('status.xml?', $args);
         if (is_null($results)) { return null; }
 
         return true;
-
     } // add
 
     /**

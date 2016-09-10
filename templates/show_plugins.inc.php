@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Plugins
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $web_path = Config::get('web_path');
@@ -37,16 +31,16 @@ $web_path = Config::get('web_path');
   <col id="col_action" />
 </colgroup>
 <tr class="th-top">
-	<th class="cel_name"><?php echo T_('Name'); ?></th>
-	<th class="cel_description"><?php echo T_('Description'); ?></th>
-	<th class="cel_version"><?php echo T_('Version'); ?></th>
-	<th class="cel_iversion"><?php echo T_('Installed Version'); ?></th>
-	<th class="cel_action"><?php echo T_('Action'); ?></th>
+    <th class="cel_name"><?php echo T_('Name'); ?></th>
+    <th class="cel_description"><?php echo T_('Description'); ?></th>
+    <th class="cel_version"><?php echo T_('Version'); ?></th>
+    <th class="cel_iversion"><?php echo T_('Installed Version'); ?></th>
+    <th class="cel_action"><?php echo T_('Action'); ?></th>
 </tr>
 <?php
 foreach ($plugins as $plugin_name) {
-	$plugin = new Plugin($plugin_name);
-	$installed_version = Plugin::get_plugin_version($plugin->_plugin->name);
+    $plugin = new Plugin($plugin_name);
+    $installed_version = Plugin::get_plugin_version($plugin->_plugin->name);
         if (! $installed_version) {
                 $action = "<a href=\"" . $web_path . "/admin/modules.php?action=install_plugin&amp;plugin=" . scrub_out($plugin_name) . "\">" .
                         T_('Activate') . "</a>";
@@ -54,30 +48,30 @@ foreach ($plugins as $plugin_name) {
         else {
                 $action = "<a href=\"" . $web_path . "/admin/modules.php?action=confirm_uninstall_plugin&amp;plugin=" . scrub_out($plugin_name) . "\">" .
                         T_('Deactivate') . "</a>";
-		if ($installed_version < $plugin->_plugin->version) {
-			$action .= '&nbsp;&nbsp;<a href="' . $web_path . 
-			'/admin/modules.php?action=upgrade_plugin&amp;plugin=' .
-			scrub_out($plugin_name) . '">' . T_('Upgrade') . '</a>';
-		}
+        if ($installed_version < $plugin->_plugin->version) {
+            $action .= '&nbsp;&nbsp;<a href="' . $web_path . 
+            '/admin/modules.php?action=upgrade_plugin&amp;plugin=' .
+            scrub_out($plugin_name) . '">' . T_('Upgrade') . '</a>';
+        }
         }
 ?>
-<tr class="<?php echo flip_class(); ?>">
-	<td class="cel_name"><?php echo scrub_out($plugin->_plugin->name); ?></td>
-	<td class="cel_description"><?php echo scrub_out($plugin->_plugin->description); ?></td>
-	<td class="cel_version"><?php echo scrub_out($plugin->_plugin->version); ?></td>
-	<td class="cel_iversion"><?php echo scrub_out($installed_version); ?></td>
-	<td class="cel_action"><?php echo $action; ?></td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td class="cel_name"><?php echo scrub_out($plugin->_plugin->name); ?></td>
+    <td class="cel_description"><?php echo scrub_out($plugin->_plugin->description); ?></td>
+    <td class="cel_version"><?php echo scrub_out($plugin->_plugin->version); ?></td>
+    <td class="cel_iversion"><?php echo scrub_out($installed_version); ?></td>
+    <td class="cel_action"><?php echo $action; ?></td>
 </tr>
 <?php } if (!count($plugins)) { ?>
-<tr class="<?php echo flip_class(); ?>">
-	<td colspan="4"><span class="error"><?php echo T_('No Records Found'); ?></span></td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td colspan="4"><span class="error"><?php echo T_('No Records Found'); ?></span></td>
 </tr>
 <?php } ?>
 <tr class="th-bottom">
-	<th class="cel_name"><?php echo T_('Name'); ?></th>
-	<th class="cel_description"><?php echo T_('Description'); ?></th>
-	<th class="cel_version"><?php echo T_('Version'); ?></th>
-	<th class="cel_action"><?php echo T_('Action'); ?></th>
+    <th class="cel_name"><?php echo T_('Name'); ?></th>
+    <th class="cel_description"><?php echo T_('Description'); ?></th>
+    <th class="cel_version"><?php echo T_('Version'); ?></th>
+    <th class="cel_action"><?php echo T_('Action'); ?></th>
 </tr>
 </table>
 <br />

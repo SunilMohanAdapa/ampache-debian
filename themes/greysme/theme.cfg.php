@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;
 ;<?php exit(); ?>;
 ;;;;;;;;;;;;;;;;;;
-; Copyright (c) 2001 - 2007 Ampache.org
+; Copyright 2001 - 2013 Ampache.org
 ; All rights reserved.
 ;
 ; This program is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@ author = "Mickael Despesse (Spocky)"
 
 ; Theme Maintainer
 ; This is just a way of listing who is responsible for
-; maintaining this theme incase it's not working right
+; maintaining this theme in case it's not working right
 ; please include an e-mail address so you can be contacted
 ; DEFAULT: N/A
 maintainer = "Spocky"

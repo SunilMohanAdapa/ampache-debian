@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Localplay Playlist
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 $localplay = new Localplay(Config::get('localplay_controller'));
@@ -38,35 +32,35 @@ $status = $localplay->status();
   <col id="col_action" />
 </colgroup>
 <tr class="th-top">
-	<th class="cel_track"><?php echo T_('Track'); ?></th>
-	<th class="cel_name"><?php echo T_('Name'); ?></th>
-	<th class="cel_action"><?php echo T_('Action'); ?></th>
+    <th class="cel_track"><?php echo T_('Track'); ?></th>
+    <th class="cel_name"><?php echo T_('Name'); ?></th>
+    <th class="cel_action"><?php echo T_('Action'); ?></th>
 </tr>
 <?php
 foreach ($object_ids as $object) {
-	$class = ' class="cel_name"';
-	if ($status['track'] == $object['track']) { $class=' class="cel_name lp_current"'; }
+    $class = ' class="cel_name"';
+    if ($status['track'] == $object['track']) { $class=' class="cel_name lp_current"'; }
 ?>
-<tr class="<?php echo flip_class(); ?>" id="localplay_playlist_<?php echo $object['id']; ?>">
-	<td class="cel_track">
-		<?php echo scrub_out($object['track']); ?>
-	</td>
-	<td<?php echo $class; ?>>
-		<?php echo $localplay->format_name($object['name'],$object['id']); ?>
-	</td>
-	<td class="cel_action">
-	<?php echo Ajax::button('?page=localplay&action=delete_track&id=' . intval($object['id']),'delete', T_('Delete'),'localplay_delete_' . intval($object['id'])); ?>
-	</td>
+<tr class="<?php echo UI::flip_class(); ?>" id="localplay_playlist_<?php echo $object['id']; ?>">
+    <td class="cel_track">
+        <?php echo scrub_out($object['track']); ?>
+    </td>
+    <td<?php echo $class; ?>>
+        <?php echo $localplay->format_name($object['name'],$object['id']); ?>
+    </td>
+    <td class="cel_action">
+    <?php echo Ajax::button('?page=localplay&action=delete_track&id=' . intval($object['id']),'delete', T_('Delete'),'localplay_delete_' . intval($object['id'])); ?>
+    </td>
 </tr>
 <?php } if (!count($object_ids)) { ?>
-<tr class="<?php echo flip_class(); ?>">
-	<td colspan="3"><span class="error"><?php echo T_('No Records Found'); ?></span></td>
+<tr class="<?php echo UI::flip_class(); ?>">
+    <td colspan="3"><span class="error"><?php echo T_('No Records Found'); ?></span></td>
 </tr>
 <?php } ?>
 <tr class="th-bottom">
-	<th class="cel_track"><?php echo T_('Track'); ?></th>
-	<th class="cel_name"><?php echo T_('Name'); ?></th>
-	<th class="cel_action"><?php echo T_('Action'); ?></th>
+    <th class="cel_track"><?php echo T_('Track'); ?></th>
+    <th class="cel_name"><?php echo T_('Name'); ?></th>
+    <th class="cel_action"><?php echo T_('Action'); ?></th>
 </tr>
 </table>
 <?php require Config::get('prefix') . '/templates/list_header.inc.php'; ?>

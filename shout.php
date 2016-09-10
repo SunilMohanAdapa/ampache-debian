@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Shout
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,50 +18,46 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 require_once 'lib/init.php';
 
-show_header();
+UI::show_header();
 
 // Switch on the incomming action
 switch ($_REQUEST['action']) {
-	case 'add_shout':
-		// Must be at least a user to do this
-		if (!Access::check('interface','25')) {
-			access_denied();
-			exit;
-		}
+    case 'add_shout':
+        // Must be at least a user to do this
+        if (!Access::check('interface','25')) {
+            UI::access_denied();
+            exit;
+        }
 
-		if (!Core::form_verify('add_shout','post')) {
-			access_denied();
-			exit;
-		}
+        if (!Core::form_verify('add_shout','post')) {
+            UI::access_denied();
+            exit;
+        }
 
-		$shout_id = shoutBox::create($_POST);
-		header("Location:" . Config::get('web_path'));
-	break;
-	case 'show_add_shout':
-		// Get our object first
-		$object = shoutBox::get_object($_REQUEST['type'],$_REQUEST['id']);
+        $shout_id = Shoutbox::create($_POST);
+        header("Location:" . Config::get('web_path'));
+    break;
+    case 'show_add_shout':
+        // Get our object first
+        $object = Shoutbox::get_object($_REQUEST['type'],$_REQUEST['id']);
 
-		if (!$object->id) {
-			Error::add('general', T_('Invalid Object Selected'));
-			Error::display('general');
-			break;
-		}
+        if (!$object->id) {
+            Error::add('general', T_('Invalid Object Selected'));
+            Error::display('general');
+            break;
+        }
 
-		// Now go ahead and display the page where we let them add a comment etc
-		require_once Config::get('prefix') . '/templates/show_add_shout.inc.php';
-	break;
-	default:
-		header("Location:" . Config::get('web_path'));
-	break;
+        // Now go ahead and display the page where we let them add a comment etc
+        require_once Config::get('prefix') . '/templates/show_add_shout.inc.php';
+    break;
+    default:
+        header("Location:" . Config::get('web_path'));
+    break;
 } // end switch on action
 
-show_footer();
+UI::show_footer();
 ?>

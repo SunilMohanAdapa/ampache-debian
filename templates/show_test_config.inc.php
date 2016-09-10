@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Test Config
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,12 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html lang="en-US">
@@ -35,10 +28,10 @@
 <link rel="stylesheet" href="templates/install.css" type="text/css" media="screen" />
 <style type="text/css">
 body {
-	text-align:left;
+    text-align:left;
 }
 #content {
-	padding-left: 10px;
+    padding-left: 10px;
 }
 </style>
 </head>
@@ -61,7 +54,7 @@ new config file.</p>
 values from the ampache.cfg.php.dist file will be used.</p>
 
 <strong>auth_methods</strong> (<i>mysql</i>)<br />
-This defines which auth methods vauth will attempt to use and in which order, if auto_create isn't enabled.
+This defines which auth methods Auth will attempt to use and in which order, if auto_create isn't enabled.
 The user must exist locally as well<br />
 <br />
 <strong>tag_order</strong> (<i>id3v2,id3v1,vorbiscomment,quicktime,ape,asf</i>)<br />

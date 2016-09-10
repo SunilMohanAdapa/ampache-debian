@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * AmpacheVlc Class
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,11 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
  *
- * @category	AmpacheVlc
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -33,11 +26,6 @@
  * This is the class for the vlc localplay method to remote control
  * a VLC Instance
  *
- * @category	AmpacheVlc
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 class AmpacheVlc extends localplay_controller {
 
@@ -285,27 +273,14 @@ class AmpacheVlc extends localplay_controller {
 
         } // get_active_instance
 
-    /**
-     * add
-     * This must take an array of URL's from Ampache
-     * and then add them to Vlc webinterface
-     */
-    public function add($object) { 
+    public function add_url(Stream_URL $url) {
+    if (is_null($this->_vlc->add($url->title, $url->url))) {
+        debug_event('vlc', 'add_url failed to add: ' . json_encode($url), 1);
+        return false;
+    }
 
-        $url = $this->get_url($object);         
-
-        // Try to pass a title (if we can)
-        if (is_object($object)) { 
-            $title = $object->title; 
-        } 
-
-        if (is_null($this->_vlc->add($title,$url))) { 
-            debug_event('vlc_add',"Error: Unable to add $url to Vlc",'1');
-        }
-
-        return true;
-
-    } // add
+    return true;
+    }
 
     /**
      * delete_track

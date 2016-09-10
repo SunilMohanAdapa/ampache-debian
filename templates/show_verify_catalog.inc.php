@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Verify Catalog
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,13 +18,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
-show_box_top(T_('Verify Catalog'), 'box box_verify_catalog');
+UI::show_box_top(T_('Verify Catalog'), 'box box_verify_catalog');
 /* HINT: Catalog Name */
 printf(T_('Updating the %s catalog'), "<strong>[ $this->name ]</strong>");
 echo "<br />\n";
@@ -34,5 +28,5 @@ printf(T_ngettext('%d item found checking tag information', '%d items found chec
 echo "<br />\n\n";
 echo T_('Verified') . ': <span id="verify_count_' . $this->id . '">' . $catalog_verify_found . '</span><br />';
 echo T_('Reading') . ': <span id="verify_dir_' . $this->id . '">' . $catalog_verify_directory . '</span><br />';
-show_box_bottom();
+UI::show_box_bottom();
 ?>

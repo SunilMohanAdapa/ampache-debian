@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Print Tags
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 define('NO_SESSION','1');
@@ -32,19 +26,18 @@ $prefix = realpath($path . '/../');
 require_once $prefix . '/lib/init.php';
 $version = "1.0";
 
-if (count($GLOBALS['argv']) == '1') {
-	usage();
-	exit;
+if (count($GLOBALS['argv']) != 2) {
+    usage();
+    exit;
 } else {
-	$filename = $GLOBALS['argv']['1'];
-	$send_mail = $GLOBALS['argv']['2'];
+    $filename = $GLOBALS['argv'][1];
 }
 
 if(!file_exists($filename)) {
-	print T_("File not found.");
-	print "\n";
-	usage();
-	exit;
+    print T_("File not found.");
+    print "\n";
+    usage();
+    exit;
 }
 
 printf(T_('Reading: %s'), $filename);
@@ -62,21 +55,13 @@ $file_pattern = $catalog->rename_pattern;
 
 $info = new vainfo($filename, '', '', '', $dir_pattern, $file_pattern);
 if(isset($dir_pattern) || isset($file_pattern)) {
-	printf(T_('Using: %s AND %s for file pattern matching'), $dir_pattern, $file_pattern);
-	print "\n";
+    printf(T_('Using: %s AND %s for file pattern matching'), $dir_pattern, $file_pattern);
+    print "\n";
 }
 $info->get_info();
 $results = $info->tags;
 $keys = vainfo::get_tag_type($results);
 $ampache_results = vainfo::clean_tag_info($results, $keys, $filename);
-
-if ($send_mail) {
-	$getid3_results = print_r($info,1);
-	$amp_results = print_r($ampache_results,1);
-	$body = $getid3_results . "\n-----\n\n" . $amp_results;
-	$subject = "[Ampache] Print Tags - $filename";
-	mail('tags@ampache.org',$subject,$body);
-}
 
 echo "\n";
 echo T_('Raw results:');
@@ -88,16 +73,16 @@ echo "\n\n";
 print_r($ampache_results);
 
 function usage() {
-	global $version;
+    global $version;
 
-	$text  = sprintf(T_('%s Version %s'), 'print_tags.inc', $version);
-	$text .= "\n\n";
-	$text .= T_('Usage:');
-	$text .= "\n";
-	$text .= T_('php print_tags.inc <Filename>');
-	$text .= "\n\n";
+    $text  = sprintf(T_('%s Version %s'), 'print_tags.inc', $version);
+    $text .= "\n\n";
+    $text .= T_('Usage:');
+    $text .= "\n";
+    $text .= T_('php print_tags.inc <Filename>');
+    $text .= "\n\n";
 
-	return print $text;
+    return print $text;
 
 }// usage()
 

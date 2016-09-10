@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Install Library
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,10 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -67,268 +61,222 @@ function split_sql($sql) {
  */
 function install_check_status($configfile) {
 
-	/*
-	  Check and see if the config file exists
-	  if it does they can't use the web interface
-	  to install ampache.
-	*/
-	if (!file_exists($configfile)) {
-		return true;
-	} else {
-		Error::add('general', T_('Config file already exists, install is probably completed'));
-	}
+    /*
+      Check and see if the config file exists
+      if it does they can't use the web interface
+      to install ampache.
+    */
+    if (!file_exists($configfile)) {
+        return true;
+    } else {
+        Error::add('general', T_('Config file already exists, install is probably completed'));
+    }
 
-	/*
-	  Check and see if they've got _any_ account
-	  if they don't then they're cool
-	*/
-	$results = parse_ini_file($configfile);
-	$dbh = check_database($results['database_hostname'],$results['database_username'],$results['database_password']);
+    /*
+      Check and see if they've got _any_ account
+      if they don't then they're cool
+    */
+    $results = parse_ini_file($configfile);
+    Config::set_by_array($results, true);
 
-	if (!is_resource($dbh)) {
-		Error::add('general', T_('Unable to connect to database, check your ampache config'));
-		return false;
-	}
+    if (!Dba::check_database()) {
+        Error::add('general', T_('Unable to connect to database, check your ampache config'));
+        return false;
+    }
 
-	$select_db = mysql_select_db($results['database_name'],$dbh);
+    $sql = 'SELECT * FROM `user`';
+    $db_results = Dba::read($sql);
 
-	if (!$select_db) {
-		Error::add('general', T_('Unable to select database, check your ampache config'));
-		return false;
-	}
+    if (!$db_results) {
+        Error::add('general', T_('Unable to query database, check your ampache config'));
+        return false;
+    }
 
-	$sql = "SELECT * FROM `user`";
-	$db_results = mysql_query($sql, $dbh);
-	if (!mysql_num_rows($db_results)) {
-		return true;
-	}
-	else {
-		Error::add('general', T_('Existing Database detected, unable to continue installation'));
-		return false;
-	}
+    if (!Dba::num_rows($db_results)) {
+        return true;
+    }
+    else {
+        Error::add('general', T_('Existing Database detected, unable to continue installation'));
+        return false;
+    }
 
-	/* Defaut to no */
-	return false;
+    /* Defaut to no */
+    return false;
 
 } // install_check_status
 
 /**
  * install_insert_db
- * this function inserts the database using the username/pass/host provided
- * and reading the .sql file
+ *
+ * Inserts the database using the values from Config.
  */
-function install_insert_db($username,$password,$hostname,$database,$dbuser=false,$dbpass=false) {
+function install_insert_db($db_user = null, $db_pass = null, $overwrite = false) {
+    $database = Config::get('database_name');
+    // Make sure that the database name is valid
+    $is_valid = preg_match('/([^\d\w\_\-])/', $database, $matches);
 
-	// Make sure that the database name is valid
-	$is_valid = preg_match("/([^\d\w\_\-])/",$database,$matches);
+    if (count($matches)) {
+        Error::add('general', T_('Error: Invalid database name.'));
+        return false;
+    }
 
-	if (count($matches)) {
-		Error::add('general', T_('Error: Database name invalid must not be a reserved word, and must be Alphanumeric'));
-		return false;
-	}
+    if (!Dba::check_database()) {
+        Error::add('general', sprintf(T_('Error: Unable to make database connection: %s'), Dba::error()));
+        return false;
+    }
 
-	$data['database_username'] = $username;
-	$data['database_password'] = $password;
-	$data['database_hostname'] = $hostname;
-	$data['database_name']	   = $database;
+    $db_exists = Dba::read('SHOW TABLES');
+    $create_db = true;
 
-	Config::set_by_array($data, true);
+    if ($db_exists) {
+        if ($_POST['existing_db']) {
+            $create_db = false;
+        }
+        else if ($overwrite) {
+            Dba::write('DROP DATABASE `' . $database . '`');
+        }
+        else {
+            Error::add('general', T_('Error: Database already exists and overwrite not checked'));
+            return false;
+        }
+    }
 
-	unset($data);
+    if ($create_db) {
+        if (!Dba::write('CREATE DATABASE `' . $database . '`')) {
+            Error::add('general', sprintf(T_('Error: Unable to create database: %s'), Dba::error()));
+            return false;
+        }
+    }
 
-	/* Attempt to make DB connection */
-	$dbh = Dba::dbh();
+    Dba::disconnect();
 
-	if (!is_resource($dbh)) {
-		Error::add('general', sprintf(T_('Error: Unable to make Database Connection %s'), mysql_error()));
-		return false;
-	}
+    // Check to see if we should create a user here
+    if (strlen($db_user) && strlen($db_pass)) {
+        $db_host = Config::get('database_hostname');
+        $sql = 'GRANT ALL PRIVILEGES ON `' . Dba::escape($database) . '`.* TO ' .
+            "'" . Dba::escape($db_user) . "'";
+        if ($db_host == 'localhost' || strpos($db_host, '/') === 0) {
+            $sql .= "@'localhost'";
+        }
+        $sql .= "IDENTIFIED BY '" . Dba::escape($db_pass) . "' WITH GRANT OPTION";
+        if (!Dba::write($sql)) {
+            Error::add('general', sprintf(T_('Error: Unable to create user %1$s with permissions to %2$s on %3$s: %4$s'), $db_user, $database, $db_host, Dba::error()));
+            return false;
+        }
+    } // end if we are creating a user
 
-	/* Check/Create Database as needed */
-	$db_selected = @mysql_select_db($database, $dbh);
+    $sql_file = Config::get('prefix') . '/sql/ampache.sql';
 
-	if ($db_selected && $_POST['existing_db']) {
-		// Rien a faire, we've got the db just blow through
-	}
-	elseif ($db_selected && !$_POST['overwrite_db']) {
-		Error::add('general', T_('Error: Database Already exists and Overwrite not checked'));
-		return false;
-	}
-	elseif (!$db_selected) {
-		$sql = "CREATE DATABASE `" . Dba::escape($database) . "`";
-		if (!$db_results = @mysql_query($sql, $dbh)) {
-			Error::add('general',sprintf(T_('Error: Unable to Create Database %s'), mysql_error()));
-			return false;
-		}
-		@mysql_select_db($database, $dbh);
-	} // if db can't be selected
-	else {
-		$sql = "DROP DATABASE `" . Dba::escape($database) . "`";
-		$db_results = @mysql_query($sql,$dbh);
-		$sql = "CREATE DATABASE `" . Dba::escape($database) . "`";
-                if (!$db_results = @mysql_query($sql, $dbh)) {
-                        Error::add('general', sprintf(T_('Error: Unable to Create Database %s'), mysql_error()));
-                        return false;
-                }
-                @mysql_select_db($database, $dbh);
-	} // end if selected and overwrite
+    $query = fread(fopen($sql_file, 'r'), filesize($sql_file));
+    $pieces  = split_sql($query);
+    for ($i=0; $i<count($pieces); $i++) {
+        $pieces[$i] = trim($pieces[$i]);
+        if(!empty($pieces[$i]) && $pieces[$i] != '#') {
+            if (!$result = Dba::write($pieces[$i])) {
+                $errors[] = array ( Dba::error(), $pieces[$i] );
+            }
+        }
+    }
 
-	/* Check and see if we should create a user here */
-	if ($_POST['db_user'] == 'create_db_user' || (strlen($dbuser) AND strlen($dbpass))) {
+    $sql = 'ALTER DATABASE `' . $database . '` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci';
+    $db_results = Dba::write($sql, array(Config::get('database_name')));
 
-		$db_user = $_POST['db_username'] ? scrub_in($_POST['db_username']) : $dbuser;
-		$db_pass = $_POST['db_password'] ? $_POST['db_password'] : $dbpass;
+    // If they've picked something other than English update default preferences
+    if (Config::get('lang') != 'en_US') {
+        // FIXME: 31? I hate magic.
+        $sql = 'UPDATE `preference` SET `value`= ? WHERE `id` = 31';
+        $db_results = Dba::write($sql, array(Config::get('lang')));
+        $sql = 'UPDATE `user_preference` SET `value` = ? WHERE `preference` = 31';
+        $db_results = Dba::write($sql, array(Config::get('lang')));
+    }
 
-		if (!strlen($db_user) || !strlen($db_pass)) {
-			Error::add('general', T_('Error: Ampache SQL Username or Password missing'));
-			return false;
-		}
-
-		$sql = "GRANT ALL PRIVILEGES ON " . Dba::escape($database) . ".* TO " .
-			"'" . Dba::escape($db_user) . "'@'" . Dba::escape($hostname) . "' IDENTIFIED BY '" . Dba::escape($db_pass) . "' WITH GRANT OPTION";
-
-		if (!$db_results = @mysql_query($sql, $dbh)) {
-			// HINT: 1: db_user, 2: database, 3: hostname, 4: mysql_error()
-			Error::add('general', sprintf(T_('Error: Unable to Insert %1$s with permissions to %2$s on %3$s %4$s'), $db_user, $database, $hostname, mysql_error()));
-			return false;
-		}
-	} // end if we are creating a user
-
-	$sql_file = Config::get('prefix') . '/sql/ampache.sql';
-
-	/* Attempt to insert database */
-         $query = fread(fopen($sql_file, "r"), filesize($sql_file));
-         $pieces  = split_sql($query);
-         for ($i=0; $i<count($pieces); $i++) {
-                 $pieces[$i] = trim($pieces[$i]);
-                 if(!empty($pieces[$i]) && $pieces[$i] != "#") {
-			   //FIXME: This is for a DB prefix when we get around to it
-//                         $pieces[$i] = str_replace( "#__", $DBPrefix, $pieces[$i]);
-                         if (!$result = Dba::write($pieces[$i])) {
-                                 $errors[] = array ( mysql_error(), $pieces[$i] );
-                         } // end if
-                 } // end if
-         } // end for
-
-	$sql = "ALTER DATABASE `" . Dba::escape($database) . "` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci";
-	$db_results = Dba::write($sql);
-
-	// If they've picked something other then English update default preferences
-	if (Config::get('lang') != 'en_US') {
-		$sql = "UPDATE `preference` SET `value`='" . Config::get('lang') . "' WHERE `id`=31";
-		$db_results = Dba::write($sql);
-		$sql = "UPDATE `user_preference` SET `value`='" .Config::get('lang') ."' WHERE `preference`=31";
-		$db_results = Dba::write($sql);
-	}
-
-	return true;
-
-} // install_insert_db
+    return true;
+}
 
 /**
  * install_create_config
- * attempts to write out the config file or offer it as a download
+ *
+ * Attempts to write out the config file or offer it as a download.
  */
-function install_create_config($web_path,$username,$password,$hostname,$database,$download) {
+function install_create_config($download = false) {
 
-	$config_file = Config::get('prefix') . '/config/ampache.cfg.php';
+    $config_file = Config::get('prefix') . '/config/ampache.cfg.php';
 
-        $data['database_username'] = $username;
-        $data['database_password'] = $password;
-        $data['database_hostname'] = $hostname;
-        $data['database_name']     = $database;
-	$data['web_path']	   = $web_path;
+    /* Attempt to make DB connection */
+    $dbh = Dba::dbh();
 
-        Config::set_by_array($data, true);
+    // Connect to the DB
+    if(!Dba::check_database()) {
+        Error::add('general', T_("Database Connection Failed Check Hostname, Username and Password"));
+        return false;
+    }
 
-        /* Attempt to make DB connection */
-        $dbh = Dba::dbh();
+    $final = generate_config(Config::get_all());
 
-	/*
-	  First Test The Variables they've given us to make
-	  sure that they actually work!
-	*/
-	// Connect to the DB
-	if(!is_resource($dbh)) {
-		Error::add('general', T_("Database Connection Failed Check Hostname, Username and Password"));
-		return false;
-	}
-	if (!@mysql_select_db($database, $dbh)) {
-		Error::add('general', sprintf(T_('Database Selection Failure Check Existance of %s'), $database));
-		return false;
-	}
+    // Make sure the directory is writable OR the empty config file is
+    if (!$download) {
+        if (!check_config_writable()) {
+            Error::add('general', T_('Config file is not writable'));
+            return false;
+        }
+        else {
+            // Given that $final is > 0, we can ignore lazy comparison problems
+            if (!file_put_contents($config_file, $final)) {
+                Error::add('general', T_('Error writing config file'));
+                return false;
+            }
+        }
+    }
+    else {
+        $browser = new Horde_Browser();
+        $browser->downloadHeaders('ampache.cfg.php', 'text/plain', false, strlen($final));
+        echo $final;
+        exit();
+    }
 
-	$final = generate_config($data);
-
-	// Make sure the directory is writable OR the empty config file is
-	if (!$download) {
-		if (!check_config_writable()) {
-			Error::add('general', T_("Config file is not writable"));
-			return false;
-		}
-		else {
-			// Given that $final is > 0, we can ignore lazy comparison problems
-			if (!file_put_contents($config_file,$final)) {
-				Error::add('general', T_("Error Writing config file"));
-				return false;
-			}
-		}
-	}
-	else {
-		$browser = new Horde_Browser();
-		$browser->downloadHeaders('ampache.cfg.php', 'text/plain', false, strlen($final));
-		echo $final;
-		exit();
-	}
-
-	return true;
-
-} // install_create_config
+    return true;
+}
 
 /**
  * install_create_account
  * this creates your initial account and sets up the preferences for the -1 user and you
  */
-function install_create_account($username,$password,$password2) {
+function install_create_account($username, $password, $password2) {
 
-	if (!strlen($username) OR !strlen($password)) {
-		Error::add('general', T_('No Username/Password specified'));
-		return false;
-	}
+    if (!strlen($username) OR !strlen($password)) {
+        Error::add('general', T_('No Username/Password specified'));
+        return false;
+    }
 
-	if ($password !== $password2) {
-		Error::add('general', T_('Passwords do not match'));
-		return false;
-	}
+    if ($password !== $password2) {
+        Error::add('general', T_('Passwords do not match'));
+        return false;
+    }
 
-	$dbh = Dba::dbh();
+    if (!Dba::check_database()) {
+        Error::add('general', sprintf(T_('Database connection failed: %s'), Dba::error()));
+        return false;
+    }
 
-	if (!is_resource($dbh)) {
-		Error::add('general', sprintf(T_('Database Connection Failed: %s'), mysql_error()));
-		return false;
-	}
+    if (!Dba::check_database_inserted()) {
+        Error::add('general', sprintf(T_('Database select failed: %s'), Dba::error()));
+        return false;
+    }
 
-	$db_select = @mysql_select_db(Config::get('database_name'),$dbh);
+    $username = Dba::escape($username);
+    $password = Dba::escape($password);
 
-	if (!$db_select) {
-		Error::add('general', sprintf(T_('Database Select Failed: %s'), mysql_error()));
-		return false;
-	}
+    $insert_id = User::create($username,'Administrator','',$password,'100');
 
-	$username = Dba::escape($username);
-	$password = Dba::escape($password);
+    if (!$insert_id) {
+        Error::add('general', sprintf(T_('Administrative user creation failed: %s'), Dba::error()));
+        return false;
+    }
 
-	$insert_id = User::create($username,'Administrator','',$password,'100');
+    // Fix the system users preferences
+    User::fix_preferences('-1');
 
-	if (!$insert_id) {
-		Error::add('general', sprintf(T_('Insert of Base User Failed %s'), mysql_error()));
-		return false;
-	}
-
-	// Fix the system users preferences
-	User::fix_preferences('-1');
-
-	return true;
+    return true;
 
 } // install_create_account
 

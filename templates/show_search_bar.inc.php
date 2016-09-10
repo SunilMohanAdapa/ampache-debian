@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Search Bar
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,28 +18,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
-
 ?>
 <div id="sb_Subsearch">
         <form name="search" method="post" action="<?php echo $web_path; ?>/search.php?type=song" enctype="multipart/form-data" style="Display:inline">
         <input type="text" name="rule_1_input" id="searchString"/>
         <input type="hidden" name="action" value="search" />
-	<input type="hidden" name="rule_1_operator" value="0" />
+    <input type="hidden" name="rule_1_operator" value="0" />
         <input type="hidden" name="object_type" value="song" />
-	<select name="rule_1">
-		<option value="anywhere"><?php echo T_('Anywhere')?></option>
-		<option value="title"><?php echo T_('Title')?></option>
-		<option value="album"><?php echo T_('Album')?></option>
-		<option value="artist"><?php echo T_('Artist')?></option>
-		<option value="tag"><?php echo T_('Tag')?></option>
-	</select>
+    <select name="rule_1">
+        <option value="anywhere"><?php echo T_('Anywhere')?></option>
+        <option value="title"><?php echo T_('Title')?></option>
+        <option value="album"><?php echo T_('Album')?></option>
+        <option value="artist"><?php echo T_('Artist')?></option>
+        <option value="tag"><?php echo T_('Tag')?></option>
+    </select>
         <input class="button" type="submit" value="<?php echo T_('Search'); ?>" id="searchBtn" />
-      	<a href="<?php echo $web_path; ?>/search.php?type=song" class="button" id="advSearchBtn"><?php echo T_('Advanced Search'); ?></a>
+          <a href="<?php echo $web_path; ?>/search.php?type=song" class="button" id="advSearchBtn"><?php echo T_('Advanced Search'); ?></a>
         </form>
 </div>
 

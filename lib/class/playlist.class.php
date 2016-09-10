@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Playlist Class
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,10 +19,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
 /**
@@ -32,427 +26,440 @@
  *
  * This class handles playlists in ampache. it references the playlist* tables
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 class Playlist extends playlist_object {
 
-	/* Variables from the database */
-	public $genre;
-	public $date;
+    /* Variables from the database */
+    public $genre;
+    public $date;
+
+    /* Generated Elements */
+    public $items = array();
+
+    /**
+     * Constructor
+     * This takes a playlist_id as an optional argument and gathers the information
+     * if not playlist_id is passed returns false (or if it isn't found
+     */
+    public function __construct($id) {
+
+        $info = $this->get_info($id);
+
+        foreach ($info as $key=>$value) {
+            $this->$key = $value;
+        }
+
+    } // Playlist
+
+    /**
+     * gc
+     *
+     * Clean dead items out of playlists
+     */
+    public static function gc() {
+        Dba::write("DELETE FROM `playlist_data` USING `playlist_data` LEFT JOIN `song` ON `song`.`id` = `playlist_data`.`object_id` WHERE `song`.`file` IS NULL AND `playlist_data`.`object_type`='song'"); 
+    }
+
+    /**
+     * build_cache
+     * This is what builds the cache from the objects
+     */
+    public static function build_cache($ids) {
 
-	/* Generated Elements */
-	public $items = array();
+        if (!count($ids)) { return false; }
 
-	/**
-	 * Constructor
-	 * This takes a playlist_id as an optional argument and gathers the information
-	 * if not playlist_id is passed returns false (or if it isn't found
-	 */
-	public function __construct($id) {
+        $idlist = '(' . implode(',',$ids) . ')';
 
-		$info = $this->get_info($id);
+        $sql = "SELECT * FROM `playlist` WHERE `id` IN $idlist";
+        $db_results = Dba::read($sql);
 
-		foreach ($info as $key=>$value) {
-			$this->$key = $value;
-		}
+        while ($row = Dba::fetch_assoc($db_results)) {
+            parent::add_to_cache('playlist',$row['id'],$row);
+        }
 
-	} // Playlist
+    } // build_cache
 
-	/**
-	 * build_cache
-	 * This is what builds the cache from the objects
-	 */
-	public static function build_cache($ids) {
+    /**
+     * get_playlists
+     * Returns a list of playlists accessible by the current user.
+     */
+    public static function get_playlists() {
+        $sql = "SELECT `id` from `playlist` WHERE `type`='public' OR " .
+            "`user`='" . $GLOBALS['user']->id . "' ORDER BY `name`";
+        $db_results = Dba::read($sql);
 
-		if (!count($ids)) { return false; }
+        $results = array();
 
-		$idlist = '(' . implode(',',$ids) . ')';
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[] = $row['id'];
+        }
 
-		$sql = "SELECT * FROM `playlist` WHERE `id` IN $idlist";
-		$db_results = Dba::read($sql);
+        return $results;
+    } // get_playlists
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			parent::add_to_cache('playlist',$row['id'],$row);
-		}
+    /**
+     * format
+     * This takes the current playlist object and gussies it up a little
+     * bit so it is presentable to the users
+     */
+    public function format() {
+        parent::format();
+        $this->f_link = '<a href="' . Config::get('web_path') . '/playlist.php?action=show_playlist&amp;playlist_id=' . $this->id . '">' . $this->f_name . '</a>';
 
-	} // build_cache
+    } // format
 
-	/**
-	 * get_playlists
-	 * Returns a list of playlists accessible by the current user.
-	 */
-	public static function get_playlists() {
-		$sql = "SELECT `id` from `playlist` WHERE `type`='public' OR " .
-			"`user`='" . $GLOBALS['user']->id . "' ORDER BY `name`";
-		$db_results = Dba::read($sql);
+    /**
+     * get_track
+     * Returns the single item on the playlist and all of it's information, restrict
+     * it to this Playlist
+     */
+    public function get_track($track_id) {
 
-		$results = array();
+        $track_id = Dba::escape($track_id);
+        $playlist_id = Dba::escape($this->id);
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[] = $row['id'];
-		}
+        $sql = "SELECT * FROM `playlist_data` WHERE `id`='$track_id' AND `playlist`='$playlist_id'";
+        $db_results = Dba::read($sql);
 
-		return $results;
-	} // get_playlists
+        $row = Dba::fetch_assoc($db_results);
 
-	/**
-	 * format
-	 * This takes the current playlist object and gussies it up a little
-	 * bit so it is presentable to the users
-	 */
-	public function format() {
-		parent::format();
-		$this->f_link = '<a href="' . Config::get('web_path') . '/playlist.php?action=show_playlist&amp;playlist_id=' . $this->id . '">' . $this->f_name . '</a>';
+        return $row;
 
-	} // format
+    } // get_track
 
-	/**
-	 * get_track
-	 * Returns the single item on the playlist and all of it's information, restrict
-	 * it to this Playlist
-	 */
-	public function get_track($track_id) {
+    /**
+     * get_items
+     * This returns an array of playlist songs that are in this playlist. 
+     * Because the same song can be on the same playlist twice they are 
+     * keyed by the uid from playlist_data
+     */
+    public function get_items() {
 
-		$track_id = Dba::escape($track_id);
-		$playlist_id = Dba::escape($this->id);
+        $results = array();
 
-		$sql = "SELECT * FROM `playlist_data` WHERE `id`='$track_id' AND `playlist`='$playlist_id'";
-		$db_results = Dba::read($sql);
+        $sql = "SELECT `id`,`object_id`,`object_type`,`track` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
+        $db_results = Dba::read($sql);
 
-		$row = Dba::fetch_assoc($db_results);
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[] = array(
+                'object_type' => $row['object_type'],
+                'object_id' => $row['object_id'],
+                'track' => $row['track'],
+                'track_id' => $row['id']
+            );
+        } // end while
 
-		return $row;
+        return $results;
 
-	} // get_track
+    } // get_items
 
-	/**
-	 * get_items
-	 * This returns an array of playlist songs that are in this playlist. 
-	 * Because the same song can be on the same playlist twice they are 
-	 * keyed by the uid from playlist_data
-	 */
-	public function get_items() {
+    /**
+     * get_random_items
+     * This is the same as before but we randomize the buggers!
+     */
+    public function get_random_items($limit='') {
 
-		$results = array();
+        $results = array();
 
-		$sql = "SELECT `id`,`object_id`,`object_type`,`track` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
-		$db_results = Dba::read($sql);
+        $limit_sql = $limit ? 'LIMIT ' . intval($limit) : '';
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[] = array('type'=>$row['object_type'],'object_id'=>$row['object_id'],'track'=>$row['track'],'track_id'=>$row['id']);
-		} // end while
+        $sql = "SELECT `object_id`,`object_type` FROM `playlist_data` " .
+            "WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY RAND() $limit_sql";
+        $db_results = Dba::read($sql);
 
-		return $results;
+        while ($row = Dba::fetch_assoc($db_results)) {
 
-	} // get_items
+            $results[] = array(
+                'object_type' => $row['object_type'],
+                'object_id' => $row['object_id']
+            );
+        } // end while
 
-	/**
-	 * get_random_items
-	 * This is the same as before but we randomize the buggers!
-	 */
-	public function get_random_items($limit='') {
+        return $results;
 
-		$results = array();
+    } // get_random_items
 
-		$limit_sql = $limit ? 'LIMIT ' . intval($limit) : '';
+    /**
+     * get_songs
+     * This is called by the batch script, because we can't pass in Dynamic objects they pulled once and then their
+     * target song.id is pushed into the array
+     */
+    function get_songs() {
 
-		$sql = "SELECT `object_id`,`object_type` FROM `playlist_data` " .
-			"WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY RAND() $limit_sql";
-		$db_results = Dba::read($sql);
+        $results = array();
 
-		while ($row = Dba::fetch_assoc($db_results)) {
+        $sql = "SELECT * FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
+        $db_results = Dba::read($sql);
 
-			$results[] = array('type'=>$row['object_type'],'object_id'=>$row['object_id']);
-		} // end while
+        while ($r = Dba::fetch_assoc($db_results)) {
+            if ($r['dyn_song']) {
+                $array = $this->get_dyn_songs($r['dyn_song']);
+                $results = array_merge($array,$results);
+            }
+            else {
+                $results[] = $r['object_id'];
+            }
 
-		return $results;
+        } // end while
 
-	} // get_random_items
+        return $results;
 
-	/**
-	 * get_songs
-	 * This is called by the batch script, because we can't pass in Dynamic objects they pulled once and then their
-	 * target song.id is pushed into the array
-	 */
-	function get_songs() {
+    } // get_songs
 
-		$results = array();
+    /**
+     * get_song_count
+     * This simply returns a int of how many song elements exist in this playlist
+     * For now let's consider a dyn_song a single entry
+     */
+    public function get_song_count() {
 
-		$sql = "SELECT * FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track`";
-		$db_results = Dba::read($sql);
+        $sql = "SELECT COUNT(`id`) FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "'";
+        $db_results = Dba::read($sql);
 
-		while ($r = Dba::fetch_assoc($db_results)) {
-			if ($r['dyn_song']) {
-				$array = $this->get_dyn_songs($r['dyn_song']);
-				$results = array_merge($array,$results);
-			}
-			else {
-				$results[] = $r['object_id'];
-			}
+        $results = Dba::fetch_row($db_results);
 
-		} // end while
+        return $results['0'];
 
-		return $results;
+    } // get_song_count
 
-	} // get_songs
+    /**
+     * get_users
+     * This returns the specified users playlists as an array of
+     * playlist ids
+     */
+    public static function get_users($user_id) {
 
-	/**
-	 * get_song_count
-	 * This simply returns a int of how many song elements exist in this playlist
-	 * For now let's consider a dyn_song a single entry
-	 */
-	public function get_song_count() {
+        $user_id = Dba::escape($user_id);
+        $results = array();
 
-		$sql = "SELECT COUNT(`id`) FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "'";
-		$db_results = Dba::read($sql);
+        $sql = "SELECT `id` FROM `playlist` WHERE `user`='$user_id' ORDER BY `name`";
+        $db_results = Dba::read($sql);
 
-		$results = Dba::fetch_row($db_results);
+        while ($row = Dba::fetch_assoc($db_results)) {
+            $results[] = $row['id'];
+        }
 
-		return $results['0'];
+        return $results;
 
-	} // get_song_count
+    } // get_users
 
-	/**
-	 * get_users
-	 * This returns the specified users playlists as an array of
-	 * playlist ids
-	 */
-	public static function get_users($user_id) {
+    /**
+      * update
+     * This function takes a key'd array of data and runs updates
+     */
+    public function update($data) {
+
+        if ($data['name'] != $this->name) {
+            $this->update_name($data['name']);
+        }
+        if ($data['pl_type'] != $this->type) {
+            $this->update_type($data['pl_type']);
+        }
+
+    } // update
+
+    /**
+     * update_type
+     * This updates the playlist type, it calls the generic update_item function
+     */
+    private function update_type($new_type) {
+
+        if ($this->_update_item('type',$new_type,'50')) {
+            $this->type = $new_type;
+        }
+
+    } // update_type
+
+    /**
+     * update_name
+     * This updates the playlist name, it calls the generic update_item function
+     */
+    private function update_name($new_name) {
+
+        if ($this->_update_item('name',$new_name,'50')) {
+            $this->name = $new_name;
+        }
+
+    } // update_name
 
-		$user_id = Dba::escape($user_id);
-		$results = array();
+    /**
+     * _update_item
+     * This is the generic update function, it does the escaping and error checking
+     */
+    private function _update_item($field,$value,$level) {
+
+        if ($GLOBALS['user']->id != $this->user AND !Access::check('interface',$level)) {
+            return false;
+        }
 
-		$sql = "SELECT `id` FROM `playlist` WHERE `user`='$user_id' ORDER BY `name`";
-		$db_results = Dba::read($sql);
+        $value = Dba::escape($value);
 
-		while ($row = Dba::fetch_assoc($db_results)) {
-			$results[] = $row['id'];
-		}
+        $sql = "UPDATE `playlist` SET $field='$value' WHERE `id`='" . Dba::escape($this->id) . "'";
+        $db_results = Dba::write($sql);
 
-		return $results;
+        return $db_results;
+
+    } // update_item
 
-	} // get_users
+    /**
+     * update_track_number
+     * This takes a playlist_data.id and a track (int) and updates the track value
+     */
+    public function update_track_number($track_id,$track) {
+
+        $playlist_id    = Dba::escape($this->id);
+        $track_id    = Dba::escape($track_id);
+        $track        = Dba::escape($track);
+
+        $sql = "UPDATE `playlist_data` SET `track`='$track' WHERE `id`='$track_id' AND `playlist`='$playlist_id'";
+        $db_results = Dba::write($sql);
+
+    } // update_track_number
+
+    /**
+     * add_songs
+     * This takes an array of song_ids and then adds it to the playlist
+     * if you want to add a dyn_song you need to use the one shot function
+     * add_dyn_song
+     */
+    public function add_songs($song_ids=array(),$ordered=false) {
+
+        /* We need to pull the current 'end' track and then use that to
+         * append, rather then integrate take end track # and add it to
+         * $song->track add one to make sure it really is 'next'
+         */
+        $sql = "SELECT `track` FROM `playlist_data` WHERE `playlist`='" . $this->id . "' ORDER BY `track` DESC LIMIT 1";
+        $db_results = Dba::read($sql);
+        $data = Dba::fetch_assoc($db_results);
+        $base_track = $data['track'];
+        debug_event('add_songs', 'Track number: '.$base_track, '5');
+
+        foreach ($song_ids as $song_id) {
+            /* We need the songs track */
+            $song = new Song($song_id);
 
-	/**
- 	 * update
-	 * This function takes a key'd array of data and runs updates
-	 */
-	public function update($data) {
+            // Based on the ordered prop we use track + base or just $i++
+            if (!$ordered) {
+                $track    = Dba::escape($song->track+$base_track);
+            }
+            else {
+                $i++;
+                $track = Dba::escape($base_track+$i);
+            }
+            $id    = Dba::escape($song->id);
+            $pl_id    = Dba::escape($this->id);
 
-		if ($data['name'] != $this->name) {
-			$this->update_name($data['name']);
-		}
-		if ($data['pl_type'] != $this->type) {
-			$this->update_type($data['pl_type']);
-		}
+            /* Don't insert dead songs */
+            if ($id) {
+                $sql = "INSERT INTO `playlist_data` (`playlist`,`object_id`,`object_type`,`track`) " .
+                    " VALUES ('$pl_id','$id','song','$track')";
+                $db_results = Dba::write($sql);
+            } // if valid id
 
-	} // update
+        } // end foreach songs
 
-	/**
-	 * update_type
-	 * This updates the playlist type, it calls the generic update_item function
-	 */
-	private function update_type($new_type) {
+    } // add_songs
 
-		if ($this->_update_item('type',$new_type,'50')) {
-			$this->type = $new_type;
-		}
+    /**
+     * create
+     * This function creates an empty playlist, gives it a name and type
+     * Assumes $GLOBALS['user']->id as the user
+     */
+    public static function create($name,$type) {
 
-	} // update_type
+        $name = Dba::escape($name);
+        $type = Dba::escape($type);
+        $user = Dba::escape($GLOBALS['user']->id);
+        $date = time();
 
-	/**
-	 * update_name
-	 * This updates the playlist name, it calls the generic update_item function
-	 */
-	private function update_name($new_name) {
+        $sql = "INSERT INTO `playlist` (`name`,`user`,`type`,`date`) " .
+            " VALUES ('$name','$user','$type','$date')";
+        $db_results = Dba::write($sql);
 
-		if ($this->_update_item('name',$new_name,'50')) {
-			$this->name = $new_name;
-		}
+        $insert_id = Dba::insert_id();
 
-	} // update_name
+        return $insert_id;
 
-	/**
-	 * _update_item
-	 * This is the generic update function, it does the escaping and error checking
-	 */
-	private function _update_item($field,$value,$level) {
+    } // create
 
-		if ($GLOBALS['user']->id != $this->user AND !Access::check('interface',$level)) {
-			return false;
-		}
+    /**
+     * set_items
+     * This calles the get_items function and sets it to $this->items which is an array in this object
+     */
+    function set_items() {
 
-		$value = Dba::escape($value);
+        $this->items = $this->get_items();
 
-		$sql = "UPDATE `playlist` SET $field='$value' WHERE `id`='" . Dba::escape($this->id) . "'";
-		$db_results = Dba::write($sql);
+    } // set_items
 
-		return $db_results;
+    /**
+     * normalize_tracks
+     * this takes the crazy out of order tracks
+     * and numbers them in a liner fashion, not allowing for
+     * the same track # twice, this is an optional funcition
+     */
+    public function normalize_tracks() {
 
-	} // update_item
+        /* First get all of the songs in order of their tracks */
+        $sql = "SELECT `id` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track` ASC";
+        $db_results = Dba::read($sql);
 
-	/**
-	 * update_track_number
-	 * This takes a playlist_data.id and a track (int) and updates the track value
-	 */
-	public function update_track_number($track_id,$track) {
+        $i = 1;
+        $results = array();
 
-		$playlist_id	= Dba::escape($this->id);
-		$track_id	= Dba::escape($track_id);
-		$track		= Dba::escape($track);
+        while ($r = Dba::fetch_assoc($db_results)) {
+            $new_data = array();
+            $new_data['id']    = $r['id'];
+            $new_data['track'] = $i;
+            $results[] = $new_data;
+            $i++;
+        } // end while results
 
-		$sql = "UPDATE `playlist_data` SET `track`='$track' WHERE `id`='$track_id' AND `playlist`='$playlist_id'";
-		$db_results = Dba::write($sql);
+        foreach($results as $data) {
+            $sql = "UPDATE `playlist_data` SET `track`='" . $data['track'] . "' WHERE" .
+                    " `id`='" . $data['id'] . "'";
+            $db_results = Dba::write($sql);
+        } // foreach re-ordered results
 
-	} // update_track_number
+        return true;
 
-	/**
-	 * add_songs
-	 * This takes an array of song_ids and then adds it to the playlist
-	 * if you want to add a dyn_song you need to use the one shot function
-	 * add_dyn_song
-	 */
-	public function add_songs($song_ids=array(),$ordered=false) {
+    } // normalize_tracks
 
-		/* We need to pull the current 'end' track and then use that to
-		 * append, rather then integrate take end track # and add it to
-		 * $song->track add one to make sure it really is 'next'
-		 */
-		$sql = "SELECT `track` FROM `playlist_data` WHERE `playlist`='" . $this->id . "' ORDER BY `track` DESC LIMIT 1";
-		$db_results = Dba::read($sql);
-		$data = Dba::fetch_assoc($db_results);
-		$base_track = $data['track'];
-		debug_event('add_songs', 'Track number: '.$base_track, '5');
+    /**
+     * delete_track
+     * this deletes a single track, you specify the playlist_data.id here
+     */
+    public function delete_track($id) {
 
-		foreach ($song_ids as $song_id) {
-			/* We need the songs track */
-			$song = new Song($song_id);
+        $this_id = Dba::escape($this->id);
+        $id = Dba::escape($id);
 
-			// Based on the ordered prop we use track + base or just $i++
-			if (!$ordered) {
-				$track	= Dba::escape($song->track+$base_track);
-			}
-			else {
-				$i++;
-				$track = Dba::escape($base_track+$i);
-			}
-			$id	= Dba::escape($song->id);
-			$pl_id	= Dba::escape($this->id);
+        $sql = "DELETE FROM `playlist_data` WHERE `playlist_data`.`playlist`='$this_id' AND `playlist_data`.`id`='$id' LIMIT 1";
+        $db_results = Dba::write($sql);
 
-			/* Don't insert dead songs */
-			if ($id) {
-				$sql = "INSERT INTO `playlist_data` (`playlist`,`object_id`,`object_type`,`track`) " .
-					" VALUES ('$pl_id','$id','song','$track')";
-				$db_results = Dba::write($sql);
-			} // if valid id
+        return true;
 
-		} // end foreach songs
+    } // delete_track
 
-	} // add_songs
+    /**
+     * delete
+     * This deletes the current playlist and all associated data
+     */
+    public function delete() {
 
-	/**
-	 * create
-	 * This function creates an empty playlist, gives it a name and type
-	 * Assumes $GLOBALS['user']->id as the user
-	 */
-	public static function create($name,$type) {
+        $id = Dba::escape($this->id);
 
-		$name = Dba::escape($name);
-		$type = Dba::escape($type);
-		$user = Dba::escape($GLOBALS['user']->id);
-		$date = time();
+        $sql = "DELETE FROM `playlist_data` WHERE `playlist` = '$id'";
+        $db_results = Dba::write($sql);
 
-		$sql = "INSERT INTO `playlist` (`name`,`user`,`type`,`date`) " .
-			" VALUES ('$name','$user','$type','$date')";
-		$db_results = Dba::write($sql);
+        $sql = "DELETE FROM `playlist` WHERE `id`='$id'";
+        $db_results = Dba::write($sql);
 
-		$insert_id = Dba::insert_id();
+        $sql = "DELETE FROM `object_count` WHERE `object_type`='playlist' AND `object_id`='$id'";
+        $db_results = Dba::write($sql);
 
-		return $insert_id;
+        return true;
 
-	} // create
-
-	/**
-	 * set_items
-	 * This calles the get_items function and sets it to $this->items which is an array in this object
-	 */
-	function set_items() {
-
-		$this->items = $this->get_items();
-
-	} // set_items
-
-	/**
-	 * normalize_tracks
-	 * this takes the crazy out of order tracks
-	 * and numbers them in a liner fashion, not allowing for
-	 * the same track # twice, this is an optional funcition
-	 */
-	public function normalize_tracks() {
-
-		/* First get all of the songs in order of their tracks */
-		$sql = "SELECT `id` FROM `playlist_data` WHERE `playlist`='" . Dba::escape($this->id) . "' ORDER BY `track` ASC";
-		$db_results = Dba::read($sql);
-
-		$i = 1;
-		$results = array();
-
-		while ($r = Dba::fetch_assoc($db_results)) {
-			$new_data = array();
-			$new_data['id']	= $r['id'];
-			$new_data['track'] = $i;
-			$results[] = $new_data;
-			$i++;
-		} // end while results
-
-		foreach($results as $data) {
-			$sql = "UPDATE `playlist_data` SET `track`='" . $data['track'] . "' WHERE" .
-					" `id`='" . $data['id'] . "'";
-			$db_results = Dba::write($sql);
-		} // foreach re-ordered results
-
-		return true;
-
-	} // normalize_tracks
-
-	/**
-	 * delete_track
-	 * this deletes a single track, you specify the playlist_data.id here
-	 */
-	public function delete_track($id) {
-
-		$this_id = Dba::escape($this->id);
-		$id = Dba::escape($id);
-
-		$sql = "DELETE FROM `playlist_data` WHERE `playlist_data`.`playlist`='$this_id' AND `playlist_data`.`id`='$id' LIMIT 1";
-		$db_results = Dba::write($sql);
-
-		return true;
-
-	} // delete_track
-
-	/**
-	 * delete
-	 * This deletes the current playlist and all associated data
-	 */
-	public function delete() {
-
-		$id = Dba::escape($this->id);
-
-		$sql = "DELETE FROM `playlist_data` WHERE `playlist` = '$id'";
-		$db_results = Dba::write($sql);
-
-		$sql = "DELETE FROM `playlist` WHERE `id`='$id'";
-		$db_results = Dba::write($sql);
-
-		$sql = "DELETE FROM `object_count` WHERE `object_type`='playlist' AND `object_id`='$id'";
-		$db_results = Dba::write($sql);
-
-		return true;
-
-	} // delete
+    } // delete
 
 } // class Playlist

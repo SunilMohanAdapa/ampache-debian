@@ -1,10 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Minimal init for use in install
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2012 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -19,16 +18,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2012 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
+
+// Minimal init for use in install
 
 // Do a check for PHP5 because nothing will work without it
 if (floatval(phpversion()) < 5) {
-	echo "ERROR: Ampache requires PHP5";
-	exit;
+    echo "ERROR: Ampache requires PHP5";
+    exit;
 }
 
 error_reporting(E_ERROR); // Only show fatal errors in production
@@ -47,16 +44,23 @@ Config::set('prefix', $prefix);
 // Register the autoloader
 spl_autoload_register(array('Core', 'autoload'), true, true);
 
-/*
- Check to see if this is http or https
-*/
+// Check to see if this is http or https
 if ((isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' ) 
-    || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') 
-    || Config::get('force_ssl')) {
-	$http_type = "https://";
+    || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')) {
+    $http_type = 'https://';
 }
 else {
-	$http_type = "http://";
+    $http_type = 'http://';
+}
+
+if (isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+    $http_port = $_SERVER['HTTP_X_FORWARDED_PORT'];
+}
+else if (isset($_SERVER['SERVER_PORT'])) {
+    $http_port = $_SERVER['SERVER_PORT'];
+}
+if (!isset($http_port) || !$http_port) {
+    $http_port = 80;
 }
 
 // Define that we've loaded the INIT file
@@ -70,14 +74,14 @@ require_once $prefix . '/lib/ui.lib.php';
 require_once $prefix . '/lib/i18n.php';
 require_once $prefix . '/lib/batch.lib.php';
 require_once $prefix . '/lib/themes.php';
-require_once $prefix . '/lib/class/localplay.abstract.php';
+require_once $prefix . '/lib/class/localplay_controller.abstract.php';
 require_once $prefix . '/lib/class/database_object.abstract.php';
 require_once $prefix . '/lib/class/playlist_object.abstract.php';
 require_once $prefix . '/lib/class/media.interface.php';
 require_once $prefix . '/modules/horde/Browser.php';
 
 /* Set up the flip class */
-flip_class(array('odd','even'));
+UI::flip_class(array('odd', 'even'));
 
 // Merge GET then POST into REQUEST effectively stripping COOKIE without
 // depending on a PHP setting change for the effect

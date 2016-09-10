@@ -1,11 +1,9 @@
 <?php
-/* vim:set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab: */
+/* vim:set softtabstop=4 shiftwidth=4 expandtab: */
 /**
- * Show Lyrics Song
- *
  *
  * LICENSE: GNU General Public License, version 2 (GPLv2)
- * Copyright (c) 2001 - 2011 Ampache.org All Rights Reserved
+ * Copyright 2001 - 2013 Ampache.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License v2
@@ -20,18 +18,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 
-show_box_top($song->title , 'box box_lyrics_song');
+UI::show_box_top($song->title , 'box box_lyrics_song');
 
 /* Prepare the variables */
-$title = scrub_out(truncate_with_ellipsis($song->title));
-$album = scrub_out(truncate_with_ellipsis($song->f_album_full));
-$artist = scrub_out(truncate_with_ellipsis($song->f_artist_full));
+$title = scrub_out(UI::truncate($song->title));
+$album = scrub_out(UI::truncate($song->f_album_full));
+$artist = scrub_out(UI::truncate($song->f_artist_full));
 ?>
 <div class="np_group">
   <?php if (Config::get('show_album_art')) { ?>
@@ -46,27 +40,27 @@ $artist = scrub_out(truncate_with_ellipsis($song->f_artist_full));
 
 <div class="np_group">
   <div class="np_cell cel_song">
-  	<label><?php echo T_('Song'); ?></label>
-  	<a title="<?php echo scrub_out($song->title); ?>" href="<?php echo $web_path; ?>/stream.php?action=single_song&amp;song_id=<?php echo $song->id; ?>">
+      <label><?php echo T_('Song'); ?></label>
+      <a title="<?php echo scrub_out($song->title); ?>" href="<?php echo $web_path; ?>/stream.php?action=single_song&amp;song_id=<?php echo $song->id; ?>">
           <?php echo $title; ?>
-  	</a>
+      </a>
   </div>
 
   <div class="np_cell cel_album">
-  	<label><?php echo T_('Album'); ?></label>
-  	<a title="<?php echo scrub_out($song->f_album_full); ?>" href="<?php echo $web_path; ?>/albums.php?action=show&amp;album=<?php echo $song->album; ?>">
-          	<?php echo $album; ?>
-  	</a>
+      <label><?php echo T_('Album'); ?></label>
+      <a title="<?php echo scrub_out($song->f_album_full); ?>" href="<?php echo $web_path; ?>/albums.php?action=show&amp;album=<?php echo $song->album; ?>">
+              <?php echo $album; ?>
+      </a>
   </div>
 
   <div class="np_cell cel_artist">
-  	<label><?php echo T_('Artist'); ?></label>
-  	<a title="<?php echo scrub_out($song->f_artist_full); ?>" href="<?php echo $web_path; ?>/artists.php?action=show&amp;artist=<?php echo $song->artist; ?>">
-  	        <?php echo $artist; ?>
-  	</a>
+      <label><?php echo T_('Artist'); ?></label>
+      <a title="<?php echo scrub_out($song->f_artist_full); ?>" href="<?php echo $web_path; ?>/artists.php?action=show&amp;artist=<?php echo $song->artist; ?>">
+              <?php echo $artist; ?>
+      </a>
   </div>
 
 </div>
 
 
-<?php show_box_bottom(); ?>
+<?php UI::show_box_bottom(); ?>

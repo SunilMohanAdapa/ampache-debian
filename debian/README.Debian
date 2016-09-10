@@ -1,0 +1,33 @@
+ampache for Debian
+------------------
+
+Ampache requires mysql-server to operate.  Mysql-server was not installed as part of the ampache install due to the fact that some users may already have a mysql-server setup and running and upgrading to a newer version of MySQL server may render their databases useless (which is really really bad) .  For those who do not have a mysql-server installed it is very easy to do.  I would recommend using phpmyadmin to setup your mysql-server.  To install mysql-server and phpmyadmin all you have to to is:
+
+apt-get install mysql-server-5.0 phpmyadmin
+
+Once they are installed create a user account on your mysql server that has root priviliges (you will need this account to configure ampache).  For this I use phpmyadmin. Point you browser to 
+
+http://localhost/phpmyadmin or
+http://your.ip.address.com/phpmyadmin.
+
+Log in with username root and password blank.  Once you loging scoll down to the section that says "privileges" and click on it.  Now scroll down to the section that says "add new user" click on it and fill in the user information, then scroll down and click on "check all" under Global privileges scroll down to the bottom of the page an click go. You user account has been created.  Now point your browser to
+ 
+http://localhost/ampache or 
+http://your.ip.address.com/ampache
+
+The web interface should come up.  Follow the instructions on the screen to configure ampache.  
+
+For those that already have a mysql-server with a user account that has root privileges all you need to do is point your brower to 
+
+http://localhost/ampache or
+http://your.ip.address.com/ampache
+
+and follow the configuration instructions.
+
+For installation question or questions on how to enable additonal features in ampache please visit the forums and the wiki
+
+http://www.ampache.org/forums/
+https://ampache.bountysource.com/wiki
+
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Wed,  1 Aug 2007 11:52:03 -0500

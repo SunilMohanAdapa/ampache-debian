@@ -1,0 +1,13 @@
+Template: ampache/configure-webserver
+Type: boolean
+Default: true
+_Description:  Configure Apache2 webserver? 
+
+
+Template: ampache/restart-webserver
+Type: boolean
+Default: true
+_Description:  Restart Apache2 webserver? 
+
+
+

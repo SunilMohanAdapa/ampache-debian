@@ -1,0 +1,245 @@
+This package was debianized by Charlie Smotherman <cjsmo@cableone.net> on
+Tue, 17 Jul 2007 21:27:24 -0500.
+
+It was downloaded from http://www.ampache.org
+
+Upstream Author: Karl Vollmerk vollmerk@ampache.org
+
+Copyright:
+
+src/modules/archive/archive.lib.php is Copyright 2005 Devin Doucette
+src/modules/captcha/captcha.php is Copyright 2005 Milky
+src/modules/horde/Browser.php is Copyright 1999 Chuck Hagenbuch
+src/modules/horde/Browser.php is Copyright 1999  Jon Parise
+src/modules/infotools/Snoopy.class.php is Copyright 1999 Monte Ohrt
+src/modules/mpd/mpd.class.php is Copyright 2003 Benjamin Carlisle
+src/modules/mpd/mpd.class-example.php is Copyright 2003 Benjamin Carlisle
+src/modules/validatemail/validateEmail.php is Copyright 1998 Jon S. Stevens, Clear Ink
+src/modules/validateEmailFormat.php is Copyright 1997 O'Reilly & Associates
+src/batch.php is Copyright 2004 by RosenSama
+All files in src/modules/xmlrpc are Copyright © 1999, Edd Dumbill
+All other files are Copyright 2001 Karl Vollmerk
+The Debian packaging is Copyright 2007, Charlie Smotherman
+
+The file in src/modules/captcha/captcha.php, are released under the following license:
+
+Public Domain
+  The person or persons who have associated work with this document (the "Dedicator" or "Certifier")
+  hereby either (a) certifies that, to the best of his knowledge, the work of authorship identified
+  is in the public domain of the country from which the work is published, or (b) hereby dedicates 
+  whatever copyright the dedicators holds in the work of authorship identified below (the "Work")
+  to the public domain. A certifier, moreover, dedicates any copyright interest he may have in the
+  associated work, and for these purposes, is described as a "dedicator" below.
+
+  A certifier has taken reasonable steps to verify the copyright status of this work. Certifier recognizes
+  that his good faith efforts may not shield him from liability if in fact the work certified is not in the
+  public domain.
+
+  Dedicator makes this dedication for the benefit of the public at large and to the detriment of the
+  Dedicator's heirs and successors. Dedicator intends this dedication to be an overt act of relinquishment
+  in perpetuity of all present and future rights under copyright law, whether vested or contingent, in the
+  Work. Dedicator understands that such relinquishment of all rights includes the relinquishment of all
+  rights to enforce (by lawsuit or otherwise) those copyrights in the Work.
+
+  Dedicator recognizes that, once placed in the public domain, the Work may be freely reproduced, distributed,
+  transmitted, used, modified, built upon, or otherwise exploited by anyone for any purpose, commercial or
+  non-commercial, and in any way, including by methods that have not yet been invented or conceived.
+
+All files in src/modules/xmlrpc, are released under the following license:
+
+BSD License
+  Redistribution and use in source and binary forms, with or without modification, are permitted provided
+  that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+  following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions
+  and the following disclaimer in the documentation and/or other materials provided with the distribution.
+  * Neither the name of the <ORGANIZATION> nor the names of its contributors may be used to endorse or
+  promote products derived from this software without specific prior written permission.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+	"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+	A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+	EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+	PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The file src/modules/horde/Browser.php is released under the following licencse:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+For full wording of above license, see '/usr/share/common-licenses/LGPL-2
+
+Everything else (including the Debian packaging) is released under the following license:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+For full wording of above license, see '/usr/share/common-licenses/GPL-2
+
+The following list of files are released under GPL-2 or later
+src/admin/access.php
+src/admin/catalog.php
+src/admin/index.php
+src/admin/mail.php
+src/admin/modules.php
+src/admin/system.php
+src/admin/users.php
+src/bin/catalog_update.inc
+src/bin/print_tags.inc
+src/lib/class/access.class.php
+src/lib/class/catalog.class.php
+src/lib/class/error.class.php
+src/lib/class/flag.class.php
+src/lib/class/genre.class.php
+src/lib/class/localplay.class.php
+src/lib/class/playlist.class.php
+src/lib/class/song.class.php
+src/lib/class/stats.class.php
+src/lib/class/update.class.php
+src/lib/class/view.class.php
+src/lib/batch.lib.php
+src/lib/debug.lib.php
+src/lib/flag.php
+src/lib/general.lib.php
+src/lib/gettext.php
+src/lib/install.php
+src/lib/javascript-base.js
+src/lib/log.lib.php
+src/lib/playlist.lib.php
+src/lib/preferences.php
+src/lib/rss.php
+src/lib/search.php
+src/lib/song.php
+src/lib/stream.lib.php
+src/lib/themes.php
+src/lib/ui.lib.php
+src/modules/archive.lib.php
+src/modules/id3/vainfo.class.php
+src/modules/infotools/AmazonSearchEngine.class.php
+src/modules/infotools/lastfm.class.php
+src/modules/infotools/Snoopy.class.php
+src/modules/kajax/ajax.js
+src/modules/localplay/icecast.controller.php
+src/modules/localplay/xbmc.controller.php
+src/modules/mpd/mpd.class.php
+src/modules/mpd/mpd-class-example.php
+src/modules/validatemail/validatemail.php
+src/modules/validatemail/validateEmailFormat.php
+src/modules/vauth/auth.lib.php
+src/modules/vauth/dbh.lib.php
+src/modules/vauth/init.php
+src/modules/vauth/sessions.lib.php
+src/server/xml.server.php
+src/server/xmlrpc.server.php
+src/templates/footer.inc
+src/templates/install.css
+src/templates/javascript_refresh.inc.php
+src/templates/show_add_catalog.inc.php
+src/templates/show_add_playlist.inc.php
+src/templates/show_add_user.inc.php
+src/templates/show_admin_tools.inc.php
+src/templates/show_alphabet_form.inc.php
+src/templates/show_artist_box.inc.php
+src/templates/show_box_bottom.inc.php
+src/templates/show_confirmation.inc.php
+src/templates/show_duplicates.inc.php
+src/templates/show_edit_access.inc
+src/templates/show_edit_user.inc.php
+src/templates/show_genre.inc.php
+src/templates/show_get_albumart.inc.php
+src/templates/show_import_playlist.inc.php
+src/templates/show_install.inc
+src/templates/show_install_account.inc.php
+src/templates/show_install_config.inc
+src/templates/show_install_lang.inc.php
+src/templates/show_ip_history.inc.php
+src/templates/show_local_catalog_info.inc.php
+src/templates/show_localplay.inc.php
+src/templates/show_localplay_control.inc.php
+src/templates/show_localplay_status.inc.php
+src/templates/show_mail_users.inc.php
+src/templates/show_now_playing.inc
+src/templates/show_playlist_edit.inc.php
+src/templates/show_playlists.inc.php
+src/templates/show_play_selected.inc.php
+src/templates/show_playtype_switch.php
+src/templates/show_rename_artist.inc.php
+src/templates/show_search_bar.inc
+src/templates/show_test.inc
+src/templates/show_user_registration.inc.php
+src/templates/subnavbar.inc.php
+src/themes/burgandy/templates/default.css
+src/themes/greyblock/templates/default.css
+src/activate.php
+src/artists.php
+src/browse.php
+src/flag.php
+src/genre.php
+src/login.php
+src/logout.php
+src/playlist.php
+src/preferences.php
+src/randomplay.php
+src/ratings.php
+src/rss.php
+src/search.php
+src/test.php
+
+All other files are released under GPL-2 only unless otherwise stated in this document.
+For full wording of above license, see '/usr/share/common-licenses/GPL-2
+
+This list of where removed from the ampache-3.3.3.4-dfsg.orig.tar.gz..
+
+Source code not available:
+
+  src/modules/helperapps/cygwin1.dll
+  src/modules/helperapps/head.exe
+  src/modules/helperapps/md5sum.exe
+  src/modules/helperapps/metaflac.exe
+  src/modules/helperapps/sha1sum.exe
+  src/modules/helperapps/shorten.exe
+  src/modules/helperapps/tail.exe
+  src/modules/helperapps/vorbiscomment.exe
+
+Released under CC license:
+
+  src/modules/flash/FMP3.swf
+  src/modules/flash/license.txt
+  src/modules/flash/swfobject.js
+  src/modules/flash/xspf_player.swf
+
+Extra license files:
+
+  src/modules/id3/license.txt
+  src/modules/mpd/COPYING
+  scr/docs/GPL-LICENSE

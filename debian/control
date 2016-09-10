@@ -1,0 +1,24 @@
+Source: ampache
+Section: web
+Priority: optional
+Maintainer: Charlie Smotherman <cjsmo@cableone.net>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: ampache
+Architecture: all
+Depends: debconf (>= 0.5) | debconf-2.0, po-debconf, apache2-mpm-prefork, php5, php5-mysql, php5-gd, php5-cli
+Recommends: phpmyadmin, mysql-server-5.0
+Description: A web based audio file management system written in PHP
+ Ampache is a Web-based Audio file manager. It is implemented with MySQL,
+ and PHP. It allows you to view, edit, and play your audio files via the
+ web. It has support for playlists, artist and album views, album art,
+ random play, playback via Http/On the Fly Transcoding and Downsampling,
+ Vote based playback, Mpd and Icecast, Integrated Flash Player, as well
+ as per user themes and song play tracking. You can also Link multiple
+ Ampache servers togeather using XML-RPC. Ampache supports GETTEXT
+ translations and has a full translation of many languages.
+ .
+ Homepage: http://www.ampache.org
+
+

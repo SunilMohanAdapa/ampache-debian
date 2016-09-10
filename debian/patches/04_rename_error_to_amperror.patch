@@ -2,6 +2,7 @@ Description: Backport 'Rename Error class to AmpError (fix php7 Error class name
 Author: Nishanth Aravamudan <nish.aravamudan@canonical.com>
 Origin: upstream, https://github.com/ampache/ampache/commit/92fcb8467070733bc70e0e0dc6a6edd3bbb2a621
 Bug-Ubuntu: https://launchpad.net/bugs/1578201
+Bug: https://github.com/ampache/ampache/issues/1034
 
 Index: ampache-alioth/admin/access.php
 ===================================================================

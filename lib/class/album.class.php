@@ -121,6 +121,7 @@ class Album extends database_object {
         if ($extra) {
             $sql = "SELECT COUNT(DISTINCT(`song`.`artist`)) AS `artist_count`, " .
                 "COUNT(`song`.`id`) AS `song_count`, " .
+                "SUM(`song`.`time`) as `total_duration`," .
                 "`artist`.`name` AS `artist_name`, " .
                 "`artist`.`prefix` AS `artist_prefix`, " .
                 "`artist`.`id` AS `artist_id`, `song`.`album`" .
@@ -157,14 +158,15 @@ class Album extends database_object {
         $sql = "SELECT " .
             "COUNT(DISTINCT(`song`.`artist`)) AS `artist_count`, " .
             "COUNT(`song`.`id`) AS `song_count`, " .
+            "SUM(`song`.`time`) as `total_duration`," .
             "`artist`.`name` AS `artist_name`, " .
             "`artist`.`prefix` AS `artist_prefix`, " .
             "`artist`.`id` AS `artist_id` " .
             "FROM `song` INNER JOIN `artist` " . 
             "ON `artist`.`id`=`song`.`artist` " .
-            "WHERE `song`.`album`='$this->id' " .
+            "WHERE `song`.`album` = ? " .
             "GROUP BY `song`.`album`";
-        $db_results = Dba::read($sql);
+        $db_results = Dba::read($sql, array($this->id));
 
         $results = Dba::fetch_assoc($db_results);
 
@@ -261,17 +263,17 @@ class Album extends database_object {
 
         $results = array();
 
-        $artist = Dba::escape($artist);
-
-        $sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' ";
+        $sql = "SELECT `id` FROM `song` WHERE `album` = ? ";
+        $params = array($this->id);
         if ($artist) {
-            $sql .= "AND `artist`='$artist'";
+            $sql .= "AND `artist` = ?";
+            $params[] = $artist;
         }
         $sql .= "ORDER BY `track`, `title`";
         if ($limit) {
-            $sql .= " LIMIT $limit";
+            $sql .= " LIMIT " . intval($limit);
         }
-        $db_results = Dba::read($sql);
+        $db_results = Dba::read($sql, $params);
 
         while ($r = Dba::fetch_assoc($db_results)) {
             $results[] = $r['id'];
@@ -287,10 +289,8 @@ class Album extends database_object {
      */
     public function has_track($title) {
 
-        $title = Dba::escape($title);
-
-        $sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' AND `title`='$title'";
-        $db_results = Dba::read($sql);
+        $sql = "SELECT `id` FROM `song` WHERE `album` = ? AND `title` = ?";
+        $db_results = Dba::read($sql, array($this->id, $title));
 
         $data = Dba::fetch_assoc($db_results);
 
@@ -354,8 +354,8 @@ class Album extends database_object {
      */
     function get_random_songs() {
 
-        $sql = "SELECT `id` FROM `song` WHERE `album`='$this->id' ORDER BY RAND()";
-        $db_results = Dba::read($sql);
+        $sql = "SELECT `id` FROM `song` WHERE `album` = ? ORDER BY RAND()";
+        $db_results = Dba::read($sql, array($this->id));
 
         while ($r = Dba::fetch_row($db_results)) {
             $results[] = $r['0'];
@@ -418,30 +418,32 @@ class Album extends database_object {
     } // update
 
     /**
-     * get_random_albums
-     * This returns a random number of albums from the catalogs
-     * this is used by the index to return some 'potential' albums to play
+     * get_random
+     *
+     * This returns a number of random albums.
      */
-    public static function get_random_albums($count=6) {
+    public static function get_random($count = 1, $with_art = false) {
+        $results = false;
 
-        $sql = 'SELECT `id` FROM `album` ORDER BY RAND() LIMIT ' . ($count*2);
+        if ($with_art) {
+            $sql = 'SELECT `album`.`id` FROM `album` LEFT JOIN `image` ' .
+                "ON (`image`.`object_type` = 'album' AND " .
+                '`image`.`object_id` = `album`.`id`) ' .
+                'WHERE `image`.`id` IS NOT NULL ';
+        }
+        else {
+            $sql = 'SELECT `id` FROM `album` ';
+        }
+        
+        $sql .= 'ORDER BY RAND() LIMIT ' . intval($count);
         $db_results = Dba::read($sql);
 
         while ($row = Dba::fetch_assoc($db_results)) {
-            $art = new Art($row['id'], 'album');
-            $art->get_db();
-            if ($art->raw) {
-                $results[] = $row['id'];
-            }
+            $results[] = $row['id'];
         }
 
-        if (count($results) < $count) { return false; }
-
-        $results = array_slice($results, 0, $count);
-
         return $results;
-
-    } // get_random_albums
+    }
 
 } //end of album class
 

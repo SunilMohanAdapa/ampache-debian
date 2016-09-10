@@ -6,14 +6,15 @@ set -e
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 
-	#restart web server is users answer is yes.
+	#restart web server if users answer is yes.
 	db_get ampache/restart_webserver || true
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
 		printf "postrm: Please restart the web server manually.\n"
 	elif [ "$re_start" = "true" ]; then
-		if [ -e /var/run/apache2.pid ]; then
-			service apache2 reload
+		if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+			. /usr/share/apache2/apache2-maintscript-helper
+			apache2_invoke disconf ampache.conf || exit $?
 		fi
 	else
 		printf "postrm: unable to de-configure ampache, please do so manually.\n"

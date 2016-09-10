@@ -16,10 +16,11 @@ if [ "$1" = "configure" ] || [ "$1" = "upgrade" ]; then
 	db_get ampache/restart_webserver || true
 	re_start="$RET"
 	if [ "$re_start" = "false" ]; then
-		printf "postinst: Users answered false, nothing to do"
+		printf "postinst: User answered false, nothing to do"
 	elif [ "$re_start" = "true" ]; then
-		if [ -e /var/run/apache2.pid ]; then
-			service apache2 reload
+		if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+			. /usr/share/apache2/apache2-maintscript-helper
+			apache2_invoke enconf ampache.conf || exit $?
 		fi
 	else
 		printf "postinst: Something weird has happened, unable to configure ampache.\n"

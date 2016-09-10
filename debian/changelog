@@ -1,3 +1,17 @@
+ampache (3.6-rzb2752+dfsg-9) unstable; urgency=medium
+
+  * QA upload.
+  * Imported source packages from snapshot.debian.org into git and
+    publish as collab-maint.
+  * Updated Standards-Version from 3.9.4 to 3.9.8.
+  * Fix typos discovered by lintian.
+  * Updated with fixes found in Ubuntu:
+    - Invoke apache2-maintscript-helper properly in postinst and
+      postrm.
+    - Added 04_rename_error_to_amperror.patch for php7 compatibility.
+
+ -- Petter Reinholdtsen <pere@debian.org>  Sat, 10 Sep 2016 09:28:56 +0200
+
 ampache (3.6-rzb2752+dfsg-8) unstable; urgency=medium
 
   * QA upload.

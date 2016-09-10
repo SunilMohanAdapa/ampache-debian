@@ -175,7 +175,7 @@ class xmlData {
 	 */
 	public static function tags($tags) { 
 
-		if (count($tags) > self::$limit) { 
+		if (count($tags) > self::$limit OR self::$offset > 0) { 
 			$tags = array_splice($tags,self::$offset,self::$limit); 
 		} 
 
@@ -188,7 +188,7 @@ class xmlData {
 					"\t<name><![CDATA[$tag->name]]></name>\n" . 
 					"\t<albums>" . intval($counts['album']) . "</albums>\n" . 
 					"\t<artists>" . intval($counts['artist']) . "</artists>\n" . 
-					"\t<songs>" . intval($counts['songs']) . "</songs>\n" . 
+					"\t<songs>" . intval($counts['song']) . "</songs>\n" . 
 					"\t<videos>" . intval($counts['video']) . "</videos>\n" . 
 					"\t<playlists>" . intval($count['playlist']) . "</playlists>\n" . 
 					"\t<stream>" . intval($count['live_stream']) . "</stream>\n" . 
@@ -208,7 +208,7 @@ class xmlData {
 	 */
 	public static function artists($artists) { 
 
-		if (count($artists) > self::$limit) { 
+		if (count($artists) > self::$limit OR self::$offset > 0) { 
 			$artists = array_splice($artists,self::$offset,self::$limit); 
 		} 
 
@@ -245,7 +245,7 @@ class xmlData {
 	 */
 	public static function albums($albums) { 
 
-		if (count($albums) > self::$limit) { 
+		if (count($albums) > self::$limit OR self::$offset > 0 ) { 
 			$albums = array_splice($albums,self::$offset,self::$limit); 
 		} 
 		
@@ -293,7 +293,7 @@ class xmlData {
 	 */
 	public static function playlists($playlists) { 
 
-		if (count($playlists) > self::$limit) { 
+		if (count($playlists) > self::$limit OR self::$offset > 0) { 
 			$playlists = array_slice($playlists,self::$offset,self::$limit); 
 		} 
 
@@ -329,7 +329,7 @@ class xmlData {
 	 */
 	public static function songs($songs) { 
 
-		if (count($songs) > self::$limit) { 
+		if (count($songs) > self::$limit OR self::$offset > 0 ) { 
 			$songs = array_slice($songs,self::$offset,self::$limit); 
 		} 
 
@@ -383,7 +383,7 @@ class xmlData {
 	 */
 	public static function videos($videos) { 
 
-                if (count($videos) > self::$limit) {
+                if (count($videos) > self::$limit OR self::$offset > 0) {
                         $videos = array_slice($videos,self::$offset,self::$limit);
                 }
 
@@ -419,6 +419,8 @@ class xmlData {
 	public static function democratic($object_ids=array()) { 
 
 		if (!is_array($object_ids)) { $object_ids = array(); } 
+
+		$democratic = Democratic::get_current_playlist();
 		
 		$string = ''; 
 

@@ -3,6 +3,35 @@
 --------------------------------------------------------------------------
 
 --------------------------------------------------------------------------
+  v.3.5.2 19/11/2009
+	- Fix typo that caused song count to not be set on tag xml response
+	- Fix tag methods so that alpha_match and exact_match work
+	- Fix limit and offset not working on search_songs API method
+	- Fix import m3u on catalog build so it does something
+	- Fix inconsistent view during catalog operations
+	- Sort malformed files into "Unknown (Broken)" rather then leaving
+		them in "Unknown (Orphaned)"
+	- Fix API democratic voting methods (Thx kindachris)
+	- Add server version information to API ping command
+	- Fix Localplay API methods (Thx thomasa) 
+	- Improve bin/catalog_update.inc to allow only verify, clean or add
+		(Thx ascheel)
+	- Fix issue with batch download and UNC paths (Thx greengeek)
+	- Added config option to turn caching on/off, Default is off
+	- Fix issue where file tag pattern was ignored if files have no tag
+		structure
+	- Add TDRC to list of parsed id3v2 tags
+	- Fix issue where rating could get cached and not update the
+		display correctly until a page reload
+	- Fix User Stats having a formating issue and not listing the
+		active playlist correctly
+	- Fix incorrect default ogg transcode target format in the default
+		config file
+	- Fix issue where the user preferences were not respected by
+		the streaming code due to caching 
+	- Fix issue where prevent multiple logins would prevent all logins
+
+--------------------------------------------------------------------------
   v.3.5.1 24/06/2009
 	- Make the PHP error a little clearer for windows users by indicating
 		that their version of PHP is < 5.3 (required for windows)

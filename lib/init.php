@@ -20,7 +20,7 @@
 */
 
 // SVN Fluf
-//$svn_version = 'Subversion ' . trim('$Rev: 2128 $','$ '); 
+//$svn_version = 'Subversion ' . trim('$Rev: 2227 $','$ '); 
 
 // Use output buffering, this gains us a few things and 
 // fixes some CSS issues
@@ -39,8 +39,8 @@ error_reporting(E_ERROR);			// Only show fatal errors in production
 $ampache_path = dirname(__FILE__);
 $prefix = realpath($ampache_path . "/../");
 $configfile = "$prefix/config/ampache.cfg.php";
-require_once $prefix . '/lib/general.lib.php';
 require_once $prefix . '/lib/class/config.class.php';
+require_once $prefix . '/lib/general.lib.php';
 
 if (!function_exists('gettext')) {
 	require_once $prefix . '/modules/emulator/gettext.php';
@@ -90,7 +90,7 @@ if (!function_exists('hash') OR !function_exists('inet_pton') OR (strtoupper(sub
 } 
 
 /** This is the version.... fluf nothing more... **/
-$results['version']		= '3.5.1'. $svn_version; 
+$results['version']		= '3.5.2'. $svn_version; 
 $results['int_config_version']	= '10'; 
 
 $results['raw_web_path']	= $results['web_path'];
@@ -243,9 +243,9 @@ elseif (!Config::get('use_auth')) {
 }
 // If Auth, but no session is set
 else { 
-	if (isset($_REQUEST['sessid'])) { 
+	if (isset($_REQUEST['sid'])) { 
 		session_name(Config::get('session_name')); 
-		session_id(scrub_in($_REQUEST['sessid']));
+		session_id(scrub_in($_REQUEST['sid']));
 		session_start();
 		$GLOBALS['user'] = User::get_from_username($_SESSION['userdata']['username']);
 	}

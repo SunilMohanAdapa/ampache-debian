@@ -28,16 +28,16 @@
 
 $confirmation = Core::form_register($form_name);
 ?>
-<?php show_box_top(scrub_out($title)); ?>
+<?php show_box_top(scrub_out($title), 'box box_confirmation'); ?>
 <?php echo $text; ?>
 <br />
 	<form method="post" action="<?php echo $path; ?>" style="display:inline;">
-	<input type="submit" value="<?php echo _('Continue'); ?>" />
+	<input type="submit" value="<?php echo T_('Continue'); ?>" />
 	<?php echo $confirmation; ?>
 	</form>
 <?php if ($cancel) { ?>
 	<form method="post" action="<?php echo Config::get('web_path') . '/' . return_referer(); ?>" style="display:inline;">
-	<input type="submit" value="<?php echo _('Cancel'); ?>" />
+	<input type="submit" value="<?php echo T_('Cancel'); ?>" />
 	<?php echo $confirmation; ?>
 	</form>
 <?php } ?>

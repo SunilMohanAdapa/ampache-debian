@@ -50,17 +50,45 @@ class Core {
 	} // construction
 
 	/**
+ 	* autoload
+	* This function automatically loads any missing classes as they are
+	* needed so that we don't use a million include statements which load
+	*  more than we need.
+ 	*/
+	public static function autoload($class) {
+        	// Lowercase the class
+        	$class = strtolower($class);
+
+        	$file = Config::get('prefix') . "/lib/class/$class.class.php";
+
+        	// See if it exists
+        	if (is_readable($file)) {
+                	require $file;
+                	if (is_callable($class . '::_auto_init')) {
+                        	$class::_auto_init();
+                	}
+        	}
+        	// Else log this as a fatal error
+        	else {
+                	debug_event('autoload', "'$class' not found!", 1);
+        	}
+	} // autoload
+
+	/**
 	 * form_register
-	 * This registers a form with a SID, inserts it into the session variables
-	 * and then returns a string for use in the HTML form
+	 * This registers a form with a SID, inserts it into the session
+	 * variables and then returns a string for use in the HTML form
 	 */
-	public static function form_register($name,$type='post') {
+	public static function form_register($name, $type = 'post') {
 
 		// Make ourselves a nice little sid
 		$sid =  md5(uniqid(rand(), true));
+		$window = Config::get('session_length');
+		$expire = time() + $window;
 
 		// Register it
-		$_SESSION['forms'][$name] = array('sid'=>$sid,'expire'=>time() + Config::get('session_length'));
+		$_SESSION['forms'][$sid] = array('name' => $name, 'expire' => $expire);
+		debug_event('Core', "Registered $type form $name with SID $sid and expiration $expire ($window seconds from now)", 5);
 
 		switch ($type) {
 			default:
@@ -78,32 +106,47 @@ class Core {
 
 	/**
 	 * form_verify
-	 * This takes a form name and then compares it with the posted sid, if they don't match
-	 * then it returns false and doesn't let the person continue
+	 *
+	 * This takes a form name and then compares it with the posted sid, if
+	 * they don't match then it returns false and doesn't let the person
+	 * continue
 	 */
-	public static function form_verify($name,$method='post') {
-
-		switch ($method) {
+	public static function form_verify($name, $type = 'post') {
+		switch ($type) {
 			case 'post':
-				$source = $_POST['form_validation'];
+				$sid = $_POST['form_validation'];
 			break;
 			case 'get':
-				$source = $_GET['form_validation'];
+				$sid = $_GET['form_validation'];
 			break;
 			case 'cookie':
-				$source = $_COOKIE['form_validation'];
+				$sid = $_COOKIE['form_validation'];
 			break;
 			case 'request':
-				$source = $_REQUEST['form_validation'];
+				$sid = $_REQUEST['form_validation'];
 			break;
 		}
 
-		if ($source == $_SESSION['forms'][$name]['sid'] AND $_SESSION['forms'][$name]['expire'] > time()) {
-			unset($_SESSION['forms'][$name]);
+		if (!isset($_SESSION['forms'][$sid])) {
+			debug_event('Core', "Form $sid not found in session, rejecting request", 2);
+			return false;
+		}
+		
+		$form = $_SESSION['forms'][$sid];
+		unset($_SESSION['forms'][$sid]);
+
+		if ($form['name'] == $name) {
+			debug_event('Core', "Verified SID $sid for $type form $name", 5);
+			if ($form['expire'] < time()) {
+				debug_event('Core', "Form $sid is expired, rejecting request", 2);
+				return false;
+			}
+
 			return true;
 		}
 
-		unset($_SESSION['forms'][$name]);
+		// OMG HAX0RZ
+		debug_event('Core', "$type form $sid failed consistency check, rejecting request", 2);
 		return false;
 
 	} // form_verify

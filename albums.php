@@ -36,33 +36,31 @@ switch ($_REQUEST['action']) {
 		if (!$GLOBALS['user']->has_access('75')) { access_denied(); }
 		$art = new Art($_GET['album_id'],'album'); 
 		$art->reset();
-		show_confirmation(_('Album Art Cleared'),_('Album Art information has been removed from the database'),"/albums.php?action=show&amp;album=" . $art->uid);
+		show_confirmation(T_('Album Art Cleared'), T_('Album Art information has been removed from the database'),"/albums.php?action=show&amp;album=" . $art->uid);
 	break;
 	// Upload album art
 	case 'upload_art':
 
 		// we didn't find anything
 		if (empty($_FILES['file']['tmp_name'])) {
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(T_('Album Art Not Located'), T_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 			break;
 		}
 
 		$album = new Album($_REQUEST['album_id']);
-		$art = new Art($album->id,'album'); 
-
 		// Pull the image information
 		$data = array('file'=>$_FILES['file']['tmp_name']);
-		$image_data = $art->get_from_source($data);
+		$image_data = Art::get_from_source($data, 'album');
 
 		// If we got something back insert it
 		if ($image_data) {
 			$art = new Art($album->id,'album'); 
 			$art->insert($image_data,$_FILES['file']['type']);
-			show_confirmation(_('Album Art Inserted'),'',"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(T_('Album Art Inserted'),'',"/albums.php?action=show&amp;album=" . $album->id);
 		}
 		// Else it failed
 		else {
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(T_('Album Art Not Located'), T_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 		}
 
 	break;
@@ -82,11 +80,11 @@ switch ($_REQUEST['action']) {
 			$path_info = pathinfo($_FILES['file']['name']);
 			$upload['file'] = $_FILES['file']['tmp_name'];
 			$upload['mime'] = 'image/' . $path_info['extension'];
-			$image_data = $art->get_from_source($upload);
+			$image_data = Art::get_from_source($upload, 'album');
 
 			if ($image_data) {
 				$art->insert($image_data,$upload['0']['mime']);
-				show_confirmation(_('Album Art Inserted'),'',"/albums.php?action=show&amp;album=" . $_REQUEST['album_id']);
+				show_confirmation(T_('Album Art Inserted'),'',"/albums.php?action=show&amp;album=" . $_REQUEST['album_id']);
 				break;
 
 			} // if image data
@@ -135,7 +133,7 @@ switch ($_REQUEST['action']) {
 		}
 		// Else nothing
 		else {
-			show_confirmation(_('Album Art Not Located'),_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
+			show_confirmation(T_('Album Art Not Located'), T_('Album Art could not be located at this time. This may be due to write access error, or the file is not received correctly.'),"/albums.php?action=show&amp;album=" . $album->id);
 		}
 
 		$albumname = $album->name;
@@ -155,7 +153,7 @@ switch ($_REQUEST['action']) {
 		$album_id = $_REQUEST['album_id'];
 		$art = new Art($album_id,'album'); 
 
-		$image 	= $art->get_from_source($_SESSION['form']['images'][$image_id]);
+		$image 	= Art::get_from_source($_SESSION['form']['images'][$image_id], 'album');
 		$mime	= $_SESSION['form']['images'][$image_id]['mime'];
 
 		$art->insert($image,$mime);

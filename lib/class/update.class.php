@@ -365,6 +365,18 @@ class Update {
 		$update_string = '- Add table for dynamic playlists.<br />';
 		$version[] = array('version' => '360006','description' => $update_string);
 
+		$update_string = '- Add local auth method to session.type.<br />';
+		$version[] = array('version' => '360007','description' => $update_string);
+
+		$update_string = '- Verify remote_username and remote_password were added correctly to catalog table.<br />';
+		$version[] = array('version' => '360008','description' => $update_string); 
+
+		$update_string = '- Allow long sessionids in tmp_playlist table.<br />';
+		$version[] = array('version' => '360009', 'description' => $update_string);
+
+		$update_string = '- Allow compound MBIDs in the artist table.<br />';
+		$version[] = array('version' => '360010', 'description' => $update_string);
+
 		return $version;
 
 	} // populate_version
@@ -381,22 +393,38 @@ class Update {
 		if (!is_array(self::$versions)) {
 			self::$versions = self::populate_version();
 		}
+		$update_needed = false;
 
-		echo "<ul>\n";
+		if (!defined('CLI')) { echo "<ul>\n"; }
 
-		foreach (self::$versions as $version) {
+		foreach (self::$versions as $update) {
 
-			if ($version['version'] > $current_version) {
-				$updated = true;
-				echo "<li><b>Version: " . self::format_version($version['version']) . "</b><br />";
-				echo $version['description'] . "<br /></li>\n";
+			if ($update['version'] > $current_version) {
+				$update_needed = true;
+				if (!defined('CLI')) { echo '<li><b>'; }
+				echo 'Version: ', self::format_version($update['version']);
+				if (defined('CLI')) {
+					echo "\n", str_replace('<br />', "\n", $update['description']), "\n";
+				}
+				else {
+					echo '</b><br />', $update['description'], "<br /></li>\n";
+				}
 			} // if newer
 
 		} // foreach versions
 
-		echo "</ul>\n";
+		if (!defined('CLI')) { echo "</ul>\n"; }
 
-		if (!isset($updated)) { echo "<p align=\"center\">No Updates Needed [<a href=\"" . Config::get('web_path') . "\">Return</a>]</p>"; }
+		if (!$update_needed) {
+			if (!defined('CLI')) { echo '<p align="center">'; }
+			echo T_('No updates needed.');
+			if (!defined('CLI')) {
+				echo '[<a href="', Config::get('web_path'), '">Return</a>]</p>'; 
+			}
+			else {
+				echo "\n";
+			}
+		}
 	} // display_update
 
 	/**
@@ -418,7 +446,7 @@ class Update {
 		/* Verify that there are no plugins installed
 		//FIXME: provide a link to remove all plugins, otherwise this could turn into a catch 22
 		if (!$self::plugins_installed()) {
-			$GLOBALS['error']->add_error('general',_('Plugins detected, please remove all Plugins and try again'));
+			$GLOBALS['error']->add_error('general', T_('Plugins detected, please remove all Plugins and try again'));
 			return false;
 		} */
 
@@ -494,7 +522,7 @@ class Update {
 
 		$user_array = array();
 
-		while ($r = mysql_fetch_assoc($db_results)) {
+		while ($r = Dba::fetch_assoc($db_results)) {
 			$username = $r['username'];
 			$user_array[$username] = Dba::escape($r['id']);
 		} // end while
@@ -1851,7 +1879,7 @@ class Update {
 		$db_results = Dba::write($sql);
 
 		// Add in Username / Password for catalog - to be used for remote catalogs
-		$sql = "ALTER TABLE `catalog` ADD `remote_username` VARCHAR ( 255 ) AFTER `user`";
+		$sql = "ALTER TABLE `catalog` ADD `remote_username` VARCHAR ( 255 ) AFTER `catalog_type`";
 		$db_results = Dba::write($sql);
 
 		$sql = "ALTER TABLE `catalog` ADD `remote_password` VARCHAR ( 255 ) AFTER `remote_username`";
@@ -1990,6 +2018,76 @@ class Update {
 		$db_results = Dba::write($sql);
 
 		self::set_version('db_version','360006');
+	}
+
+	/**
+	 * update_360007
+	 * This fixes the session table
+	 */
+	public static function update_360007() {
+		$sql = "ALTER TABLE `session` MODIFY `type` ENUM ('mysql','ldap','http','api','xml-rpc','local') NOT NULL";
+		$db_results = Dba::write($sql);
+		self::set_version('db_version','360007');
+	}
+
+	/**
+	 * update_360008
+	 * Fix bug that caused the remote_username/password fields to not be created
+	 */
+	public static function update_360008() { 
+
+		$remote_username = false; 
+		$remote_password = false; 
+
+		$sql = "DESCRIBE `catalog`"; 
+		$db_results = Dba::read($sql); 
+
+		while ($row = Dba::fetch_assoc($db_results)) { 
+			if ($row['Field'] == 'remote_username') { 
+				$remote_username = true; 
+			} 
+			if ($row['Field'] == 'remote_password') { 
+				$remote_password = true; 
+			} 
+		} // end while 
+
+		if (!$remote_username) { 
+	                // Add in Username / Password for catalog - to be used for remote catalogs
+	                $sql = "ALTER TABLE `catalog` ADD `remote_username` VARCHAR ( 255 ) AFTER `catalog_type`";
+	                $db_results = Dba::write($sql);
+		}
+		if (!$remote_password) { 
+	                $sql = "ALTER TABLE `catalog` ADD `remote_password` VARCHAR ( 255 ) AFTER `remote_username`";
+	                $db_results = Dba::write($sql);
+		} 
+
+		self::set_version('db_version','360008'); 
+
+	} // update_360008
+
+
+	/**
+	 * update_360009
+	 * The main session table was already updated to use varchar(64) for the ID,
+	 * tmp_playlist needs the same change
+	 */
+	public static function update_360009() {
+		$sql = "ALTER TABLE `tmp_playlist` CHANGE `session` `session` VARCHAR(64)";
+		$db_results = Dba::write($sql);
+
+		self::set_version('db_version','360009');
+	}
+
+	/**
+	* update_360010
+	* MBz NGS means collaborations have more than one MBID (the ones 
+	* belonging to the underlying artists).  We need a bigger column.
+	*/
+	public static function update_360010() {
+		$sql = 'ALTER TABLE `artist` CHANGE `mbid` `mbid` VARCHAR(1369)';
+		$db_results = Dba::write($sql);
+
+		self::set_version('db_version', '360010');
 	}
 
 } // end update class

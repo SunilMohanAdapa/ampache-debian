@@ -160,17 +160,17 @@ class Access {
 		$end = @inet_pton($data['end']);
 
 		if (!$start AND $data['start'] != '0.0.0.0' AND $data['start'] != '::') {
-			Error::add('start',_('Invalid IPv4 / IPv6 Address Entered'));
+			Error::add('start', T_('Invalid IPv4 / IPv6 Address Entered'));
 			return false;
 		}
 		if (!$end) {
-			Error::add('end',_('Invalid IPv4 / IPv6 Address Entered'));
+			Error::add('end', T_('Invalid IPv4 / IPv6 Address Entered'));
 			return false;
 		}
 
 		if (strlen(bin2hex($start)) != strlen(bin2hex($end))) {
-			Error::add('start',_('IP Address Version Mismatch'));
-			Error::add('end',_('IP Address Version Mismatch'));
+			Error::add('start', T_('IP Address Version Mismatch'));
+			Error::add('end', T_('IP Address Version Mismatch'));
 			return false;
 		}
 
@@ -207,24 +207,24 @@ class Access {
 		$end = @inet_pton($data['end']);
 
 		if (!$start AND $data['start'] != '0.0.0.0' AND $data['start'] != '::') {
-			Error::add('start',_('Invalid IPv4 / IPv6 Address Entered'));
+			Error::add('start', T_('Invalid IPv4 / IPv6 Address Entered'));
 			return false;
 		}
 		if (!$end) {
-			Error::add('end',_('Invalid IPv4 / IPv6 Address Entered'));
+			Error::add('end', T_('Invalid IPv4 / IPv6 Address Entered'));
 			return false;
 		}
 
 		if (strlen(bin2hex($start)) != strlen(bin2hex($end))) {
-			Error::add('start',_('IP Address Version Mismatch'));
-			Error::add('end',_('IP Address Version Mismatch'));
+			Error::add('start', T_('IP Address Version Mismatch'));
+			Error::add('end', T_('IP Address Version Mismatch'));
 			return false;
 		}
 
 		// Check existing ACL's to make sure we're not duplicating values here
 		if (self::exists($data)) {
 			debug_event('ACL Create','Error: An ACL equal to the created one does already exist. Not adding another one: ' . $data['start'] . ' - ' . $data['end'],'1');
-			Error::add('general',_('Duplicate ACL defined'));
+			Error::add('general', T_('Duplicate ACL defined'));
 			return false;
 		}
 
@@ -330,7 +330,7 @@ class Access {
 	 * @param	string	$ip	IP Address.
 	 * @return	boolean
 	 */
-	public static function check_network($type,$user,$level,$ip='') {
+	public static function check_network($type, $user, $level, $ip=null) {
 
 		if (!Config::get('access_control')) {
 			switch ($type) {
@@ -343,56 +343,49 @@ class Access {
 			} // end switch
 		} // end if access control is turned off
 
-		// Clean incomming variables
-		$ip 	= $ip ? Dba::escape(inet_pton($ip)) : Dba::escape(inet_pton($_SERVER['REMOTE_ADDR']));
+		// Clean incoming variables
+		$ip 	= $ip 
+			? Dba::escape(inet_pton($ip)) 
+			: Dba::escape(inet_pton($_SERVER['REMOTE_ADDR']));
 		$user 	= Dba::escape($user);
 		$level	= Dba::escape($level);
 
 		switch ($type) {
-			/* This is here because we want to at least check IP before even creating the xml-rpc server
-			 * however we don't have the key that was passed yet so we've got to do just ip
-			 */
-			case 'init-rpc':
-			case 'init-xml-rpc':
-				$sql = "SELECT `id` FROM `access_list`" .
-					" WHERE `start` <= '$ip' AND `end` >= '$ip' AND `type`='rpc' AND `level` >= '$level'";
-			break;
-			case 'rpc':
-			case 'xml-rpc':
-				$sql = "SELECT `id` FROM `access_list`" .
-					" WHERE `start` <= '$ip' AND `end` >= '$ip'" .
-					" AND `level` >= '$level' AND `type`='rpc'";
-			break;
 			case 'init-api':
-				$type = 'rpc';
 				if ($user) {
-					$client = User::get_from_username($user);
-					$user = $client->id;
+					$user = User::get_from_username($user);
+					$user = $user->id;
 				}
+			case 'api':
+				$type = 'rpc';
 			case 'network':
 			case 'interface':
 			case 'stream':
+			break;
 			default:
-				$sql = "SELECT `id` FROM `access_list`" .
-					" WHERE `start` <= '$ip' AND `end` >= '$ip'" .
-					" AND `level` >= '$level' AND `type` = '$type'";
-				if (strlen($user)) { $sql .= " AND (`user` = '$user' OR `user` = '-1')"; }
-				else { $sql .= " AND `user` = '-1'"; }
+				return false;
 			break;
 		} // end switch on type
 
+		$sql = 'SELECT `id` FROM `access_list` ' .
+			"WHERE `start` <= '$ip' AND `end` >= '$ip' " .
+			"AND `level` >= '$level' AND `type` = '$type'";
+
+		if (strlen($user) && $user != '-1') {
+			$sql .= " AND `user` IN('$user', '-1')";
+		}
+		else {
+			$sql .= " AND `user` = '-1'";
+		}
+
 		$db_results = Dba::read($sql);
 
-		// Yah they have access they can use the mojo
 		if (Dba::fetch_row($db_results)) {
+			// Yah they have access they can use the mojo
 			return true;
 		}
 
-		// No Access Sucks to be them.
-		else {
-			return false;
-		}
-
+		return false;
 	} // check_network
 
 	/**
@@ -489,16 +482,16 @@ class Access {
 	public function get_level_name() {
 
 		if ($this->level >= '75') {
-			return _('All');
+			return T_('All');
 		}
 		if ($this->level == '5') {
-			return _('View');
+			return T_('View');
 		}
 		if ($this->level == '25') {
-			return _('Read');
+			return T_('Read');
 		}
 		if ($this->level == '50') {
-			return _('Read/Write');
+			return T_('Read/Write');
 		}
 
 	} // get_level_name
@@ -509,7 +502,7 @@ class Access {
 	 */
 	public function get_user_name() {
 
-		if ($this->user == '-1') { return _('All'); }
+		if ($this->user == '-1') { return T_('All'); }
 
 		$user = new User($this->user);
 		return $user->fullname . " (" . $user->username . ")";
@@ -525,17 +518,17 @@ class Access {
 		switch ($this->type) {
 			case 'xml-rpc':
 			case 'rpc':
-				return _('API/RPC');
+				return T_('API/RPC');
 			break;
 			case 'network':
-				return _('Local Network Definition');
+				return T_('Local Network Definition');
 			break;
 			case 'interface':
-				return _('Web Interface');
+				return T_('Web Interface');
 			break;
 			case 'stream':
 			default:
-				return _('Stream Access');
+				return T_('Stream Access');
 			break;
 		} // end switch
 

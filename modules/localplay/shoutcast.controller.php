@@ -249,10 +249,10 @@ class AmpacheShoutCast extends localplay_controller {
 	 */
 	public function instance_fields() {
 
-		$fields['name'] 	= array('description'=>_('Instance Name'),'type'=>'textbox');
-		$fields['pid'] 		= array('description'=>_('PID File'),'type'=>'textbox');
-		$fields['playlist']	= array('description'=>_('Playlist File'),'type'=>'textbox');
-		$fields['local_root']	= array('description'=>_('Local Path to Files'),'type'=>'textbox');
+		$fields['name'] 	= array('description' => T_('Instance Name'),'type'=>'textbox');
+		$fields['pid'] 		= array('description' => T_('PID File'),'type'=>'textbox');
+		$fields['playlist']	= array('description' => T_('Playlist File'),'type'=>'textbox');
+		$fields['local_root']	= array('description' => T_('Local Path to Files'),'type'=>'textbox');
 
 		return $fields;
 
@@ -272,7 +272,7 @@ class AmpacheShoutCast extends localplay_controller {
 		$user_id = $user_id ? $user_id : $GLOBALS['user']->id;
 
 		Preference::update('shoutcast_active',$user_id,intval($uid));
-		Config::set('shoutcast_active',intval($uid),'1');
+		Config::set('shoutcast_active', intval($uid), true);
 
 		return true;
 

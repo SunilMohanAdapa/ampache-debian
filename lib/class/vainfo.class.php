@@ -27,122 +27,31 @@
  */
 
 /**
- * vainfo Class
  *
  * This class takes the information pulled from getID3 and returns it in a
  * Ampache friendly way.
  *
- * @package	Ampache
- * @copyright	2001 - 2011 Ampache.org
- * @license	http://opensource.org/licenses/gpl-2.0 GPLv2
- * @link	http://www.ampache.org/
  */
 class vainfo {
 
-	// {{{ property
+	public $encoding = '';
+	public $encoding_id3v1 = '';
+	public $encoding_id3v2 = '';
 
-	/**
-	 * Default encoding
-	 *
-	 * @var	string
-	 */
-	public $encoding	= '';
-
-	/**
-	 * Default id3v1 encoding
-	 *
-	 * @var	string
-	 */
-	public $encoding_id3v1	= 'ISO-8859-1';
-
-	/**
-	 * Default id3v2 encoding
-	 *
-	 * @var	string
-	 */
-	public $encoding_id3v2 = 'ISO-8859-1';
-
-	/* Loaded Variables */
-	/**
-	 * Filename
-	 *
-	 * @var	string
-	 */
 	public $filename	= '';
-
-	/**
-	 * Media type
-	 *
-	 * @var	string
-	 */ 
 	public $type		= '';
-
-	/**
-	 * Media tags
-	 *
-	 * @var	array
-	 */
 	public $tags		= array();
 
-	/* Internal Information */
-	/**
-	 * GetID3 analyzed data.
-	 *
-	 * @var	array
-	 */
 	protected $_raw 		= array();
-
-	/**
-	 * GetID3 object
-	 *
-	 * @var	object
-	 */
 	protected $_getID3 	= '';
-
-	/**
-	 * Iconv use flag
-	 *
-	 * @var	boolean
-	 */
 	protected $_iconv		= false;
 
-	/**
-	 * File encoding charset
-	 *
-	 * @var	string
-	 */
 	protected $_file_encoding	= '';
-
-	/**
-	 * File pattern
-	 *
-	 * @var	string
-	 */
 	protected $_file_pattern	= '';
-
-	/**
-	 * Directory pattern
-	 *
-	 * @var	string
-	 */
 	protected $_dir_pattern	= '';
 
-	/* Internal Private */
-	/**
-	 * Pathinfo results array
-	 *
-	 * @var	array
-	 */
 	private $_pathinfo;
-
-	/**
-	 * Tag broken flag. If tag is broken, return true.
-	 *
-	 * @var	boolean
-	 */
 	private $_broken = false;
-
-	// }}}
 
 	/**
 	 * Constructor
@@ -150,9 +59,8 @@ class vainfo {
 	 * This function just sets up the class, it doesn't
 	 * actually pull the information
 	 *
-	 * @todo	Some mp3 is still broken... I think this is related to mb_detect_order().
 	 * @param	string	$file	filename
-	 * @param	string	$encoding	Default encode character set
+	 * @param	string	$encoding	Target encode character set
 	 * @param	string	$encoding_id3v1	Default id3v1 encode character set
 	 * @param	string	$encoding_iv3v2	Default id3v2 encode character set
 	 * @param	string	$dir_pattern	Directory pattern
@@ -259,7 +167,6 @@ class vainfo {
 	 */
 	private static function _detect_encoding($tags, $mb_order) {
 		if (function_exists('mb_detect_encoding')) {
-			debug_event('vainfo', "id3v -> $id3v", 5);
 			$encodings = array();
 			$tags = array('artist', 'album', 'genre', 'title');
 			foreach ($tags as $tag) {
@@ -374,63 +281,29 @@ class vainfo {
 		foreach ($keys as $key) {
 			$tags = $results[$key];
 
-			$info['file']		= $info['file']
-						? $info['file']
-						: $tags['file'];
-
-
-			$info['bitrate']	= $info['bitrate']
-						? $info['bitrate']
-						: intval($tags['bitrate']);
-
-			$info['rate']		= $info['rate']
-						? $info['rate']
-						: intval($tags['rate']);
-
-			$info['mode']		= $info['mode']
-						? $info['mode']
-						: $tags['mode'];
-
-			$info['size']		= $info['size']
-						? $info['size']
-						: $tags['size'];
-
-			$info['mime']		= $info['mime']
-						? $info['mime']
-						: $tags['mime'];
-
-			$info['encoding']       = $info['encoding']
-						? $info['encoding']
-						: $tags['encoding'];
-
-			$info['time']		= $info['time']
-						? $info['time']
-						: intval($tags['time']);
-
-			$info['channels']	= $info['channels']
-						? $info['channels']
-						: $tags['channels'];
+			$info['file'] = $info['file'] ?: $tags['file'];
+			$info['bitrate'] = $info['bitrate'] ?: intval($tags['bitrate']);
+			$info['rate'] = $info['rate'] ?: intval($tags['rate']);
+			$info['mode'] = $info['mode'] ?: $tags['mode'];
+			$info['size'] = $info['size'] ?: $tags['size'];
+			$info['mime'] = $info['mime'] ?: $tags['mime'];
+			$info['encoding'] = $info['encoding'] ?: $tags['encoding'];
+			$info['rating'] = $info['rating'] ?: $tags['rating'];
+			$info['time'] = $info['time'] ?: intval($tags['time']);
+			$info['channels'] = $info['channels'] ?: $tags['channels'];
 
 			/* These are used to generate the correct IDs later */
-			$info['title']		= $info['title']
-						? $info['title']
-						: stripslashes(trim($tags['title']));
+			$info['title'] = $info['title'] ?: stripslashes(trim($tags['title']));
 
-			$info['year']		= $info['year']
-						? $info['year']
-						: intval($tags['year']);
+			$info['year'] = $info['year'] ?: intval($tags['year']);
 
-			$info['disk']		= $info['disk']
-						? $info['disk']
-						: intval($tags['disk']);
+			$info['disk'] = $info['disk'] ?: intval($tags['disk']);
 
-			$info['artist']		= $info['artist']
-						? $info['artist']
-						: trim($tags['artist']);
+			$info['totaldiscs'] = $info['totaldiscs'] ?: intval($tags['totaldiscs']);
 
-			$info['album']		= $info['album']
-						? $info['album']
-						: trim($tags['album']);
+			$info['artist']	= $info['artist'] ?: trim($tags['artist']);
+
+			$info['album'] = $info['album'] ?: trim($tags['album']);
 
 			// multiple genre support
 			if ((!$info['genre']) && $tags['genre']) {
@@ -446,57 +319,30 @@ class vainfo {
 				}
 			}
 
-			$info['mb_trackid']	= $info['mb_trackid']
-						? $info['mb_trackid']
-						: trim($tags['mb_trackid']);
-
-			$info['mb_albumid']	= $info['mb_albumid']
-						? $info['mb_albumid']
-						: trim($tags['mb_albumid']);
-
-			$info['mb_artistid']	= $info['mb_artistid']
-						? $info['mb_artistid']
-						: trim($tags['mb_artistid']);
+			$info['mb_trackid'] = $info['mb_trackid'] ?: trim($tags['mb_trackid']);
+			$info['mb_albumid'] = $info['mb_albumid'] ?: trim($tags['mb_albumid']);
+			$info['mb_artistid'] = $info['mb_artistid'] ?: trim($tags['mb_artistid']);
 
 			/* @TODO language doesn't import from id3tag. @momo-i */
-			$info['language']	= $info['language']
-						? $info['language']
-						: Dba::escape($tags['language']);
+			$info['language'] = $info['language'] ?: Dba::escape($tags['language']);
 
-			$info['lyrics']		= $info['lyrics']
-						? $info['lyrics']
-						: str_replace(
-							array("\r\n","\r","\n"),
-							'<br />',
-							strip_tags($tags['lyrics']));
+			$info['lyrics']	= $info['lyrics']
+					?: str_replace(
+						array("\r\n","\r","\n"),
+						'<br />',
+						strip_tags($tags['lyrics']));
 
-			$info['track']		= $info['track']
-						? $info['track']
-						: intval($tags['track']);
-
-			$info['resolution_x']	= $info['resolution_x']
-						? $info['resolution_x']
-						: intval($tags['resolution_x']);
-
-			$info['resolution_y']	= $info['resolution_y']
-						? $info['resolution_y']
-						: intval($tags['resolution_y']);
-
-			$info['audio_codec']	= $info['audio_codec']
-						? $info['audio_codec']
-						: Dba::escape($tags['audio_codec']);
-
-			$info['video_codec']	= $info['video_codec']
-						? $info['video_codec']
-						: Dba::escape($tags['video_codec']);
+			$info['track'] = $info['track'] ?: intval($tags['track']);
+			$info['resolution_x'] = $info['resolution_x'] ?: intval($tags['resolution_x']);
+			$info['resolution_y'] = $info['resolution_y'] ?: intval($tags['resolution_y']);
+			$info['audio_codec'] = $info['audio_codec'] ?: Dba::escape($tags['audio_codec']);
+			$info['video_codec'] = $info['video_codec'] ?: Dba::escape($tags['video_codec']);
 		}
 
-		// I really think this belongs somewhere else
-		$slash_point = strpos($info['disk'], '/');
-		if ($slash_point !== false) {
-			$info['disk'] = substr($info['disk'], 0, $slash_point);
+		if ($info['totaldiscs'] == 1 && $info['disk'] == 1) {
+			unset($info['disk']);
+			unset($info['totaldiscs']);
 		}
-			
 
 		return $info;
 
@@ -515,25 +361,6 @@ class vainfo {
 		 * type
 		 */
 		if ($type = $this->_raw['video']['dataformat']) {
-			// Manually set the tag information
-			if ($type == 'flv') {
-				$this->_raw['tags']['flv'] = array();
-			}
-			if ($type == 'quicktime') {
-				$this->_raw['tags']['quicktime'] = array();
-			}
-			if($type == 'mpeg' OR $type == 'mpg') {
-				$this->_raw['tags']['mpeg'] = array();
-			}
-			if($type == 'asf') {
-				$this->_raw['tags']['asf'] = array();
-			}
-			if($type == 'wmv') {
-				$this->_raw['tags']['wmv'] = array();
-			}
-			else {
-				$this->_raw['tags']['avi'] = array();
-			}
 			$type = $this->_clean_type($type);
 			return $type;
 		}
@@ -780,7 +607,8 @@ class vainfo {
 					$array['track']	= $this->_clean_tag($data['0']);
 				break;
 				case 'discnumber':
-					$array['disk'] 	= $this->_clean_tag($data['0']);
+					$el = explode('/', $data['0']);
+					$array['disk'] 	= $el[0];
 				break;
 				case 'date':
 					$array['year']	= $this->_clean_tag($data['0']);
@@ -844,18 +672,16 @@ class vainfo {
 						$array['genre'][] = $this->_clean_tag($genre);
 					}
 				break;
-				case 'pos':
+				case 'part_of_a_set':
 					$el = explode('/', $data['0']);
 					$array['disk'] = $el[0];
+					$array['totaldiscs'] = $el[1];
 				break;
 				case 'track_number':
 					$array['track'] = $this->_clean_tag($data['0']);
 				break;
 				case 'comments':
 					$array['comment'] = $this->_clean_tag($data['0']);
-				break;
-				case 'title':
-					$array['title'] = $this->_clean_tag($data['0']);
 				break;
 				default:
 					$array[$tag]	= $this->_clean_tag($data['0']);
@@ -867,18 +693,33 @@ class vainfo {
 		$id3v2 = $this->_raw['id3v2'];
 
 		if(!empty($id3v2['UFID'])) {
+			// Find the MBID for the track
 			foreach ($id3v2['UFID'] as $ufid) {
 				if ($ufid['ownerid'] == 'http://musicbrainz.org') {
 					$array['mb_trackid'] = $this->_clean_tag($ufid['data']);
 				}
 			}
 
-			for ($i = 0, $size = sizeof($id3v2['comments']['text']) ; $i < $size ; $i++) {
-				if ($id3v2['TXXX'][$i]['description'] == 'MusicBrainz Album Id') {
-					$array['mb_albumid'] = $this->_clean_tag($id3v2['comments']['text'][$i]);
+			// Find the MBIDs for the album and artist
+			foreach ($id3v2['TXXX'] as $txxx) {
+				switch ($txxx['description']) {
+					case 'MusicBrainz Album Id':
+						$array['mb_albumid'] = $this->_clean_tag($txxx['data']);
+					break;
+					case 'MusicBrainz Artist Id':
+						$array['mb_artistid'] = $this->_clean_tag($txxx['data']);
+					break;
 				}
-				elseif ($id3v2['TXXX'][$i]['description'] == 'MusicBrainz Artist Id') {
-					$array['mb_artistid'] = $this->_clean_tag($id3v2['comments']['text'][$i]);
+			}
+		}
+
+		// Find the rating
+		if (is_array($id3v2['POPM'])) {
+			foreach ($id3v2['POPM'] as $popm) {
+				if (array_key_exists('email', $popm) &&
+					$user = User::get_from_email($popm['email'])) {
+					// Ratings are out of 255; scale it
+					$array['rating'][$user->id] = $popm['rating'] / 255 * 5;
 				}
 			}
 		}
@@ -962,6 +803,15 @@ class vainfo {
 						$data['0'] = date("Y",strtotime($data['0']));
 					}
 					$array['year']  = $this->_clean_tag($data['0']);
+				break;
+				case 'MusicBrainz Track Id':
+					$array['mb_trackid'] = $this->_clean_tag($data['0']);
+				break;
+				case 'MusicBrainz Album Id':
+					$array['mb_albumid'] = $this->_clean_tag($data['0']);
+				break;
+				case 'MusicBrainz Artist Id':
+					$array['mb_artistid'] = $this->_clean_tag($data['0']);
 				break;
 			} // end switch
 
@@ -1097,26 +947,33 @@ class vainfo {
 			$slash_type = '\\';
 		}
 
+		// Combine the patterns
 		$pattern = preg_quote($this->_dir_pattern) . $slash_type . preg_quote($this->_file_pattern);
-		preg_match_all("/\%\w/",$pattern,$elements);
+		
+		// Pull out the pattern codes into an array
+		preg_match_all('/\%\w/', $pattern, $elements);
 
-		$preg_pattern = preg_quote($pattern);
-		$preg_pattern = preg_replace("/\%[Ty]/","([0-9]+?)",$preg_pattern);
-		$preg_pattern = preg_replace("/\%\w/","(.+?)",$preg_pattern);
-		$preg_pattern = str_replace("/","\/",$preg_pattern);
-		$preg_pattern = str_replace(" ","\s",$preg_pattern);
-		$preg_pattern = "/" . $preg_pattern . "\..+$/";
-		preg_match($preg_pattern,$filename,$matches);
-		/* Cut out the Full line, we don't need that */
-		array_shift($matches);
+		// Mangle the pattern by turning the codes into regex captures
+		$pattern = preg_replace('/\%[Ty]/', '([0-9]+?)', $pattern);
+		$pattern = preg_replace('/\%\w/', '(.+?)', $pattern);
+		$pattern = str_replace('/', '\/', $pattern);
+		$pattern = str_replace(' ', '\s', $pattern);
+		$pattern = '/' . $pattern . '\..+$/';
 
-		/* Foreach through what we've found */
-		foreach ($matches as $key=>$value) {
+		// Pull out our actual matches
+		preg_match($pattern, $filename, $matches);
+
+		// The first element is the full match text
+		$matched = array_shift($matches);
+		debug_event('vainfo', $pattern . ' matched ' . $matched . ' on ' . $filename, 5);
+
+		// Iterate over what we found
+		foreach ($matches as $key => $value) {
 			$new_key = translate_pattern_code($elements['0'][$key]);
 			if ($new_key) {
 				$results[$new_key] = $value;
 			}
-		} // end foreach matches
+		}
 
 		$results['size'] = filesize($filename);
 
@@ -1174,7 +1031,7 @@ class vainfo {
 			$encoding = $this->_getID3->encoding;
 		}
 		// If we've got iconv then go ahead and clear her up
-		if (strcmp($encoding, $this->encoding) == 0) {
+		if ($encoding == $this->encoding) {
 			debug_event('vainfo', "\$encoding -> ${encoding}, \$this->encoding -> {$this->encoding}", 5);
 			return $tag;
 		}

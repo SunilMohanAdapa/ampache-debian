@@ -35,7 +35,6 @@
 */
 define('NO_SESSION','1');
 require_once '../lib/init.php';
-require_once Config::get('prefix') . '/modules/horde/Browser.php';
 ob_end_clean();
 
 /* These parameters had better come in on the url. */
@@ -244,6 +243,10 @@ ignore_user_abort(true);
 // Format the song name
 $media_name = $media->f_artist_full . " - " . $media->title . "." . $media->type;
 
+
+// Generate browser class for sending headers
+$browser = new Horde_Browser();
+
 /* If they are just trying to download make sure they have rights
  * and then present them with the download file
  */
@@ -253,9 +256,6 @@ if ($_GET['action'] == 'download' AND Config::get('download')) {
 	$media->format_pattern();
 	$media_name = str_replace(array('?','/','\\'),"_",$media->f_file);
 
-	// Use Horde's Browser class to send the headers
-	header("Content-Length: " . $media->size);
-	$browser = new Browser();
 	$browser->downloadHeaders($media_name,$media->mime,false,$media->size);
 	$fp = fopen($media->file,'rb');
 	$bytesStreamed = 0;
@@ -289,8 +289,6 @@ if ($_GET['action'] == 'download' AND Config::get('download')) {
 
 } // if they are trying to download and they can
 
-// Generate browser class for sending headers
-$browser = new Browser();
 header("Accept-Ranges: bytes" );
 
 // Prevent the script from timing out
@@ -323,6 +321,7 @@ if (((Config::get('transcode') == 'always' AND  !$video) ||
 } // end if downsampling
 else {
 	$fp = fopen($media->file, 'rb');
+	$transcoded = false; 
 }
 
 if (!is_resource($fp)) {
@@ -366,15 +365,14 @@ $bytes_streamed = 0;
 
 // Actually do the streaming
 do {
-	$buf = fread($fp, 2048);
+	$buf = fread($fp, min(2048, $stream_size - $bytes_streamed));
 	print($buf);
 	$bytes_streamed += strlen($buf);
 } while (!feof($fp) && (connection_status() == 0) && ($bytes_streamed < $stream_size));
 
-// Need to make sure enough bytes were sent. Some players (Windows Media Player)
-// won't work if specified content length is not sent.
-if($bytes_streamed < $stream_size AND (connection_status() == 0)) {
-	print(str_repeat(' ',$stream_size - $bytes_streamed));
+// Need to make sure enough bytes were sent.
+if($bytes_streamed < $stream_size && (connection_status() == 0)) {
+	print(str_repeat(' ', $stream_size - $bytes_streamed));
 }
 
 // Make sure that a good chunk of the song has been played

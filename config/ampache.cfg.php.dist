@@ -85,6 +85,13 @@ session_cookiesecure       = 0
 ; VALUES: mysql,ldap,http,local
 auth_methods = "mysql"
 
+; Automatic local password updating
+; Determines whether successful authentication against an external source
+; will result in an update to the password stored in the database.
+; A locally stored password is needed for API access.
+; DEFAULT: false
+;auth_password_save = "false"
+
 ; Logout redirection target
 ; Defaults to our own login.php, but we can override it here if, for instance, 
 ; we want to redirect to an SSO provider instead.
@@ -312,6 +319,12 @@ art_order = "db,tags,folder,musicbrainz,lastfm,google"
 ;amazon_developer_public_key = ""
 ;amazon_developer_private_key = ""
 
+; Recommendations
+; Set this to true to enable display of similar artists or albums
+; while browsing.  Currently very experimental, requires Last.FM.
+; DEFAULT: false
+;show_similar = "false"
+
 ; Last.FM API Key
 ; Set this to your Last.FM api key to actually use Last.FM for
 ; recommendations.
@@ -459,6 +472,12 @@ refresh_limit = "60"
 ; This setting turns on/off admin notification of registration.
 ; DEFAULT: false
 ;admin_notify_reg = "false"
+
+; This setting determines whether the user will be created as a disabled user.
+; If this is on, an administrator will need to manually enable the account
+; before it's usable.
+; DEFAULT: false
+;admin_enable_required = "false"
 
 ; This setting will allow all registrants/ldap/http users 
 ; to be auto-approved as a user. By default, they will be 

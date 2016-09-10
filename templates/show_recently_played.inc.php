@@ -26,10 +26,8 @@
  * @link	http://www.ampache.org/
  */
 
-/* Define the time places starting at 0 */
-$time_unit = array('',_('seconds ago'),_('minutes ago'),_('hours ago'),_('days ago'),_('weeks ago'),_('months ago'),_('years ago'));
 $link = Config::get('use_rss') ? ' ' . AmpacheRSS::get_display('recently_played') :  '';
-show_box_top(_('Recently Played') . $link);
+show_box_top(T_('Recently Played') . $link, 'box box_recently_played');
 ?>
 <table class="tabledata" cellpadding="0" cellspacing="0">
 <colgroup>
@@ -41,50 +39,58 @@ show_box_top(_('Recently Played') . $link);
   <col id="col_lastplayed" />
 </colgroup>
 <tr class="th-top">
-	<th class="cel_add"><?php echo _('Add'); ?></th>
-	<th class="cel_song"><?php echo _('Song'); ?></th>
-	<th class="cel_album"><?php echo _('Album'); ?></th>
-	<th class="cel_artist"><?php echo _('Artist'); ?></th>
-	<th class="cel_username"><?php echo _('Username'); ?></th>
-	<th class="cel_lastplayed"><?php echo _('Last Played'); ?></th>
+	<th class="cel_add"><?php echo T_('Add'); ?></th>
+	<th class="cel_song"><?php echo T_('Song'); ?></th>
+	<th class="cel_album"><?php echo T_('Album'); ?></th>
+	<th class="cel_artist"><?php echo T_('Artist'); ?></th>
+	<th class="cel_username"><?php echo T_('Username'); ?></th>
+	<th class="cel_lastplayed"><?php echo T_('Last Played'); ?></th>
 </tr>
 <?php foreach ($data as $row) {
 	$row_user = new User($row['user']);
 	$song = new Song($row['object_id']);
-	$amount = intval(time() - $row['date']+2);
-	$time_place = '0';
+	$interval = intval(time() - $row['date']);
 
-	while ($amount >= 1) {
-		$final = $amount;
-		$time_place++;
-                if ($time_place <= 2) {
-                        $amount = floor($amount/60);
-                }
-                if ($time_place == '3') {
-                        $amount = floor($amount/24);
-                }
-                if ($time_place == '4') {
-                        $amount = floor($amount/7);
-                }
-                if ($time_place == '5') {
-                        $amount = floor($amount/4);
-                }
-                if ($time_place == '6') {
-                        $amount = floor ($amount/12);
-                }
-		if ($time_place > '6') {
-			$final = $amount . '+';
-			break;
-		}
+	if ($interval < 60) {
+		$unit = 'seconds';
+	}
+	else if ($interval < 3600) {
+		$interval = floor($interval / 60);
+		$unit = 'minutes';
+	}
+	else if ($interval < 86400) {
+		$interval = floor($interval / 3600);
+		$unit = 'hours';
+	}
+	else if ($interval < 604800) {
+		$interval = floor($interval / 86400);
+		$unit = 'days';
+	}
+	else if ($interval < 2592000) {
+		$interval = floor($interval / 604800);
+		$unit = 'weeks';
+	}
+	else if ($interval < 31556926) {
+		$interval = floor($interval / 2592000);
+		$unit = 'months';
+	}
+	else if ($interval < 631138519) {
+		$interval = floor($interval / 31556926); 
+		$unit = 'years';
+	}
+	else {
+		$interval = floor($interval / 315569260);
+		$unit = 'decades';
 	}
 
-	$time_string = $final . ' ' . $time_unit[$time_place];
+	// I wonder how smart gettext is?
+	$time_string = sprintf(T_ngettext('%d ' . rtrim($unit, 's') . ' ago', '%d ' . $unit . ' ago', $interval), $interval);
 
 	$song->format();
 ?>
 <tr class="<?php echo flip_class(); ?>">
 	<td class="cel_add">
-        <?php echo Ajax::button('?action=basket&type=song&id=' . $song->id,'add',_('Add'),'add_' . $song->id); ?>
+        <?php echo Ajax::button('?action=basket&type=song&id=' . $song->id,'add', T_('Add'),'add_' . $song->id); ?>
 	</td>
 	<td class="cel_song"><?php echo $song->f_link; ?></td>
 	<td class="cel_album"><?php echo $song->f_album_link; ?></td>
@@ -99,16 +105,16 @@ show_box_top(_('Recently Played') . $link);
 <?php } ?>
 <?php if (!count($data)) { ?>
 <tr>
-	<td colspan="6"><span class="fatalerror"><?php echo _('Not Enough Data'); ?></span></td>
+	<td colspan="6"><span class="fatalerror"><?php echo T_('Not Enough Data'); ?></span></td>
 </tr>
 <?php } ?>
 <tr class="th-bottom">
-	<th class="cel_add"><?php echo _('Add'); ?></th>
-	<th class="cel_username"><?php echo _('Username'); ?></th>
-	<th class="cel_song"><?php echo _('Song'); ?></th>
-	<th class="cel_album"><?php echo _('Album'); ?></th>
-	<th class="cel_artist"><?php echo _('Artist'); ?></th>
-	<th class="cel_lastplayed"><?php echo _('Last Played'); ?></th>
+	<th class="cel_add"><?php echo T_('Add'); ?></th>
+	<th class="cel_username"><?php echo T_('Username'); ?></th>
+	<th class="cel_song"><?php echo T_('Song'); ?></th>
+	<th class="cel_album"><?php echo T_('Album'); ?></th>
+	<th class="cel_artist"><?php echo T_('Artist'); ?></th>
+	<th class="cel_lastplayed"><?php echo T_('Last Played'); ?></th>
 </tr>
 </table>
 <?php show_box_bottom(); ?>

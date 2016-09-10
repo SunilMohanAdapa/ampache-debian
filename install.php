@@ -45,7 +45,7 @@ set_error_handler('ampache_error_handler');
    install ampache 
 */
 if (!install_check_status($configfile)) { 
-	echo "Error: Config file detected, Ampache is already installed"; 
+	Error::display('general'); 
 	exit; 
 }
 
@@ -61,7 +61,8 @@ $hostname = scrub_in($_REQUEST['local_host']);
 $database = scrub_in($_REQUEST['local_db']);
 if ($_SERVER['HTTPS'] == 'on') { $http_type = "https://"; }
 else { $http_type = "http://"; }
-$php_self = $http_type . $_SERVER['HTTP_HOST'] . "/" . preg_replace("/^\/(.+\.php)\/?.*/","$1",$_SERVER['PHP_SELF']);
+define('WEB_PATH',$http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . basename($_SERVER['PHP_SELF']));  
+define('WEB_ROOT',$http_type . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF'])); 
 
 /* Catch the Current Action */
 switch ($_REQUEST['action']) { 
@@ -75,7 +76,7 @@ switch ($_REQUEST['action']) {
 		$htmllang = $_REQUEST['htmllang'];
 		$charset  = $_REQUEST['charset'];
 		
-		header ("Location: " . $php_self . "?action=show_create_config&local_db=$database&local_host=$hostname&htmllang=$htmllang&charset=$charset");
+		header ("Location: " . WEB_PATH . "?action=show_create_config&local_db=$database&local_host=$hostname&htmllang=$htmllang&charset=$charset");
 		
 	break;
 	case 'create_config':
@@ -100,6 +101,7 @@ switch ($_REQUEST['action']) {
 		$charsets = array('de_DE' => 'ISO-8859-15',
 				  'en_US' => 'iso-8859-1',
 				  'en_GB' => 'UTF-8',
+				  'ja_JP' => 'UTF-8',
 				  'es_ES' => 'iso-8859-1',
 				  'fr_FR' => 'iso-8859-1',
 				  'el_GR' => 'el_GR.utf-8',
@@ -130,12 +132,7 @@ switch ($_REQUEST['action']) {
 			break;
 		}
 
-		if ($_SERVER['HTTPS'] == 'on') { $http_type = "https://"; }
-		else { $http_type = "http://"; }
-
-		$web_path = $http_type . $_SERVER['HTTP_HOST'] . $results['web_path'];
-
-		header ("Location: " . $web_path . "/login.php");
+		header ("Location: " . WEB_ROOT . "/login.php");
 	break;	
 	case 'show_create_account':
 	
@@ -143,6 +140,7 @@ switch ($_REQUEST['action']) {
 
 		/* Make sure we've got a valid config file */
 		if (!check_config_values($results)) { 
+			Error::add('general',_('Error: Config file not found or Unreadable')); 
 			require_once Config::get('prefix') . '/templates/show_install_config.inc.php'; 
 			break;
 		}
@@ -157,6 +155,7 @@ switch ($_REQUEST['action']) {
 		// We need the charset for the different languages
 		$charsets = array('de_DE' => 'ISO-8859-15',
 				  'en_US' => 'iso-8859-1',
+				  'ja_JP' => 'UTF-8',
 				  'en_GB' => 'UTF-8',
 				  'es_ES' => 'iso-8859-1',
 				  'fr_FR' => 'iso-8859-1',
@@ -186,6 +185,7 @@ switch ($_REQUEST['action']) {
 		// We need the charset for the different languages
 		$charsets = array('de_DE' => 'ISO-8859-15',
 				  'en_US' => 'iso-8859-1',
+				  'ja_JP' => 'UTF-8',
 				  'en_GB' => 'UTF-8',
 				  'es_ES' => 'iso-8859-1',
 				  'fr_FR' => 'iso-8859-1',
@@ -208,7 +208,7 @@ switch ($_REQUEST['action']) {
         default:
 		/* Do some basic tests here... most common error, no mysql */
 		if (!function_exists('mysql_query')) { 
-			header ("Location: test.php");
+			header ("Location: " . WEB_PATH . "/test.php");
 		}
 		$htmllang = "en_US";
 		header ("Content-Type: text/html; charset=UTF-8");

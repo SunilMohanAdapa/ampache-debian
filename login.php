@@ -67,7 +67,12 @@ if ($_POST['username'] && $_POST['password']) {
 		if ($user->disabled == '1') { 	
                                 $auth['success'] = false;
 				Error::add('general',_('User Disabled please contact Admin')); 
+				debug_event('Login','Disabled User ' . scrub_out($username) . ' attempted to login, but is disabled','1'); 
                 } // if user disabled
+
+		if (!$auth['success']) { 
+			debug_event('Login','Login Username / Password Failure:' . scrub_out($username),'5'); 
+		}
                 
 		elseif (!$user->username AND $auth['success']) { 
 			/* This is run if we want to auto_create users who don't exist (usefull for non mysql auth) */                

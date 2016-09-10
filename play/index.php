@@ -61,6 +61,7 @@ if (!isset($uid)) {
 
 /* Misc Housework */
 $user = new User($uid);
+Preference::init(); 
 
 /* If the user has been disabled (true value) */
 if (make_bool($GLOBALS['user']->disabled)) {
@@ -136,7 +137,7 @@ if ($demo_id) {
  * if we are doing random let's pull the random object
  */
 if ($random) { 
-	if (!isset($start)) { 
+	if ($start < 1) { 
 		$song_id = Random::get_single_song($_REQUEST['type']); 
 		// Save this one incase we do a seek
 		$_SESSION['random']['last'] = $song_id; 
@@ -157,21 +158,6 @@ if (!make_bool($song->enabled)) {
 	exit;
 }
 
-/* If we don't have a file, or the file is not readable */
-if (!$song->file OR ( !is_readable($song->file) AND $catalog->catalog_type != 'remote' ) ) { 
-
-	// We need to make sure this isn't democratic play, if it is then remove the song
-	// from the vote list
-	if (is_object($tmp_playlist)) { 
-		$tmp_playlist->delete_track($song_id); 
-	}
-
-	debug_event('file_not_found',"Error song $song->file ($song->title) does not have a valid filename specified",'2');
-	echo "Error: Invalid Song Specified, file not found or file unreadable"; 
-	exit; 
-}
-
-	
 // If we are running in Legalize mode, don't play songs already playing
 if (Config::get('lock_songs')) {
 	if (!check_lock_songs($song->id)) { 
@@ -198,8 +184,32 @@ if ($catalog->catalog_type == 'remote') {
 	$extra_info = "&xml_rpc=1&sid=$sid";
 	header("Location: " . $song->file . $extra_info);
 	debug_event('xmlrpc-stream',"Start XML-RPC Stream - " . $song->file . $extra_info,'5');
+
+	/* If this is a voting tmp playlist remove the entry, we do this regardless of play amount */
+	if ($demo_id) {
+	        $row_id = $democratic->get_uid_from_object_id($song_id,'song');
+	        if ($row_id) {
+	                debug_event('Democratic','Removing ' . $song->title . ' from Democratic Playlist','1');
+	                $democratic->delete_votes($row_id);
+	        }
+	} // if tmp_playlist
+
 	exit;
 } // end if remote catalog
+
+/* If we don't have a file, or the file is not readable */
+if (!$song->file OR ( !is_readable($song->file) AND $catalog->catalog_type != 'remote' ) ) { 
+
+	// We need to make sure this isn't democratic play, if it is then remove the song
+	// from the vote list
+	if (is_object($tmp_playlist)) { 
+		$tmp_playlist->delete_track($song_id); 
+	}
+
+	debug_event('file_not_found',"Error song $song->file ($song->title) does not have a valid filename specified",'2');
+	echo "Error: Invalid Song Specified, file not found or file unreadable"; 
+	exit; 
+}
 
 // make fread binary safe
 set_magic_quotes_runtime(0);
@@ -234,6 +244,7 @@ if ($_GET['action'] == 'download' AND Config::get('download')) {
 	if (Config::get('rate_limit') > 0) { 
 		while (!feof($fp)) { 
 			echo fread($fp,round(Config::get('rate_limit')*1024)); 
+			$bytesStreamed += round(Config::get('rate_limit')*1024); 
 			flush(); 
 			sleep(1); 
 		} 
@@ -243,7 +254,7 @@ if ($_GET['action'] == 'download' AND Config::get('download')) {
 	} 
 
 	// Make sure that a good chunk of the song has been played
-	if ($bytesStreamed > $minBytesStreamed) {
+	if ($bytesStreamed >= $song->size) {
         	debug_event('Stats','Downloaded, Registering stats for ' . $song->title,'5');
         
 	        $user->update_stats($song->id);
@@ -295,7 +306,7 @@ else {
 // Put this song in the now_playing table
 Stream::insert_now_playing($song->id,$uid,$song->time,$sid);
 
-if (isset($start)) {
+if ($start > 0) {
 
 	// Calculate stream size from byte range
 	if(isset($end)) {
@@ -334,7 +345,11 @@ $min_bytes_streamed = $song->size / 2;
 
 // Actually do the streaming 
 do {
-	$buf = fread($fp, min(2048,$stream_size-$bytes_streamed));
+	// Prevent a fread($fp,0)
+	$read_size = min(2048,$stream_size-$bytes_streamed);
+	if ($read_size < 1) { break; } 
+
+	$buf = fread($fp, $read_size);
 	print($buf);
 	$bytes_streamed += strlen($buf);
 } while (!feof($fp) && (connection_status() == 0) AND $bytes_streamed < $stream_size);

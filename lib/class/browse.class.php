@@ -76,7 +76,8 @@ class Browse {
 			case 'rated':
 
 			break; 
-			case 'alpha_match':
+			case 'alpha_match': 
+			case 'starts_with':
 				if (self::$static_content) { return false; }
 				//if ($value == _('All')) { $value = ''; } 
 				$_SESSION['browse']['filter'][$key] = $value; 
@@ -140,16 +141,16 @@ class Browse {
 
 		switch ($_SESSION['browse']['type']) { 
 			case 'album': 
-				$valid_array = array('show_art','alpha_match'); 
+				$valid_array = array('show_art','starts_with','alpha_match'); 
 			break; 
 			case 'artist': 
 			case 'genre': 
 			case 'song': 
 			case 'live_stream': 
-				$valid_array = array('alpha_match'); 	
+				$valid_array = array('starts_with','alpha_match'); 	
 			break; 
 			case 'playlist': 
-				$valid_array = array('alpha_match'); 
+				$valid_array = array('starts_with','alpha_match'); 
 				if (Access::check('interface','50')) { 
 					array_push($valid_array,'playlist_type'); 
 				} 
@@ -493,6 +494,9 @@ class Browse {
 		if ($_SESSION['browse']['type'] == 'song') { 
 			switch($filter) { 
 				case 'alpha_match':
+					$filter_sql = " `song`.`title` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break; 
+				case 'starts_with': 
 					$filter_sql = " `song`.`title` LIKE '" . Dba::escape($value) . "%' AND ";
 				break;
 				case 'unplayed':
@@ -506,6 +510,9 @@ class Browse {
 		elseif ($_SESSION['browse']['type'] == 'album') { 
 			switch($filter) { 
 				case 'alpha_match':
+					$filter_sql = " `album`.`name` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break; 
+				case 'starts_with': 
 					$filter_sql = " `album`.`name` LIKE '" . Dba::escape($value) . "%' AND "; 
 				break;
 				case 'min_count': 
@@ -519,6 +526,9 @@ class Browse {
 		elseif ($_SESSION['browse']['type'] == 'artist') { 
 			switch($filter) { 
 				case 'alpha_match':
+					$filter_sql = " `artist`.`name` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break; 
+				case 'starts_with': 
 					$filter_sql = " `artist`.`name` LIKE '" . Dba::escape($value) . "%' AND ";
 				break;
 				default:
@@ -529,6 +539,9 @@ class Browse {
 		elseif ($_SESSION['browse']['type'] == 'genre') { 
 			switch ($filter) { 
 				case 'alpha_match': 
+					$filter_sql = " `genre`.`name` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break; 
+				case 'starts_with': 
 					$filter_sql = " `genre`.`name` LIKE '" . Dba::escape($value) . "%' AND "; 
 				break;
 				default: 
@@ -539,6 +552,9 @@ class Browse {
 		elseif ($_SESSION['browse']['type'] == 'live_stream') { 
 			switch ($filter) { 
 				case 'alpha_match':
+					$filter_sql = " `live_stream`.`name` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break;
+				case 'starts_with': 
 					$filter_sql = " `live_stream`.`name` LIKE '" . Dba::escape($value) . "%' AND "; 
 				break;
 				default: 
@@ -549,6 +565,9 @@ class Browse {
 		elseif ($_SESSION['browse']['type'] == 'playlist') { 
 			switch ($filter) { 
 				case 'alpha_match': 
+					$filter_sql = " `playlist`.`name` LIKE '%" . Dba::escape($value) . "%' AND "; 
+				break; 
+				case 'starts_with': 
 					$filter_sql = " `playlist`.`name` LIKE '" . Dba::escape($value) . "%' AND "; 
 				break;
 				case 'playlist_type': 
@@ -706,8 +725,15 @@ class Browse {
 			$object_ids = array_slice($object_ids,self::$start,$limit); 
 		} 
 
+		$match = ''; 
+
 		// Format any matches we have so we can show them to the masses
-		$match = $_SESSION['browse']['filter']['alpha_match'] ? ' (' . $_SESSION['browse']['filter']['alpha_match'] . ')' : '';  
+		if ($filter_value = self::get_filter('alpha_match')) { 
+			$match = ' (' . $filter_value . ')';
+		} 
+		elseif ($filter_value = self::get_filter('starts_with')) { 
+			$match = ' (' . $filter_value . ')'; 
+		} 
 
 		// Set the correct classes based on type
     		$class = "box browse_".$_SESSION['browse']['type'];

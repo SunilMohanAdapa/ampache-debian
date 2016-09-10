@@ -77,14 +77,27 @@ function install_check_status($configfile) {
 	$results = parse_ini_file($configfile);
 	$dbh = check_database($results['database_hostname'],$results['database_username'],$results['database_password']);	
 
-	if (is_resource($dbh)) { 
-		@mysql_select_db($results['database_name'],$dbh);
-		$sql = "SELECT * FROM `user`";
-		$db_results = @mysql_query($sql, $dbh);
-		if (!@mysql_num_rows($db_results)) { 
-			return true;
-		}
+	if (!is_resource($dbh)) { 
+		Error::add('general',_('Unable to connect to database, check your ampache config')); 
+		return false; 
+	} 
+		
+	$select_db = mysql_select_db($results['database_name'],$dbh);
+
+	if (!$select_db) { 
+		Error::add('general',_('Unable to select database, check your ampache config')); 
+		return false; 
+	} 
+	
+	$sql = "SELECT * FROM `user`";
+	$db_results = mysql_query($sql, $dbh);
+	if (!mysql_num_rows($db_results)) { 
+		return true;
 	}
+	else { 
+		Error::add('general',_('Existing Database detected, unable to continue installation')); 
+		return false; 
+	} 
 
 	/* Defaut to no */
 	return false;
@@ -106,17 +119,11 @@ function install_insert_db($username,$password,$hostname,$database) {
 		return false; 
 	} 
 
-
 	$data['database_username'] = $username; 
 	$data['database_password'] = $password; 
 	$data['database_hostname'] = $hostname; 
 	$data['database_name']	   = $database;
 
-	if (!strlen($data['database_password'])) { 
-		Error::add('general','Error: Password required for Database creation'); 
-		return false; 
-	} 
-	
 	Config::set_by_array($data,'1'); 
 	
 	unset($data); 
@@ -132,7 +139,10 @@ function install_insert_db($username,$password,$hostname,$database) {
 	/* Check/Create Database as needed */
 	$db_selected = @mysql_select_db($database, $dbh);
 
-	if ($db_selected && !$_POST['overwrite_db']) { 
+	if ($db_selected && $_POST['existing_db']) { 
+		// Rien a faire, we've got the db just blow through
+	} 
+	elseif ($db_selected && !$_POST['overwrite_db']) { 
 		Error::add('general','Error: Database Already exists and Overwrite not checked'); 
 		return false; 
 	} 
@@ -194,6 +204,13 @@ function install_insert_db($username,$password,$hostname,$database) {
 		$sql = "ALTER DATABASE `" . Dba::escape($database) . "` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci";
 		$db_results = mysql_query($sql); 
 	} 
+
+	if(Config::get('lang') != 'en_US') {
+		$sql = "UPDATE `preference` SET `value`='" . Config::get('lang') . "' WHERE `id`=31";
+		$db_results = mysql_query($sql);
+		$sql = "UPDATE `user_preference` SET `value`='" .Config::get('lang') ."' WHERE `preference`=31";
+		$db_results = mysql_query($sql);
+	}
 
 	return true;
 

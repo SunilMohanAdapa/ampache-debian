@@ -341,10 +341,7 @@ class Preference {
 	        } // end while sys prefs
 
 	        /* Now we need to allow the user to override some stuff that's been set by the above */
-	        $user_id = '-1';
-	        if ($GLOBALS['user']->username) {
-	                $user_id = Dba::escape($GLOBALS['user']->id);
-	        }
+		$user_id = $GLOBALS['user']->id ? Dba::escape($GLOBALS['user']->id) : '-1'; 
 
 	        $sql = "SELECT preference.name,user_preference.value FROM preference,user_preference WHERE user_preference.user='$user_id' " .
 	                "AND user_preference.preference = preference.id AND preference.catagory != 'system'";

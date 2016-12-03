@@ -1,0 +1,23 @@
+- Package the following dependencies:
+  wikimedia/composer-merge-plugin: 1.*,
+  gettext/gettext: 3.5.*,
+  mikealmond/musicbrainz: dev-master,
+  rmccue/requests: 1.6.*,
+  react/react: 0.4.*,
+  cboden/ratchet: 0.3.*,
+  szymach/c-pchart: 1.*,
+  evenement/evenement: 2.*,
+  happyworm/jplayer: 2.*,
+  needim/noty: 2.3.*,
+  sabre/dav: 3.0.5 (already in Debian, needs newer version)
+  maennchen/zipstream-php: 0.*,
+  Afterster/php-echonest-api: dev-master,
+  vakata/jstree: 3.*,
+  aehlke/tag-it: 2.*,
+  scaron/prettyphoto: 3.*,
+  jeromeetienne/jquery-qrcode: dev-master,
+  xdan/datetimepicker: 2.*,
+  blueimp/jQuery-File-Upload: 9.*,
+  aterrien/jQuery-Knob: 1.2.*,
+  pklauzinski/jscroll: 2.*,
+  kumailht/responsive-elements: dev-master
